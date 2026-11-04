@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Allow: /api/image
+Disallow: /*?view=admin
+Disallow: /*?from=
+Disallow: /*?to=
+Sitemap: https://jowwa-kayan.vercel.app/sitemap.xml

@@ -1,0 +1,1 @@
+export default {"url":"https://opbfcrzxkxrbokihqrxy.supabase.co","key":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9wYmZjcnp4a3hyYm9raWhxcnh5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM3MzM4ODAsImV4cCI6MjEwOTMwOTg4MH0.qh66UPCeT978fQ6NcbxRm--uxFiXUaQ95m1V6Y0Wfr4","publicSignup":false,"phoneAuth":true};

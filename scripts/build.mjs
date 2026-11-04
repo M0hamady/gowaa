@@ -1,0 +1,15 @@
+import {build} from 'esbuild';
+import {writeFile,readFile} from 'node:fs/promises';
+import {esc} from '../public/market-core.js';
+const url=process.env.SUPABASE_URL||process.env.NEXT_PUBLIC_SUPABASE_URL||'';
+const key=process.env.SUPABASE_ANON_KEY||process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY||process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY||'';
+// Only the public anon/publishable key is ever shipped to the browser.
+if(key.startsWith('sb_secret_'))throw Error('Secret key cannot be published');
+if(key.startsWith('eyJ')&&JSON.parse(Buffer.from(key.split('.')[1],'base64url').toString()).role!=='anon')throw Error('Expected public anon key');
+await writeFile('public/config.js',`export default ${JSON.stringify({url,key,publicSignup:false,phoneAuth:process.env.JOWWA_PHONE_AUTH==='true'})};\n`);
+await writeFile('src/market-template.mjs','export default '+JSON.stringify(await readFile('public/market.html','utf8'))+';\n');
+await build({entryPoints:['src/market.js'],outfile:'public/market.js',bundle:true,format:'esm',minify:true,target:'es2022',legalComments:'eof'});
+await build({entryPoints:['src/round-sync.js'],outfile:'public/round-sync.js',bundle:true,format:'esm',minify:true,target:'es2022',legalComments:'eof'});
+await build({entryPoints:['src/order-pages.js'],outfile:'public/order-pages.js',bundle:true,format:'esm',minify:true,target:'es2022',legalComments:'eof'});
+await import('./directory-pages.mjs');
+console.log('Jowwa built; account backend '+(url&&key?'configured':'not configured'));

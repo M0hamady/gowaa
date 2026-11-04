@@ -1,0 +1,13 @@
+{
+ "checkedAt":"2026-11-04",
+ "note":"Reference schedules are independent from provider consent to receive Jowwa orders.",
+ "records":[{
+  "placeId":"directory-auc-daycare",
+  "status":"published_reference",
+  "publicLabel":"الأحد–الخميس ٨:١٥ ص–٤:٣٠ م؛ تتبع إجازات الجامعة",
+  "source":"https://www.aucegypt.edu/ar/node/15811",
+  "checkedAt":"2026-11-04",
+  "notes":["في رمضان ينتهي العمل ٣:٠٠ م بحسب المصدر؛ إجازات الجامعة تُراجع معها.","التقديم والمقابلة بموعد مسبق من ٩:٣٠ إلى ١١:٣٠ ص؛ هذه ليست ساعات رعاية الأطفال."],
+  "canDeriveOpenNow":false
+ }]
+}
