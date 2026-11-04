@@ -1,17 +1,18 @@
 import {readFile,writeFile,mkdir,readdir,unlink} from 'node:fs/promises';
 import {resolve,dirname} from 'node:path';
 import {directoryPlaces} from '../public/directory-core.js';
+import {mergeDirectoryUpdates} from '../public/directory-updates.js';
 import {renderPlace,renderDirectory} from '../src/place-render.mjs';
-const curated=JSON.parse(await readFile('public/data/directory.json','utf8'));
+const curated=mergeDirectoryUpdates(JSON.parse(await readFile('public/data/directory.json','utf8')));
 const map=JSON.parse(await readFile('public/data/map.json','utf8'));
 const places=directoryPlaces(curated,map);
+// Keep home, market, AI and server-rendered pages on the same idempotently merged data.
+await writeFile('public/data/directory.json',JSON.stringify(curated,null,2)+'\n');
 await writeFile('src/directory-urls.mjs','export default '+JSON.stringify(places.map(p=>p.url))+';\n');
 await writeFile('public/data/places.json',JSON.stringify(places));
 const output=resolve('public/place');
 await mkdir(output,{recursive:true});
 if(process.env.VERCEL==='1'||process.argv.includes('--production')){
- // Static pages take precedence over live ownership/hours rewrites.
- // Remove only generated HTML files from this exact output directory.
  for(const name of await readdir(output)){
   const file=resolve(output,name);
   if(dirname(file)!==output||!name.endsWith('.html'))continue;

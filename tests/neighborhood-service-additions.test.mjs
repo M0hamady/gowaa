@@ -5,14 +5,12 @@ import {directoryPlaces} from '../public/directory-core.js';
 import {matchesNeed,providerContact} from '../public/welcome-journey.js';
 import {everydayIntent} from '../public/egyptian-language.js';
 import {renderPlace,renderPublishedPriceOffers} from '../src/place-render.mjs';
-
 const read=(path)=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
 const curated=JSON.parse(read('public/data/directory.json'));
 const mapped=JSON.parse(read('public/data/map.json'));
 const live=JSON.parse(read('public/data/places.json'));
 const get=id=>live.find(p=>p.id===id);
 const wash=get('directory-mobile-car-wash-kayan');
-
 test('home removes only the extra colloquial input, keeping AI and service cards',()=>{
  const html=read('public/index.html'),js=read('public/app.js');
  assert.doesNotMatch(html,/home-search-form|id="home-search"|قولنا بالبلدي/);
@@ -24,15 +22,13 @@ test('home removes only the extra colloquial input, keeping AI and service cards
  assert.match(html,/>البنوك والصرافات</);
  assert.equal((html.match(/data-home-action=/g)||[]).length,10);
 });
-
 test('new public directory and generated place catalog agree without duplicating existing map POIs',()=>{
  const rebuilt=directoryPlaces(curated,mapped);
  assert.deepEqual(live,rebuilt);
- assert.equal(live.length,63);
+ assert.equal(live.length,66);
  assert.equal(new Set(live.map(p=>p.id)).size,live.length);
  assert.equal(live.filter(p=>p.id==='poi-1122262346').length,1);
 });
-
 test('at-home wash service keeps exactly 5 user-advertised offers and published phone',()=>{
  assert.ok(wash);
  assert.equal(wash.businessOwnerVerified,false);
@@ -51,7 +47,6 @@ test('at-home wash service keeps exactly 5 user-advertised offers and published 
  assert.doesNotMatch(html,/https:\/\/wa\.me\/201116039386/);
  assert.match(html,/الطلب يتاح بعد تأكيد صاحب الخدمة/);
 });
-
 test('new categories are searchable, and planned cinema/Carrefour are not falsely open',()=>{
  assert.ok(matchesNeed(wash,'services','غسيل سيارات',''));
  assert.ok(matchesNeed(get('directory-international-garden-kayan'),'places','حدائق',''));
@@ -67,7 +62,6 @@ test('new categories are searchable, and planned cinema/Carrefour are not falsel
  assert.equal(everydayIntent('محتاج غسيل للعربية'),'shop');
  assert.equal(everydayIntent('عايز مكوى للهدوم'),'shop');
 });
-
 test('new landmarks preserve source URLs and explicit absence of confirmed hours/orders',()=>{
  for(const id of ['directory-international-garden-kayan','directory-fuel-near-sunmall','directory-madkour-yasmin-330','directory-gas-office-yasmin-188','directory-projects-office-kayan']){
   const row=get(id);
