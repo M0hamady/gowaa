@@ -2,9 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {mergeDirectoryUpdates,visitorDirectory} from '../public/directory-updates.js';
+import {directoryPlaces} from '../public/directory-core.js';
 import {visitorRouteUrl,visitorActions,visitorAddress} from '../public/visitor-services.js';
 import {renderPlace,renderDirectory} from '../src/place-render.mjs';
-const records=JSON.parse(readFileSync(new URL('../public/data/places.json',import.meta.url),'utf8'));
+const curated=mergeDirectoryUpdates(JSON.parse(readFileSync(new URL('../public/data/directory.json',import.meta.url),'utf8'))),map=JSON.parse(readFileSync(new URL('../public/data/map.json',import.meta.url),'utf8')),records=directoryPlaces(curated,map);
 const get=id=>records.find(p=>p.id===id);
 test('bank additions are idempotent, separate ATMs, with no invented phones or hours',()=>{
  assert.deepEqual(mergeDirectoryUpdates(records),mergeDirectoryUpdates(mergeDirectoryUpdates(records)));
