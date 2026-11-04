@@ -110,6 +110,10 @@
       "destination": "/api/service-claims?__serviceRoute=tracking"
     },
     {
+      "source": "/market/category/:category",
+      "destination": "/market.html"
+    },
+    {
       "source": "/seller/:id",
       "destination": "/api/page?type=seller&id=:id"
     },
