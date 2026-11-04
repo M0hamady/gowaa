@@ -32,6 +32,12 @@ export function onlinePaymentFeeQuote(s,o,amountPiastres){
  const customerChargePiastres=amountPiastres+result.totals.customer;money(customerChargePiastres);
  return {fees:result.fees,customerChargePiastres,providerDeductionPiastres:result.totals.provider,platformAbsorbedPiastres:result.totals.platform};
 }
+export function finalizeOnlinePaymentPayouts(s,o,actorId,at){
+ if(o.onlinePayoutsFinalized||o.status!=='completed'||paidNet(s,o.id)<o.total)return false;
+ const intents=Object.values(s.onlinePayments||{}).filter(x=>x.orderId===o.id&&x.status==='paid'&&!x.payoutFinalized);
+ for(const intent of intents){if(intent.providerNetPiastres)postDebt(s,{from:'platform:jowwa',to:'shop:'+o.shopId,amount:intent.providerNetPiastres,kind:'online_provider_payout',ref:intent.id,actorId,at});intent.payoutFinalized=true;intent.payoutReadyAt=at;bump(intent);for(const tx of (s.platformTransactions||[]).filter(x=>x.intentId===intent.id&&x.status==='held')){tx.status='finalized';tx.finalizedAt=at;}}
+ o.onlinePayoutsFinalized=true;return true;
+}
 export function finalizePlatformBenefits(s,o,actorId,at){
  if(o.platformBenefitsFinalized||o.status!=='completed'||paidNet(s,o.id)<o.total)return false;
  for(const use of Object.values(s.benefitUses||{}).filter(x=>x.orderId===o.id&&!x.released&&!x.finalized)){
@@ -52,7 +58,7 @@ export function collect(c,b){
  ok(payment.tendered>=amount,'CASH','المبلغ المستلم أقل من قيمة التحصيل.');payment.change=payment.tendered-amount;s.payments[id]=payment;
  if(isCourier)postDebt(s,{from:holder,to:'shop:'+o.shopId,amount,kind:'customer_collection',ref:id,actorId:a,at});
  else if(b.method==='cash')addCash(s,a,o.shopId,amount,'sale',id,at);
- if(o.status==='completed'){finalizePlatformBenefits(s,o,a,at);finalizeOrderFees(s,o,a,at);}bump(o);return {id,message:'اتسجل المبلغ المستلم. ده تسجيل فقط مش تنفيذ دفع إلكتروني.'};
+ if(o.status==='completed'){finalizePlatformBenefits(s,o,a,at);finalizeOrderFees(s,o,a,at);finalizeOnlinePaymentPayouts(s,o,a,at);}bump(o);return {id,message:'اتسجل المبلغ المستلم. ده تسجيل فقط مش تنفيذ دفع إلكتروني.'};
 }
 function create(c,b,{pos=false}={}){
  const{s,actorId:a,now,at}=c,shop=s.shops[key(b.shopId)];ok(shop&&!shop.archived&&shop.accepting,'CLOSED','المحل مش بيستقبل طلبات جديدة دلوقتي.');
@@ -79,7 +85,7 @@ export function orderCommand(c){const{s,actorId:a,body:b,at}=c;
    o.cancelReason=text(b.reason,3,300);if(['pending','accepted'].includes(o.status)){releaseInventory(s,o);releasePromo(s,o);}else o.wasteNote=text(b.wasteReason,3,300);releasePlatformBenefits(s,o);
    if(task&&task.status!=='cancelled'){task.status='cancelled';task.cancelReason=o.cancelReason;bump(task);delete s.positions[task.id];}
   }
-  o.status=b.state;o.updatedAt=at;if(b.state==='completed'){finalizePlatformBenefits(s,o,a,at);finalizeOrderFees(s,o,a,at);}bump(o);return {id:o.id,message:'حالة الطلب اتحدثت.'};
+  o.status=b.state;o.updatedAt=at;if(b.state==='completed'){finalizePlatformBenefits(s,o,a,at);finalizeOrderFees(s,o,a,at);finalizeOnlinePaymentPayouts(s,o,a,at);}bump(o);return {id:o.id,message:'حالة الطلب اتحدثت.'};
  }
  case 'order.cancel-request':{const o=s.orders[key(b.id)];checkVersion(o,b.version);ok(o.customerId===a,'FORBIDDEN','الطلب مش تابع لحسابك.',403);ok(['pending','accepted','preparing','ready'].includes(o.status),'STATE','الطلب مش قابل لطلب الإلغاء.');if(o.status==='pending'){o.status='cancelled';releasePromo(s,o);releasePlatformBenefits(s,o);}else o.cancelRequested=text(b.reason,3,300);bump(o);return {id:o.id,message:o.status==='cancelled'?'الطلب اتلغى.':'طلب الإلغاء اتبعت للمحل، منتظرين الرد.'};}
  case 'payment.online.prepare':{
@@ -94,9 +100,9 @@ export function orderCommand(c){const{s,actorId:a,body:b,at}=c;
   if(b.status==='failed'){intent.status='failed';intent.gatewayStatus='FAILED';intent.updatedAt=at;bump(intent);return {id:intent.id,message:'Kashier Test رجّع فشل؛ مفيش تحصيل أو مستحقات اتسجلت.'};}
   const o=s.orders[intent.orderId];ok(o&&o.customerId===intent.customerId,'PAYMENT','الطلب المرتبط غير صحيح.');ok(paidNet(s,o.id)+intent.principalPiastres<=o.total,'OVERPAYMENT','الطلب اتسدد أو اتغير؛ راجع العملية.');
   const paymentId=nextId(s,'payment');s.payments[paymentId]={id:paymentId,orderId:o.id,actorId:'gateway-test',holder:'platform:jowwa',kind:'payment',amount:intent.principalPiastres,method:'online',at,note:'Kashier TEST confirmed by isolated gateway simulation',tendered:intent.customerChargePiastres,change:0,onlineIntentId:intent.id};
-  const providerNet=intent.principalPiastres-intent.providerDeductionPiastres;if(providerNet)postDebt(s,{from:'platform:jowwa',to:'shop:'+o.shopId,amount:providerNet,kind:'online_provider_payout',ref:intent.id,actorId:a,at});
-  for(const fee of intent.fees){s.platformTransactions.push({id:nextId(s,'platform-tx'),orderId:o.id,intentId:intent.id,feeId:fee.id,bearer:fee.bearer,amount:fee.amountPiastres,kind:fee.bearer==='platform'?'gateway_cost_absorbed':'platform_fee_revenue',at});}
-  intent.status='paid';intent.gatewayStatus='SUCCESS';intent.paymentId=paymentId;intent.providerNetPiastres=providerNet;intent.paidAt=at;bump(intent);if(o.status==='completed'){finalizePlatformBenefits(s,o,a,at);finalizeOrderFees(s,o,a,at);}bump(o);
+  const providerNet=intent.principalPiastres-intent.providerDeductionPiastres;
+  for(const fee of intent.fees){s.platformTransactions.push({id:nextId(s,'platform-tx'),orderId:o.id,intentId:intent.id,feeId:fee.id,bearer:fee.bearer,amount:fee.amountPiastres,kind:fee.bearer==='platform'?'gateway_cost_absorbed':'platform_fee_revenue',status:'held',at});}
+  intent.status='paid';intent.gatewayStatus='SUCCESS';intent.paymentId=paymentId;intent.providerNetPiastres=providerNet;intent.paidAt=at;intent.payoutFinalized=false;bump(intent);if(o.status==='completed'){finalizePlatformBenefits(s,o,a,at);finalizeOrderFees(s,o,a,at);finalizeOnlinePaymentPayouts(s,o,a,at);}bump(o);
   return {id:intent.id,message:'Kashier Test اتأكد؛ التحصيل وصافي مقدم الخدمة اتسجلوا مرة واحدة.',paymentId};
  }
  case 'payment.collect':{const o=s.orders[key(b.orderId)];checkVersion(o,b.version);return collect(c,b);}
