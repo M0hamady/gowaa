@@ -27,7 +27,7 @@ test('platform-funded discount becomes an explicit amount platform owes provider
  h.run('owner','order.transition',{id,version:h.s.orders[id].version,state:'accepted'});
  h.run('owner','payment.collect',{orderId:id,version:h.s.orders[id].version,amount:11000,method:'card',confirmed:true});
  assert.equal(debtBalance(h.s,'platform:jowwa','shop:shop-a'),0);
- h.run('owner','order.transition',{id,version:h.s.orders[id].version,state:'completed'});
+ h.run('owner','order.transition',{id,version:h.s.orders[id].version,state:'ready'});h.run('owner','order.transition',{id,version:h.s.orders[id].version,state:'completed'});
  assert.equal(debtBalance(h.s,'platform:jowwa','shop:shop-a'),1000);
  assert.equal(h.s.orders[id].platformBenefitsFinalized,true);
 });
