@@ -33,7 +33,7 @@ async function send(type,body,commandId=crypto.randomUUID()){
  try{await new Promise(r=>setTimeout(r,100));const result=await app.store.dispatch(app.actor,command);await load();notify(result.message||'تم حفظ العملية.');return result;}catch(e){await load();notify(e.message||'تعذر الحفظ.',true);throw e;}finally{app.busy=false;$('ops-main').setAttribute('aria-busy','false');}
 }
 function form(title,html,onSubmit,{label='حفظ',steps=true,review}={}){
- show(title,`<form id="ops-form" class="market-form">${html}<div class="form-error" role="alert"></div><button type="submit" class="primary">${esc(label)}</button></form>`);const f=$('ops-form'),id=crypto.randomUUID();if(steps)formSteps(f,{onSubmitLabel:label,review});
+ show(title,`<form id="ops-form" class="market-form">${html}<div class="form-error" role="alert"></div><button type="submit" class="primary">${esc(label)}</button></form>`);const f=$('ops-form'),id=crypto.randomUUID();formSteps(f,{onSubmitLabel:label,review,summary:steps!==false});
  f.onsubmit=async event=>{event.preventDefault();const button=f.querySelector('[type=submit]');button.disabled=true;f.querySelector('.form-error').textContent='';try{const values=Object.fromEntries(new FormData(f));for(const box of f.querySelectorAll('input[type=checkbox]'))values[box.name]=box.checked;await onSubmit(values,f,id);close();}catch(e){f.querySelector('.form-error').textContent=e.message||'راجع البيانات.';}finally{button.disabled=false;}};return f;
 }
 function confirm(title,message,action){return form(title,`<p>${esc(message)}</p>${check('confirmed','أؤكد إن الإجراء ده حصل فعلًا',true)}`,v=>action(v),{label:'تأكيد',steps:false});}
