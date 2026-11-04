@@ -1,5 +1,5 @@
 import {requireThat as ok,int,money,text,key,nextId,approved,isAdmin,requireShop,canShop,checkVersion,bump,activeTaskStates,taskVisible,taskParty,location,postDebt} from './core.mjs';
-import {collect,finalizePlatformBenefits,finalizeOrderFees} from './orders.mjs';
+import {collect,finalizePlatformBenefits,finalizeOrderFees,finalizeOnlinePaymentPayouts} from './orders.mjs';
 import {applyFeeRules} from './dynamic-fees.mjs';
 const busy=(s,id,except)=>Object.values(s.tasks).some(t=>t.id!==except&&t.courierId===id&&activeTaskStates.includes(t.status));
 const requester=(s,a,t)=>a===t.requesterId||t.shopId&&canShop(s,a,t.shopId,'dispatch')||isAdmin(s,a);
@@ -61,7 +61,7 @@ export function deliveryCommand(c){const{s,actorId:a,body:b,now,at}=c;
  }
  case 'task.confirm-receipt':{
   const t=s.tasks[key(b.id)];checkVersion(t,b.version);ok(t.customerId===a,'FORBIDDEN','تأكيد الاستلام من العميل نفسه.',403);ok(t.status==='awaiting_receipt','STATE','المندوب لسه ما أكدش التسليم.');ok(b.confirmed===true,'CONFIRM','أكد الاستلام.');t.status='delivered';t.completedAt=at;t.trackingConsent=false;delete s.positions[t.id];
-  if(t.orderId){const o=s.orders[t.orderId];o.status='completed';o.completedAt=at;finalizePlatformBenefits(s,o,a,at);finalizeOrderFees(s,o,a,at);bump(o);if(!t.feePosted){postDebt(s,{from:'shop:'+t.shopId,to:'courier:'+t.courierId,amount:t.fare,kind:'delivery_earned',ref:t.id,actorId:a,at});t.feePosted=true;}}finalizeDeliveryFees(s,t,a,at);
+  if(t.orderId){const o=s.orders[t.orderId];o.status='completed';o.completedAt=at;finalizePlatformBenefits(s,o,a,at);finalizeOrderFees(s,o,a,at);finalizeOnlinePaymentPayouts(s,o,a,at);bump(o);if(!t.feePosted){postDebt(s,{from:'shop:'+t.shopId,to:'courier:'+t.courierId,amount:t.fare,kind:'delivery_earned',ref:t.id,actorId:a,at});t.feePosted=true;}}finalizeDeliveryFees(s,t,a,at);
   bump(t);return {id:t.id,message:'تم تأكيد الاستلام. التحصيل والتسوية ليهم حالتهم المنفصلة.'};
  }
  case 'task.collect':{
