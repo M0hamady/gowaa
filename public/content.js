@@ -3,6 +3,7 @@ export async function contentOverrides(kind){try{if(!config.url)return [];const 
 export async function loadContent(kind,base){const records=new Map(base.map(v=>[v.id,v]));for(const row of await contentOverrides(kind)){if(row.archived)records.delete(row.id);else records.set(row.id,{...records.get(row.id),...row.data,id:row.id,url:kind==='places'?'/place/'+encodeURIComponent(row.id):records.get(row.id)?.url});}return [...records.values()];}
 export async function applyContent(data,transit){
  const [buildings,places,buses,directory]=await Promise.all([contentOverrides('buildings'),contentOverrides('places'),contentOverrides('buses'),fetch('/data/places.json').then(r=>r.ok?r.json():[]).catch(()=>[])]);
+ data.directoryOverrides=places;
  const merge=(base,rows)=>{const map=new Map(base.map(x=>[x.id,x]));for(const r of rows){if(r.archived)map.delete(r.id);else map.set(r.id,{...map.get(r.id),...r.data,id:r.id});}return [...map.values()];};
  data.buildings=merge(data.buildings,buildings).filter(p=>validCoordinate(p.coordinate));
  const categories={'تسوق':'shopping','منطقة خدمات':'shopping','مطاعم':'restaurant','صحة':'health','صيدليات':'health','حضانات':'nursery','مدارس':'school','نوادي':'club','مكاتب وخدمات إدارية':'office','مكاتب وشركات':'office','صراف آلي':'atm','حدائق ومساحات خضراء':'park','بنزينات ومحطات وقود':'fuel','مرافق وغاز':'fuel'};
