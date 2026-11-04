@@ -20,6 +20,9 @@ test('home removes only the extra colloquial input, keeping AI and service cards
  assert.match(html,/id="home-ai"/);
  assert.match(html,/class="home-shortcuts-title"/);
  assert.match(html,/id="home-journey-stage"/);
+ assert.match(html,/data-home-action="banks"/);
+ assert.match(html,/>البنوك والصرافات</);
+ assert.equal((html.match(/data-home-action=/g)||[]).length,10);
 });
 
 test('new public directory and generated place catalog agree without duplicating existing map POIs',()=>{
