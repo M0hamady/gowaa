@@ -1,5 +1,6 @@
 import {requireThat as ok,fail,int,money,text,key,nextId,calendarMonthEnd,normalizePhone,roles,permissions,approved,isAdmin,requireShop,checkVersion,bump} from './core.mjs';
 import {validateFeeRule} from './dynamic-fees.mjs';
+import {validatePlatformBenefit} from './platform-benefits.mjs';
 const object=(v)=>{ok(v&&typeof v==='object'&&!Array.isArray(v),'FIELDS','راجع البيانات.');return v;};
 const only=(v,keys)=>{object(v);ok(Object.keys(v).every(k=>keys.includes(k)),'FIELDS','في بيانات غير مسموح بتعديلها.');};
 export function businessCommand(c){
@@ -40,6 +41,14 @@ export function businessCommand(c){
  }
  case 'fee.rule.archive':{
   admin();const rule=s.settings.feeRules?.[key(b.id)];checkVersion(rule,b.version);rule.enabled=false;bump(rule);return {id:rule.id,message:'قاعدة الرسوم اتوقفت؛ العمليات القديمة محتفظة بنسختها.'};
+ }
+ case 'benefit.save':{
+  admin();const prior=b.id?s.platformBenefits?.[key(b.id)]:null;if(b.id){ok(prior,'NOT_FOUND','العرض مش موجود.',404);checkVersion(prior,b.version);}
+  const id=prior?.id||nextId(s,'benefit'),validated=validatePlatformBenefit({...b.benefit,id,used:prior?.used||0,spentPiastres:prior?.spentPiastres||0,version:(prior?.version||0)+1},{existingId:id});
+  s.platformBenefits??={};s.platformBenefits[id]={...validated};return {id,message:'عرض المنصة اتحفظ في بيئة الاختبار.'};
+ }
+ case 'benefit.archive':{
+  admin();const row=s.platformBenefits?.[key(b.id)];checkVersion(row,b.version);row.enabled=false;bump(row);return {id:row.id,message:'عرض المنصة اتوقف؛ الطلبات السابقة محتفظة بحقوقها.'};
  }
  case 'section.save':{
   requireShop(s,a,key(b.shopId),'catalog');const row=b.id?s.sections[key(b.id)]:null;if(b.id){ok(row?.shopId===b.shopId,'FORBIDDEN','القسم مش تابع لنشاطك.',403);checkVersion(row,b.version);}
