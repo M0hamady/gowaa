@@ -4,7 +4,9 @@ import {directoryPlaces} from '../public/directory-core.js';
 import {renderPlace,renderDirectory} from '../src/place-render.mjs';
 const curated=JSON.parse(await readFile('public/data/directory.json','utf8'));
 const map=JSON.parse(await readFile('public/data/map.json','utf8'));
-const places=directoryPlaces(curated,map);
+// Community PDF entries are clearly marked unverified and must not create seller accounts or ownership claims.
+const community=JSON.parse(await readFile('public/data/community-guide-2027.json','utf8'));
+const places=directoryPlaces([...curated,...community],map);
 await writeFile('src/directory-urls.mjs','export default '+JSON.stringify(places.map(p=>p.url))+';\n');
 await writeFile('public/data/places.json',JSON.stringify(places));
 const output=resolve('public/place');
