@@ -4,11 +4,10 @@ import {readFileSync} from 'node:fs';
 import {renderPlace,metadataUrl} from '../src/place-render.mjs';
 import {renderBusDirectory} from '../api/bus.mjs';
 import {sitemapXml} from '../api/sitemap.mjs';
-import page from '../api/page.mjs';
+import page from '../src/legacy-page.mjs';
 import image from '../api/image.mjs';
 import {placeResults} from '../public/ux.js';
 import {renderTransitCard,transitState} from '../public/transit.js';
-
 test('directory metadata and public cards escape content and encode IDs',()=>{
  const p={id:'x" onclick="bad',name:'</script><img src=x onerror=bad>',description:'<b>test</b>',image:'" onload="bad',website:'javascript:bad()',category:'خدمات'};
  const html=renderPlace(p,[p]);assert.ok(html.includes('&lt;img'));assert.ok(!html.includes('<img src=x'));assert.ok(!html.includes('href="javascript:'));assert.ok(!html.includes('content="" onload='));assert.ok(html.includes('/place/x%22%20onclick%3D%22bad'));
