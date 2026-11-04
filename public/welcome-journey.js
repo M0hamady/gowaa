@@ -131,8 +131,9 @@ export function mountWelcomeJourney({root,stage,places=[],directory=[],busRoutes
     +'<p class="journey-hint">دي مسودة بس. هنفتح لك نفس نموذج إنشاء المتجر الموجود على جوه، وفيه مراجعة وصلاحيات الدخول قبل أي نشر.</p>'
     +'<button type="button" class="journey-primary" data-store-save>'+icon('check')+' كمّل تجهيز متجرك</button>';
   }else if(state.step==='listing'){
-   html='<p class="journey-subline">هتكمل نموذج الإضافة الموجود على جوه، سؤال واحد في كل شاشة ومراجعة قبل الإرسال.</p>'
-    +'<div class="journey-choice-grid">'+[['product','منتج','bag'],['service','خدمة','store']].map(([v,label,glyph])=>'<a class="journey-choice" href="/market?add='+v+'">'+icon(glyph)+'<strong>أضيف '+label+'</strong></a>').join('')+'</div>'
+   const kind=state.branch==='add-service'?'service':'product',label=kind==='service'?'خدمتك':'منتجك';
+   html='<p class="journey-subline">هنفتح نموذج إضافة '+label+' الموجود على جوه، سؤال واحد في كل شاشة ومراجعة قبل الإرسال.</p>'
+    +'<a class="journey-primary" href="/market?add='+kind+'">'+icon(kind==='service'?'store':'bag')+' ابدأ إضافة '+label+'</a>'
     +'<button type="button" class="journey-link" data-store-new>لسه معنديش متجر، ابدأ من الأول</button>';
   }
   const stepCount=history.length+1;
@@ -182,7 +183,7 @@ export function mountWelcomeJourney({root,stage,places=[],directory=[],busRoutes
  }
  function choosePlace(p){
   if(!p?.coordinate)return;
-  if(state.step==='origin'){state.from=p;advance('destination');}
+  if(state.step==='origin'){state.from=p;advance(state.to?'mode':'destination');}
   else if(state.step==='destination'){state.to=p;advance(state.from?'mode':'origin');}
  }
  function advance(step){history.push(state.step);state.step=step;nextFocus=true;show();}
@@ -212,7 +213,12 @@ export function mountWelcomeJourney({root,stage,places=[],directory=[],busRoutes
  function fromSearch(query){
   const intent=everydayIntent(query),term=shoppingTerms(query);
   if(intent==='navigate')return routeFromText(query)||open('navigate');
-  if(intent==='shop')return open('food',{query:term||query});
+  if(intent==='shop'){
+   const q=normalizeEgyptian(query);
+   if(/(?:صيدليه|صيدلي|سباك|سباكه|كهربائي|كهربا|صيانه|نجار|نجاره|حلاق|كوافير|طبيب|دكتور|خدمه)/.test(q))return open('services',{query:term||query});
+   if(/(?:اكل|جعان|جوعان|فطار|غدا|عشا|كشري|شاورما|بيتزا|برجر|سندوتش|قهوه|كافيه|كوفي|مطعم|مشروبات|عصير|شاي|كريب|حلويات)/.test(q))return open('food',{query:term||query});
+   location.assign('/market?q='+encodeURIComponent(term||query));return;
+  }
   if(intent==='find')return open('places',{query:term||query});
   if(intent==='add-product')return open('add-product');
   if(intent==='add-service')return open('add-service');
