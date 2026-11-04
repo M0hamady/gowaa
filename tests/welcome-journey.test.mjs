@@ -1,0 +1,4 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {welcomeActions,providerContact,sanitizeStoreDraft} from '../public/welcome-journey.js';
+test('first-visit actions cover navigation, food, places, services, market and store',()=>{assert.deepEqual(welcomeActions.map(x=>x.id),['navigate','food','places','services','market','store','add-service','bus','round']);});
+test('provider contacts are only drawn from supplied public records',()=>{assert.deepEqual(providerContact({phone:'01040446383',whatsapp:'+201040446383'}),{phone:'01040446383',whatsapp:'201040446383'});assert.deepEqual(providerContact({}),{phone:'',whatsapp:''});});
+test('store draft requires real public profile fields',()=>{assert.equal(sanitizeStoreDraft({name:'a',description:'too',district:'yasmin'}),null);assert.equal(sanitizeStoreDraft({name:'متجر كيان',description:'منتجات من أهل كيان',district:'yasmin'}).district,'yasmin');});
