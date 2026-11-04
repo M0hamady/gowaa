@@ -41,13 +41,13 @@ export function project(state,actorId,{now=Date.now()}={}){
  const team=Object.values(s.team).filter(x=>admin||x.userId===actorId||s.shops[x.shopId]?.ownerId===actorId);
  const courierLinks=Object.values(s.courierLinks).filter(x=>admin||x.courierId===actorId||x.phone===user.phone||canShop(s,actorId,x.shopId,'dispatch'));
  const relatedUsers=new Set([actorId,...team.map(x=>x.userId),...courierLinks.map(x=>x.courierId),...bids.map(x=>x.courierId),...tasks.flatMap(t=>[t.courierId,t.requesterId,t.customerId]),...ownOrders.map(o=>o.customerId)]);
- return {schema:s.schema,revision:s.revision,mode:'test',user:{id:user.id,name:user.name,admin},roles:rolesFor(s,actorId),settings:{categories:s.settings.categories,policyVersion:s.settings.policyVersion,identityUploadsEnabled:false,passengerLaunchEnabled:false,customerAlwaysFree:true,noPaidPlans:true,rates:s.settings.rates,feeRules:admin?Object.values(s.settings.feeRules||{}):[]},trial:s.trials[actorId]||null,
+ return {schema:s.schema,revision:s.revision,mode:'test',user:{id:user.id,name:user.name,admin},roles:rolesFor(s,actorId),settings:{categories:s.settings.categories,policyVersion:s.settings.policyVersion,identityUploadsEnabled:false,passengerLaunchEnabled:false,customerAlwaysFree:true,noPaidPlans:true,rates:s.settings.rates,feeRules:admin?Object.values(s.settings.feeRules||{}):[],platformBenefits:admin?Object.values(s.platformBenefits||{}):[]},trial:s.trials[actorId]||null,
   shops:Object.values(s.shops).filter(sh=>!sh.archived||shopIds.includes(sh.id)||admin).map(sh=>({...sh,canCatalog:canShop(s,actorId,sh.id,'catalog'),canOrders:canShop(s,actorId,sh.id,'orders'),canCash:canShop(s,actorId,sh.id,'cash'),canDispatch:canShop(s,actorId,sh.id,'dispatch')})),
   sections:Object.values(s.sections).filter(x=>admin||shopIds.includes(x.shopId)||!x.archived),products:Object.values(s.products).filter(x=>admin||shopIds.includes(x.shopId)||!x.archived),promotions:Object.values(s.promotions).filter(x=>admin||shopIds.includes(x.shopId)||x.active),applications:apps,team,courierLinks,
   availability:s.availability[actorId]||{available:false,public:false},orders:ownOrders.map(o=>({...o,paid:paidNet(s,o.id)})),tasks,bids,payments,
   taskPayments:Object.values(s.taskPayments).filter(p=>admin||p.actorId===actorId||s.tasks[p.taskId]?.customerId===actorId),ledger,
   settlements:Object.values(s.settlements).filter(x=>admin||parties.has(x.from)||parties.has(x.to)),shifts:Object.values(s.shifts).filter(x=>admin||x.actorId===actorId||s.shops[x.shopId]?.ownerId===actorId).map(x=>({...x,expected:expectedCash(s,x.id)})),
-  events:s.events.filter(e=>admin||e.actorId===actorId).slice(-100),locations:s.locations,
+  events:s.events.filter(e=>admin||e.actorId===actorId).slice(-100),customerCredit:s.customerCredits?.[actorId]||0,locations:s.locations,
   people:Object.values(s.users).filter(u=>admin||relatedUsers.has(u.id)).map(u=>({id:u.id,name:u.name})),updatedAt:s.updatedAt};
 }
 export function rolesFor(s,id){return ['customer',...['merchant','service_provider','courier','driver'].filter(r=>approved(s,id,r)),...(isAdmin(s,id)?['admin']:[])];}
