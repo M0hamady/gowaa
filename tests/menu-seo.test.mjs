@@ -2,9 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {eligibleMenus,menuLinks,menuImageUrl,renderMenuItem} from '../src/menu-render.mjs';
-import menu from '../api/menu.mjs';
+import menu from '../src/legacy-menu.mjs';
 import sitemap from '../api/sitemap.mjs';
-
 const data=JSON.parse(readFileSync(new URL('../public/data/market-directory.json',import.meta.url)));
 const places=JSON.parse(readFileSync(new URL('../public/data/places.json',import.meta.url)));
 const item=data.items[0],place=places.find(p=>p.id===item.placeId);
@@ -41,7 +40,7 @@ test('reviewed local menu page images and undated before-tax prices remain factu
  assert.equal(schema['@graph'][0].image.url,'https://jowwa-kayan.vercel.app/menus/voya/page-2.png');assert.equal(schema['@graph'][0].offers,undefined);
  const unknown=renderMenuItem({...v,price:null},place);assert.ok(unknown.includes('اسأل المحل عن السعر'));assert.ok(!unknown.includes('١٣٥ ج.م'));
 });
-test('live handlers honor archived overrides, fail closed on source-read errors, and expose no-index for missing menus',async()=>{
+test('renderers behind member access honor archived overrides and fail closed on source-read errors',async()=>{
  const previousFetch=globalThis.fetch,previousUrl=process.env.NEXT_PUBLIC_SUPABASE_URL,previousKey=process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
  process.env.NEXT_PUBLIC_SUPABASE_URL='https://menu-test.supabase.co';process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY='public-test';let archived=false,failed=false;
  globalThis.fetch=async input=>{const url=new URL(typeof input==='string'?input:input.url);if(url.pathname.endsWith('/site_content'))return failed?new Response('{"message":"unavailable"}',{status:503,headers:{'Content-Type':'application/json'}}):new Response(JSON.stringify(archived?[{kind:'places',id:item.placeId,archived:true}]:[]),{headers:{'Content-Type':'application/json'}});return new Response('[]',{headers:{'Content-Type':'application/json'}});};
