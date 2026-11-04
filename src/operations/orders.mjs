@@ -7,6 +7,27 @@ export function reserve(s,o){
 }
 export function releaseInventory(s,o){if(!o.inventoryReserved||o.inventoryReleased)return;for(const l of o.lines){if(l.custom)continue;const p=s.products[l.productId];if(p?.stock!==null&&p){p.stock+=l.quantity;bump(p);}}o.inventoryReleased=true;}
 function releasePromo(s,o){if(!o.promo||o.promoReleased)return;const p=s.promotions[o.promo.id];if(p){p.used--;p.spent-=o.promo.reduction;bump(p);}o.promoReleased=true;}
+function reservePlatformBenefits(s,o,at){
+ if(!o.platformBenefits?.length)return;s.benefitUses??={};s.customerCredits??={};
+ for(const benefit of o.platformBenefits){const rule=s.platformBenefits?.[benefit.id];ok(rule&&rule.enabled&&rule.version===benefit.ruleVersion,'BENEFIT','عرض المنصة اتغير؛ راجع الطلب.',409);ok(rule.used<rule.maxUses&&rule.spentPiastres+benefit.amountPiastres<=rule.budgetPiastres,'BENEFIT','ميزانية أو عدد استخدامات العرض خلص.');
+  const id=nextId(s,'benefit-use');s.benefitUses[id]={id,benefitId:rule.id,customerId:o.customerId,orderId:o.id,kind:benefit.kind,amount:benefit.amountPiastres,status:'reserved',at,released:false,finalized:false};rule.used++;rule.spentPiastres+=benefit.amountPiastres;bump(rule);
+ }
+ o.platformBenefitsReserved=true;
+}
+export function releasePlatformBenefits(s,o){
+ if(!o.platformBenefitsReserved||o.platformBenefitsReleased||o.platformBenefitsFinalized)return;
+ for(const use of Object.values(s.benefitUses||{}).filter(x=>x.orderId===o.id&&!x.released&&!x.finalized)){const rule=s.platformBenefits?.[use.benefitId];if(rule){rule.used=Math.max(0,rule.used-1);rule.spentPiastres=Math.max(0,rule.spentPiastres-use.amount);bump(rule);}use.released=true;use.status='released';}
+ o.platformBenefitsReleased=true;
+}
+export function finalizePlatformBenefits(s,o,actorId,at){
+ if(o.platformBenefitsFinalized||o.status!=='completed'||paidNet(s,o.id)<o.total)return false;
+ for(const use of Object.values(s.benefitUses||{}).filter(x=>x.orderId===o.id&&!x.released&&!x.finalized)){
+  if(use.kind==='discount')postDebt(s,{from:'platform:jowwa',to:'shop:'+o.shopId,amount:use.amount,kind:'platform_discount_funding',ref:use.id,actorId,at});
+  else if(use.kind==='cashback'){s.customerCredits[o.customerId]=(s.customerCredits[o.customerId]||0)+use.amount;postDebt(s,{from:'platform:jowwa',to:'customer:'+o.customerId,amount:use.amount,kind:'cashback_earned',ref:use.id,actorId,at});}
+  use.finalized=true;use.status='finalized';
+ }
+ o.platformBenefitsFinalized=true;return true;
+}
 export function collect(c,b){
  const{s,actorId:a,at}=c,o=s.orders[key(b.orderId)];ok(o,'NOT_FOUND','الطلب غير موجود.',404);ok(['accepted','preparing','ready','completed'].includes(o.status),'STATE','الطلب لازم يتقبل قبل تسجيل الدفع.');
  ok(b.confirmed===true,'CONFIRM','أكد إن المبلغ اتستلم فعلًا.');const amount=int(b.amount,1,100000000);ok(['cash','card','transfer','other'].includes(b.method),'METHOD','حدد وسيلة التحصيل.');
@@ -18,18 +39,19 @@ export function collect(c,b){
  ok(payment.tendered>=amount,'CASH','المبلغ المستلم أقل من قيمة التحصيل.');payment.change=payment.tendered-amount;s.payments[id]=payment;
  if(isCourier)postDebt(s,{from:holder,to:'shop:'+o.shopId,amount,kind:'customer_collection',ref:id,actorId:a,at});
  else if(b.method==='cash')addCash(s,a,o.shopId,amount,'sale',id,at);
- bump(o);return {id,message:'اتسجل المبلغ المستلم. ده تسجيل فقط مش تنفيذ دفع إلكتروني.'};
+ if(o.status==='completed')finalizePlatformBenefits(s,o,a,at);bump(o);return {id,message:'اتسجل المبلغ المستلم. ده تسجيل فقط مش تنفيذ دفع إلكتروني.'};
 }
 function create(c,b,{pos=false}={}){
  const{s,actorId:a,now,at}=c,shop=s.shops[key(b.shopId)];ok(shop&&!shop.archived&&shop.accepting,'CLOSED','المحل مش بيستقبل طلبات جديدة دلوقتي.');
  const fulfillment=pos?(b.fulfillment||'counter'):b.fulfillment;ok(['counter','pickup','delivery'].includes(fulfillment),'FULFILLMENT','اختار طريقة الاستلام.');
  if(pos)requireShop(s,a,shop.id,'cash');else ok(fulfillment!=='counter','FORBIDDEN','بيع الكاشير من حساب موظف المحل فقط.',403);
- const q=quote(s,shop.id,b.lines,{promoId:b.promoId||null,deliveryFee:fulfillment==='delivery'&&shop.deliveryPolicy==='customer'?shop.suggestedFee:0,fulfillment,now});
+ const customerId=pos?(b.customerId||null):a;ok(!customerId||s.users[customerId],'CUSTOMER','العميل غير موجود.');
+ const q=quote(s,shop.id,b.lines,{promoId:b.promoId||null,benefitCode:pos?'':b.benefitCode||'',customerId:pos?null:customerId,deliveryFee:fulfillment==='delivery'&&shop.deliveryPolicy==='customer'?shop.suggestedFee:0,fulfillment,now});
  ok(b.expectedTotal===q.total,'PRICE_CHANGED','الإجمالي اتغير؛ راجع السلة قبل التأكيد.',409);
  if(fulfillment==='delivery')ok(s.locations[b.destinationId],'ADDRESS','حدد عنوان التسليم.');
- const id=nextId(s,'order');const customerId=pos?(b.customerId||null):a;ok(!customerId||s.users[customerId],'CUSTOMER','العميل غير موجود.');
+ const id=nextId(s,'order');
  const o={id,queue:++s.nextQueue,shopId:shop.id,customerId,customerName:customerId?s.users[customerId].name:text(b.customerName||'عميل الكاشير',2,80),fulfillment,status:'pending',...q,destinationId:fulfillment==='delivery'?b.destinationId:null,note:text(b.note||'',0,500),createdAt:at,version:1,inventoryReserved:false,taskId:null,promoReleased:false,deliveryPayer:shop.deliveryPolicy,prepMinutes:shop.prepMinutes};
- if(q.promo){const p=s.promotions[q.promo.id];p.used++;p.spent+=q.promo.reduction;bump(p);}s.orders[id]=o;return o;
+ if(q.promo){const p=s.promotions[q.promo.id];p.used++;p.spent+=q.promo.reduction;bump(p);}s.orders[id]=o;reservePlatformBenefits(s,o,at);return o;
 }
 export function orderCommand(c){const{s,actorId:a,body:b,at}=c;
  switch(c.type){
@@ -38,15 +60,15 @@ export function orderCommand(c){const{s,actorId:a,body:b,at}=c;
   const o=s.orders[key(b.id)];ok(o,'NOT_FOUND','الطلب غير موجود.',404);checkVersion(o,b.version);requireShop(s,a,o.shopId,'orders');
   const allowed={pending:['accepted','rejected'],accepted:['preparing','ready','cancelled'],preparing:['ready','cancelled'],ready:['completed','cancelled']};ok(allowed[o.status]?.includes(b.state),'STATE','الخطوة دي مش مناسبة لحالة الطلب.');
   if(b.state==='accepted'){reserve(s,o);o.prepMinutes=int(b.prepMinutes??s.shops[o.shopId].prepMinutes,1,240);o.readyEstimate=new Date(c.now+o.prepMinutes*60000).toISOString();}
-  if(b.state==='completed')ok(o.fulfillment!=='delivery','DELIVERY','طلبات التوصيل تتقفل بتأكيد التسليم، مش من زر الكاشير.');
+  if(b.state==='completed'){ok(o.fulfillment!=='delivery','DELIVERY','طلبات التوصيل تتقفل بتأكيد التسليم، مش من زر الكاشير.');}
   if(['rejected','cancelled'].includes(b.state)){
    const task=o.taskId?s.tasks[o.taskId]:null;ok(!task||['open','assigned','at_pickup','cancelled'].includes(task.status),'CUSTODY','المندوب استلم الطلب؛ افتح مشكلة تسليم بدل إلغائه.');
-   o.cancelReason=text(b.reason,3,300);if(['pending','accepted'].includes(o.status)){releaseInventory(s,o);releasePromo(s,o);}else o.wasteNote=text(b.wasteReason,3,300);
+   o.cancelReason=text(b.reason,3,300);if(['pending','accepted'].includes(o.status)){releaseInventory(s,o);releasePromo(s,o);}else o.wasteNote=text(b.wasteReason,3,300);releasePlatformBenefits(s,o);
    if(task&&task.status!=='cancelled'){task.status='cancelled';task.cancelReason=o.cancelReason;bump(task);delete s.positions[task.id];}
   }
-  o.status=b.state;o.updatedAt=at;bump(o);return {id:o.id,message:'حالة الطلب اتحدثت.'};
+  o.status=b.state;o.updatedAt=at;if(b.state==='completed')finalizePlatformBenefits(s,o,a,at);bump(o);return {id:o.id,message:'حالة الطلب اتحدثت.'};
  }
- case 'order.cancel-request':{const o=s.orders[key(b.id)];checkVersion(o,b.version);ok(o.customerId===a,'FORBIDDEN','الطلب مش تابع لحسابك.',403);ok(['pending','accepted','preparing','ready'].includes(o.status),'STATE','الطلب مش قابل لطلب الإلغاء.');if(o.status==='pending'){o.status='cancelled';releasePromo(s,o);}else o.cancelRequested=text(b.reason,3,300);bump(o);return {id:o.id,message:o.status==='cancelled'?'الطلب اتلغى.':'طلب الإلغاء اتبعت للمحل، منتظرين الرد.'};}
+ case 'order.cancel-request':{const o=s.orders[key(b.id)];checkVersion(o,b.version);ok(o.customerId===a,'FORBIDDEN','الطلب مش تابع لحسابك.',403);ok(['pending','accepted','preparing','ready'].includes(o.status),'STATE','الطلب مش قابل لطلب الإلغاء.');if(o.status==='pending'){o.status='cancelled';releasePromo(s,o);releasePlatformBenefits(s,o);}else o.cancelRequested=text(b.reason,3,300);bump(o);return {id:o.id,message:o.status==='cancelled'?'الطلب اتلغى.':'طلب الإلغاء اتبعت للمحل، منتظرين الرد.'};}
  case 'payment.collect':{const o=s.orders[key(b.orderId)];checkVersion(o,b.version);return collect(c,b);}
  case 'payment.refund':{
   const o=s.orders[key(b.orderId)];checkVersion(o,b.version);ok(b.confirmed===true,'CONFIRM','أكد إن المبلغ اترجع فعلًا.');const amount=int(b.amount,1);ok(amount<=paidNet(s,o.id),'REFUND','المبلغ أكبر من صافي اللي اتحصّل.');
