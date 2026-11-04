@@ -1,4 +1,5 @@
 import {requireThat as ok,int,money,text,key,nextId,quote,requireShop,canShop,isAdmin,checkVersion,bump,paidNet,postDebt,ownsParty,debtBalance,openShift,addCash,expectedCash} from './core.mjs';
+import {applyFeeRules} from './dynamic-fees.mjs';
 export function reserve(s,o){
  const quantities=new Map();for(const l of o.lines)if(!l.custom)quantities.set(l.productId,(quantities.get(l.productId)||0)+l.quantity);
  for(const[id,n]of quantities){const p=s.products[id];ok(p&&!p.archived&&p.available,'STOCK','صنف اتوقف قبل قبول الطلب.');ok(p.stock===null||p.stock>=n,'STOCK','المخزون مش كفاية.');}
@@ -18,6 +19,16 @@ export function releasePlatformBenefits(s,o){
  if(!o.platformBenefitsReserved||o.platformBenefitsReleased||o.platformBenefitsFinalized)return;
  for(const use of Object.values(s.benefitUses||{}).filter(x=>x.orderId===o.id&&!x.released&&!x.finalized)){const rule=s.platformBenefits?.[use.benefitId];if(rule){rule.used=Math.max(0,rule.used-1);rule.spentPiastres=Math.max(0,rule.spentPiastres-use.amount);bump(rule);}use.released=true;use.status='released';}
  o.platformBenefitsReleased=true;
+}
+export function finalizeOrderFees(s,o,actorId,at){
+ if(o.platformFeesFinalized||o.status!=='completed'||paidNet(s,o.id)<o.total)return false;
+ for(const fee of o.platformFees||[]){if(!fee.amountPiastres||fee.bearer==='platform')continue;postDebt(s,{from:'shop:'+o.shopId,to:'platform:jowwa',amount:fee.amountPiastres,kind:fee.bearer==='customer'?'customer_platform_fee':'provider_platform_fee',ref:o.id+':'+fee.id+(fee.appliedTo?':'+fee.appliedTo:''),actorId,at});}
+ o.platformFeesFinalized=true;return true;
+}
+export function onlinePaymentFeeQuote(s,o,amountPiastres){
+ money(amountPiastres);const shop=s.shops[o.shopId];ok(shop,'SHOP','النشاط غير موجود.',404);
+ const result=applyFeeRules(Object.values(s.settings.feeRules||{}),{trigger:'online_payment',shopId:o.shopId,category:shop.category,goods:o.goods,deliveryFee:o.deliveryFee,orderTotal:o.total,paymentAmount:amountPiastres,lines:o.lines});
+ return {fees:result.fees,customerChargePiastres:amountPiastres+result.totals.customer,providerDeductionPiastres:result.totals.provider,platformAbsorbedPiastres:result.totals.platform};
 }
 export function finalizePlatformBenefits(s,o,actorId,at){
  if(o.platformBenefitsFinalized||o.status!=='completed'||paidNet(s,o.id)<o.total)return false;
@@ -39,7 +50,7 @@ export function collect(c,b){
  ok(payment.tendered>=amount,'CASH','المبلغ المستلم أقل من قيمة التحصيل.');payment.change=payment.tendered-amount;s.payments[id]=payment;
  if(isCourier)postDebt(s,{from:holder,to:'shop:'+o.shopId,amount,kind:'customer_collection',ref:id,actorId:a,at});
  else if(b.method==='cash')addCash(s,a,o.shopId,amount,'sale',id,at);
- if(o.status==='completed')finalizePlatformBenefits(s,o,a,at);bump(o);return {id,message:'اتسجل المبلغ المستلم. ده تسجيل فقط مش تنفيذ دفع إلكتروني.'};
+ if(o.status==='completed'){finalizePlatformBenefits(s,o,a,at);finalizeOrderFees(s,o,a,at);}bump(o);return {id,message:'اتسجل المبلغ المستلم. ده تسجيل فقط مش تنفيذ دفع إلكتروني.'};
 }
 function create(c,b,{pos=false}={}){
  const{s,actorId:a,now,at}=c,shop=s.shops[key(b.shopId)];ok(shop&&!shop.archived&&shop.accepting,'CLOSED','المحل مش بيستقبل طلبات جديدة دلوقتي.');
@@ -66,7 +77,7 @@ export function orderCommand(c){const{s,actorId:a,body:b,at}=c;
    o.cancelReason=text(b.reason,3,300);if(['pending','accepted'].includes(o.status)){releaseInventory(s,o);releasePromo(s,o);}else o.wasteNote=text(b.wasteReason,3,300);releasePlatformBenefits(s,o);
    if(task&&task.status!=='cancelled'){task.status='cancelled';task.cancelReason=o.cancelReason;bump(task);delete s.positions[task.id];}
   }
-  o.status=b.state;o.updatedAt=at;if(b.state==='completed')finalizePlatformBenefits(s,o,a,at);bump(o);return {id:o.id,message:'حالة الطلب اتحدثت.'};
+  o.status=b.state;o.updatedAt=at;if(b.state==='completed'){finalizePlatformBenefits(s,o,a,at);finalizeOrderFees(s,o,a,at);}bump(o);return {id:o.id,message:'حالة الطلب اتحدثت.'};
  }
  case 'order.cancel-request':{const o=s.orders[key(b.id)];checkVersion(o,b.version);ok(o.customerId===a,'FORBIDDEN','الطلب مش تابع لحسابك.',403);ok(['pending','accepted','preparing','ready'].includes(o.status),'STATE','الطلب مش قابل لطلب الإلغاء.');if(o.status==='pending'){o.status='cancelled';releasePromo(s,o);releasePlatformBenefits(s,o);}else o.cancelRequested=text(b.reason,3,300);bump(o);return {id:o.id,message:o.status==='cancelled'?'الطلب اتلغى.':'طلب الإلغاء اتبعت للمحل، منتظرين الرد.'};}
  case 'payment.collect':{const o=s.orders[key(b.orderId)];checkVersion(o,b.version);return collect(c,b);}
