@@ -117,7 +117,7 @@ function followLocation(){if(watchId!==null){navigator.geolocation.clearWatch(wa
 function sources(){dialog(`<h2>خريطة واحدة. مصادر واضحة.</h2><div class="stat-row"><div><b>624</b><span>رقم عمارة من المخططات</span></div><div><b>${data.pois.length}</b><span>خدمات ومعالم محددة الموقع</span></div></div><h3>التغطية الحالية</h3><p>${data.coverage.scope}</p><p>${data.coverage.alignment}</p><p>${data.coverage.routing}</p><h3>المصادر</h3>${data.sources.map(s=>`<div class="source-row"><a href="${escape(s.url)}" target="_blank" rel="noreferrer">${escape(s.title)} ↗</a></div>`).join('')}<h3>دليل الباصات</h3><p><a href="/buses">مراجعة خطوط العباسية والجامعة والحجاز وباقي الخدمات ومصادرها ←</a></p><h3>مصدر باص الجامعة</h3><p>الصورتان منشورتان في 23 مارس 2026. دليل الإدارة بتاريخ 3 نوفمبر 2026 يحيل إليهما. لا نعتبر تاريخ الإحالة تاريخ إصدار جدول جديد، ولا نعرض رسائل الركاب كتتبع حي.</p><h3>كيف نحسب الوقت؟</h3><p>تقدير الحركة: مشي 4.5 كم/س، دراجة 12 كم/س، عربية 20 كم/س، مع نطاق زيادة 30%. هذه افتراضات تخطيطية، بلا زحام حي أو انتظار سائق أو بوابة. الطرق الداخلية تعامل في الاتجاهين طبقًا لوصفك، والطرق الخارجية تحتفظ بالاتجاه المسجل.</p><h3>الخصوصية والتشغيل</h3><p>الموقع بإذنك ويظل في المتصفح؛ المشاوير والمسودات تحفظ محليًا. خلفية OpenStreetMap والخط قد تتصل بالإنترنت. لا يوجد إرسال طلبات أو دفع أو سائقون متصلون في هذه النسخة.</p><a href="data/map.json" download="jowwa-map-data.json">تحميل بيانات الخريطة ↧</a> • <a href="data/bus.json" download="jowwa-bus-data.json">تحميل بيانات الباص ↧</a><p>البيانات المشتقة من OpenStreetMap تحت ODbL؛ مخططات الترقيم مصدرها الملفات التي قدمتها. آخر تجميع: 3 نوفمبر 2026.</p>`);}
 function wire(){initSearch();$('route-button').onclick=route;$('swap').onclick=()=>{[from,to]=[to,from];$('from').value=from?.name||'';$('to').value=to?.name||'';invalidate();drawEndpoints();if(from&&to)route();};document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>setMode(b.dataset.mode,true));for(const w of ['from','to'])$('pick-'+w).onclick=()=>startPick(w);$('use-location').onclick=locate;$('map-location').onclick=locate;$('fit-all').onclick=fitAll;$('zoom-in').onclick=()=>map.zoomIn();$('zoom-out').onclick=()=>map.zoomOut();document.querySelectorAll('[data-district]').forEach(b=>b.onclick=()=>{const d=data.districts.find(d=>d.id===b.dataset.district);setSheet('collapsed');fitView(d.polygon,17);});$('layers-button').onclick=()=>$('layers-panel').hidden=!$('layers-panel').hidden;$('layer-buildings').onchange=refreshBuildings;for(const [id,layer] of [['services',serviceLayer],['tiles',tiles],['roads',roadLayer]])$('layer-'+id).onchange=e=>e.target.checked?map.addLayer(layer):map.removeLayer(layer);$('saved-button').onclick=showSaved;$('sources-button').onclick=sources;$('help-map').onclick=sources;$('bus-date').value=cairoParts().iso;$('bus-date').onchange=renderBus;$('day-type').onchange=renderBus;document.querySelectorAll('[data-direction]').forEach(b=>b.onclick=()=>{busDirection=b.dataset.direction;document.querySelectorAll('[data-direction]').forEach(x=>x.classList.toggle('active',x===b));renderBus();});$('example-internal').onclick=()=>{setEndpoint('from',objects.get('yasmin-318'));setEndpoint('to',objects.get('poi-1021898717'));setMode('walk');route();};$('example-cross').onclick=()=>{setEndpoint('from',objects.get('narges-182'));setEndpoint('to',objects.get('yasmin-1'));setMode('car');route();};window.addEventListener('pagehide',()=>{if(watchId!==null)navigator.geolocation.clearWatch(watchId);});}
 function setupHome(directory=[]){
- const root=$('home-screen'),back=$('home-back'),rail=root.querySelector('.home-shortcut-rail'),searchInput=$('home-search');
+ const root=$('home-screen'),back=$('home-back'),rail=root.querySelector('.home-shortcut-rail');
  const journey=mountWelcomeJourney({
   root,stage:$('home-journey-stage'),
   places:[...objects.values()],
@@ -134,8 +134,7 @@ function setupHome(directory=[]){
    $('bus-line').value=id;tab('bus');renderBus();document.querySelector('.bus-schedule-drawer').open=true;
   },
   onAsk:query=>{assistant?.ask(query);},
-  notify:toast,
-  onGoHome:()=>{searchInput.value='';}
+  notify:toast
  });
  const open=action=>journey.open(action);
  for(const button of rail.querySelectorAll('[data-home-action]')){
@@ -147,11 +146,6 @@ function setupHome(directory=[]){
   button.onclick=()=>rail.scrollBy({left:(button.dataset.railShift==='next'?-1:1)*Math.max(rail.clientWidth*.75,240),behavior:'smooth'});
  }
  document.querySelector('.tabs').before(back);
- $('home-search-form').onsubmit=e=>{
-  e.preventDefault();const question=searchInput.value.trim();
-  if(!question){searchInput.focus();toast('اكتب محتاج إيه أو اختار من الكروت.');return;}
-  journey.fromSearch(question);
- };
  const showHome=()=>{
   document.body.classList.add('home-mode');root.hidden=false;back.hidden=true;journey.reset();setSheet('expanded');
   requestAnimationFrame(()=>map?.invalidateSize(false));
