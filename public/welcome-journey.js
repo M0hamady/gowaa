@@ -9,6 +9,7 @@ export const welcomeActions=[
  {id:'food',title:'أكل أو شرب',hint:'مطاعم وكافيهات',glyph:'store'},
  {id:'places',title:'أماكن عامة',hint:'كل الأماكن',glyph:'map'},
  {id:'services',title:'خدمات',hint:'شوف مين يساعدك',glyph:'grid'},
+ {id:'banks',title:'البنوك والصرافات',hint:'بنوك وماكينات ATM',glyph:'bank'},
  {id:'market',title:'عايز أشتري',hint:'سوق جوه',glyph:'bag'},
  {id:'store',title:'افتح متجرك',hint:'ابدأ نشاطك',glyph:'building'},
  {id:'add-service',title:'أضيف خدمة',hint:'اعرض خدمتك',glyph:'plus'},
@@ -219,9 +220,10 @@ export function mountWelcomeJourney({root,stage,places=[],directory=[],busRoutes
  function open(branch,{query='',from=null,to=null}={}){
   if(branch==='market'){location.assign('/market');return;}
   if(branch==='round'){onRound();return;}
-  state={branch,step:'',from,to,mode:'walk',kind:'',filter:'',query:query||'',selected:null,store:{name:'',description:'',district:'yasmin'}};history=[];
+  const bankShortcut=branch==='banks';
+  state={branch:bankShortcut?'services':branch,step:'',from,to,mode:'walk',kind:'',filter:bankShortcut?'بنوك':'',query:query||'',selected:null,store:{name:'',description:'',district:'yasmin'}};history=[];
   if(branch==='navigate')state.step=from&&to?'mode':from?'destination':'origin';
-  else if(['food','places','services'].includes(branch))state.step=query?'results':'category';
+  else if(['food','places','services'].includes(state.branch))state.step=bankShortcut||query?'results':'category';
   else if(branch==='store')state.step='store-name';
   else if(branch==='add-product'||branch==='add-service')state.step='listing';
   else if(branch==='bus')state.step='bus';
