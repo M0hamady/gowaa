@@ -113,5 +113,5 @@ export function mountAssistant({root,onPlace,onBus,onAskOrigin,onPrepareRound,on
   finally{clearTimeout(timeout);if(current===requestId){pending=false;controller=null;}}
  }
  inputView();
- return {destroy(){requestId++;controller?.abort();root.replaceChildren();},reset,getState(){return {step,pending,hasContext:!!context};}};
+ return {destroy(){requestId++;controller?.abort();root.replaceChildren();},reset,ask(question){drawer.open=true;return ask(String(question||'').trim());},getState(){return {step,pending,hasContext:!!context};}};
 }
