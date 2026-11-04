@@ -17,9 +17,9 @@ test('automatic cashback and coupon discount are resolved from platform budget w
 });
 test('coupon usage reserves budget and cancellation releases it for reuse',()=>{
  const h=harness(),{q,body}=oneMeal(h,{benefitCode:'JOWWA10'}),id=h.run('customer','order.create',body).id;
- const rule=h.s.platformBenefits['benefit-jowwa10'];assert.equal(rule.used,1);assert.equal(rule.spentPiastres,1000);assert.equal(Object.values(h.s.benefitUses).filter(x=>x.orderId===id&&!x.released).length,1);
+ assert.equal(h.s.platformBenefits['benefit-jowwa10'].used,1);assert.equal(h.s.platformBenefits['benefit-jowwa10'].spentPiastres,1000);assert.equal(Object.values(h.s.benefitUses).filter(x=>x.orderId===id&&!x.released).length,1);
  h.run('customer','order.cancel-request',{id,version:h.s.orders[id].version});
- assert.equal(rule.used,0);assert.equal(rule.spentPiastres,0);assert.equal(Object.values(h.s.benefitUses).find(x=>x.orderId===id).status,'released');
+ assert.equal(h.s.platformBenefits['benefit-jowwa10'].used,0);assert.equal(h.s.platformBenefits['benefit-jowwa10'].spentPiastres,0);assert.equal(Object.values(h.s.benefitUses).find(x=>x.orderId===id).status,'released');
  assert.equal(q.total,11000);
 });
 test('platform-funded discount becomes an explicit amount platform owes provider only after completed paid order',()=>{
@@ -34,6 +34,7 @@ test('platform-funded discount becomes an explicit amount platform owes provider
 test('cashback is credited only after order is completed and fully paid',()=>{
  const h=harness(),{q,body}=oneMeal(h),id=h.run('customer','order.create',body).id;assert.equal(q.cashback,600);
  h.run('owner','order.transition',{id,version:h.s.orders[id].version,state:'accepted'});
+ h.run('owner','order.transition',{id,version:h.s.orders[id].version,state:'ready'});
  h.run('owner','order.transition',{id,version:h.s.orders[id].version,state:'completed'});
  assert.equal(project(h.s,'customer').customerCredit,0);
  h.run('owner','payment.collect',{orderId:id,version:h.s.orders[id].version,amount:12000,method:'card',confirmed:true});
