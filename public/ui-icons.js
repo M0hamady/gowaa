@@ -19,6 +19,7 @@ const paths={
  store:'<path d="M4 10v11h16V10M3 3h18l1 7a3 3 0 0 1-5 2 3 3 0 0 1-5 0 3 3 0 0 1-5 0 3 3 0 0 1-5-2ZM9 21v-7h6v7"/>',
  grid:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
  building:'<path d="M4 21V3h12v18m0-12h4v12M2 21h20M8 7h4M8 11h4M8 15h4m-2 6v-3"/>',
+ bank:'<path d="m2 9 10-6 10 6M3 9h18M5 10v8m5-8v8m4-8v8m5-8v8M3 18h18M2 21h20"/>',
  bus:'<rect x="4" y="3" width="16" height="17" rx="3"/><path d="M4 12h16M7 20v2m10-2v2M8 16h.01M16 16h.01M12 3v9"/>',
  walk:'<circle cx="13" cy="4" r="2"/><path d="m7 11 4-3 4 1 3 4M10 10l-1 6-4 5m6-7 5 4 1 4"/>',
  bike:'<circle cx="5" cy="17" r="4"/><circle cx="19" cy="17" r="4"/><path d="m5 17 5-10h4m-4 2 9 8-4-13h3M8 5h4"/>',
