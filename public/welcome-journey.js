@@ -9,6 +9,7 @@ export const welcomeActions=[
  {id:'food',title:'أكل أو شرب',hint:'مطاعم وكافيهات',glyph:'store'},
  {id:'places',title:'أماكن عامة',hint:'كل الأماكن',glyph:'map'},
  {id:'services',title:'خدمات',hint:'شوف مين يساعدك',glyph:'grid'},
+ {id:'banks',title:'البنوك والصرافات',hint:'بنوك وماكينات ATM',glyph:'bank'},
  {id:'market',title:'عايز أشتري',hint:'سوق جوه',glyph:'bag'},
  {id:'store',title:'افتح متجرك',hint:'ابدأ نشاطك',glyph:'building'},
  {id:'add-service',title:'أضيف خدمة',hint:'اعرض خدمتك',glyph:'plus'},
@@ -44,21 +45,47 @@ export function providerContact(record){
 }
 export function matchesNeed(record,branch,filter='',search=''){
  if(!record||typeof record.id!=='string'||!record.name)return false;
- const category=normalizeEgyptian(record.category),full=normalizeEgyptian([record.name,record.category,record.address,record.description,...(record.keywords||[])].join(' '));
- const food=/(?:مطعم|مطاعم|كافيه|قهوه|مشروب|حلويات|مخبز|وجبات|بقاله|سوبرماركت)/.test(category);
+ const category=normalizeEgyptian(record.category),name=normalizeEgyptian(record.name),title=name+' '+category;
+ const full=normalizeEgyptian([record.name,record.category,record.address,record.description,...(record.aliases||[]),...(record.keywords||[])].join(' '));
+ const food=/(?:مطعم|مطاعم|كافيه|قهوه|مشروب|حلويات|مخبز|وجبات|بقاله|سوبرماركت|اكل بيتي|مطبخ منزلي|عصاير)/.test(category);
  if(branch==='food'&&!food)return false;
  const group=normalizeEgyptian(filter);
- if(group&&group!=='الكل'&&group!=='كل الخدمات'&&!category.includes(group)&&!full.includes(group))return false;
+ const rules={
+  'بنزين وغاز':/(?:بنزين|وقود|غاز|محطه تموين|مرافق وغاز)/,
+  'بنوك':/(?:بنك|بنوك|صراف|atm)/,
+  'حدائق':/(?:حدائق|مساحات خضراء|حديقه|منتزه)/,
+  'مواصلات':/(?:مواصلات|نقل|توصل|باصات|موقف)/,
+  'صنايعيه':/(?:صيانه|صنايعي|سباكه|كهرباء|نجاره|تشطيبات وخدمات)/,
+  'خدمات منزليه':/(?:خدمات منزليه|اكل بيتي|من المنزل|من البيت|غسيل سيارات متنقل|خياطه|مكوي)/,
+  'غسيل سيارات':/(?:غسيل سيارات|غسيل عربيات|تنظيف سيارات)/,
+  'اكل بيتي':/(?:اكل بيتي|اكل منزلي|مطبخ منزلي)/,
+  'حلويات':/(?:حلويات|كيك|تورت)/,
+  'ترزي':/(?:ترزي|تفصيل|خياطه)/,
+  'مكوي':/(?:مكوي|كي|دراي كلين|مغسله)/,
+  'سينما':/(?:سينما|دار عرض افلام)/,
+  'كارفور':/(?:كارفور|carrefour)/,
+  'بيع من المنزل':/(?:بيع من المنزل|بيع من البيت|منتجات منزليه|اكل بيتي|مطبخ منزلي)/,
+  'مولات':/(?:مول|تسوق|بلازا|مجمع تجاري)/,
+  'محطات غاز':/(?:غاز طبيعي|مرافق وغاز|محطات غاز)/,
+  'مكاتب وشركات':/(?:مكاتب|شركات)/
+ };
+ if(group&&group!=='الكل'&&group!=='كل الخدمات'){
+  const matched=Object.hasOwn(rules,group)?rules[group].test(title):category.includes(group)||title.includes(group);
+  if(!matched)return false;
+ }
  const terms=normalizeEgyptian(search).split(' ').filter(Boolean);
+ // Planned Carrefour/cinema mentions in an unrelated mall's notes aren't proof that the service exists.
+ if(terms.some(x=>x==='سينما')&&!/(?:سينما|دار عرض افلام)/.test(category))return false;
+ if(terms.some(x=>x==='كارفور')&&!/(?:كارفور|carrefour)/.test(name))return false;
  return terms.every(t=>full.includes(t));
 }
 const groups={
- food:[['','كل الأكل والشرب','store'],['مطاعم','مطاعم','store'],['كافيه','قهوة ومشروبات','heart'],['بقالة','بقالة','bag']],
- services:[['','كل الخدمات','grid'],['صيدليات','صيدليات وصحة','heart'],['مدارس','مدارس وتعليم','school'],['صيانة','صيانة البيت','building'],['اتصالات','اتصالات وإنترنت','phone'],['','خدمات تانية','grid']]
+ food:[['','كل الأكل والشرب','store'],['مطاعم','مطاعم','store'],['كافيه','قهوة ومشروبات','heart'],['اكل بيتي','أكل بيتي','heart'],['حلويات','حلويات من البيت','bag'],['بقاله','بقالة وسوبرماركت','bag']],
+ services:[['','كل الخدمات','grid'],['غسيل سيارات','غسيل سيارات للبيت','car'],['صنايعيه','صنايعية وصيانة','building'],['خدمات منزليه','خدمات من البيت','heart'],['ترزي','ترزي وتفصيل','bag'],['مكوي','مكوى ودراي كلين','layers'],['بنزين وغاز','بنزينات وغاز طبيعي','car'],['بنوك','بنوك وصرافات','building'],['مواصلات','تنقل ومواصلات','bus'],['صيدليات','صيدليات وصحة','heart'],['مدارس','مدارس وتعليم','school'],['اتصالات','اتصالات وإنترنت','phone'],['بيع من المنزل','بيع من المنزل','store'],['حلويات','حلويات','heart']]
 };
 function groupingOptions(places){
  const values=[...new Set(places.map(p=>p.category).filter(Boolean))];
- const preferred=['مطاعم','كافيه ومطعم','صيدليات','تسوق','جامعات','مدارس','حضانات','صراف آلي','اتصالات وإنترنت','أرقام الطوارئ'];
+ const preferred=['مطاعم','كافيه ومطعم','صيدليات','تسوق','حدائق ومساحات خضراء','بنزينات ومحطات وقود','مرافق وغاز','غسيل سيارات متنقل','مكاتب وشركات','جامعات','مدارس','حضانات','صراف آلي','اتصالات وإنترنت','أرقام الطوارئ'];
  return values.sort((a,b)=>preferred.indexOf(a)<0?1:preferred.indexOf(b)<0?-1:preferred.indexOf(a)-preferred.indexOf(b)).slice(0,20);
 }
 export function mountWelcomeJourney({root,stage,places=[],directory=[],busRoutes=[],onRoute,onSelectEndpoint,onPickMap,onRound,onBus,onAsk,notify=()=>{},onGoHome=()=>{}}){
@@ -95,7 +122,7 @@ export function mountWelcomeJourney({root,stage,places=[],directory=[],busRoutes
     +'<button type="button" class="journey-primary" data-finish>'+icon('navigation')+' ورّيني الطريق على الخريطة</button>'
     +'<p class="journey-hint">جوه بيحسب الطريق من بيانات الخريطة؛ مش هنقولك إن طريق متاح لو مفيش مسار موثوق.</p>';
   }else if(state.step==='category'){
-   const options=state.branch==='places'?groupingOptions(publicRows).map(name=>[name,name,'map']):groups[state.branch]||[];
+   const options=state.branch==='places'?[['','كل الأماكن','map'],['حدائق','حدائق ومتنزهات','heart'],['بنزين وغاز','بنزينات وغاز','car'],['بنوك','بنوك وماكينات صراف','building'],['مولات','مولات ومحلات','store'],['سينما','سينما','play'],['كارفور','كارفور','bag'],...groupingOptions(publicRows).filter(name=>!['تسوق','مرافق وغاز'].includes(name)).map(name=>[name,name,'map'])]:groups[state.branch]||[];
    html='<p class="journey-subline">اختار نوع واحد، وبعدها نورّيك الأماكن المنشورة فعلًا.</p>'
     +'<div class="journey-choice-grid">'+options.map(([value,label,glyph])=>'<button type="button" class="journey-choice" data-category-choice="'+esc(value)+'">'+icon(glyph)+'<strong>'+esc(label)+'</strong></button>').join('')+'</div>'
     +'<button type="button" class="journey-link" data-skip-category>أدور بالاسم بدل التصنيف</button>';
@@ -111,10 +138,11 @@ export function mountWelcomeJourney({root,stage,places=[],directory=[],busRoutes
     +(p.address?'<p class="journey-address">'+icon('map')+' '+esc(p.address)+'</p>':'')
     +(p.status?'<p class="journey-evidence">'+icon('info')+' '+esc(p.status)+'</p>':'')
     +(p.checkedAt?'<small>آخر مراجعة للمصدر: '+esc(p.checkedAt)+'</small>':'<small>تاريخ مراجعة المصدر غير محدد</small>')
+    +(Array.isArray(p.priceOffers)&&p.priceOffers.length?'<section class="journey-price-offers"><h4>الأسعار والاشتراكات المعلنة</h4><ul>'+p.priceOffers.filter(o=>o&&o.currency==='EGP'&&typeof o.label==='string'&&Number.isFinite(o.price)&&o.price>=0).slice(0,15).map(o=>'<li><span>'+esc(o.label)+'</span><strong>'+new Intl.NumberFormat('ar-EG',{maximumFractionDigits:2}).format(o.price)+' جنيه</strong></li>').join('')+'</ul><p>الأسعار مأخوذة من الإعلان؛ تأكد من سريانها وقت الحجز.</p></section>':'')
     +(contact.phone?'<a class="journey-primary" href="tel:'+esc(contact.phone)+'">'+icon('phone')+' اتصل واستفسر عن الطلب</a>':'')
     +(contact.whatsapp?'<a class="journey-secondary" target="_blank" rel="noopener noreferrer" href="https://wa.me/'+contact.whatsapp+'?text='+encodeURIComponent('أهلًا، وصلت لبياناتكم من جوه. ممكن أعرف تفاصيل الخدمة والتوفر والسعر الحالي؟')+'">'+icon('phone')+' اسأل على واتساب</a>':'')
     +'<a class="journey-secondary" href="'+esc(link)+'">'+icon('store')+' تفاصيل المكان والتواصل</a>'
-    +(map?.coordinate?'<button type="button" class="journey-secondary" data-route-to>'+icon('navigation')+' شوف الطريق للمكان</button>':'<p class="journey-hint">موقع الوصول على الخريطة لسه محتاج تأكيد.</p>')
+    +(map?.coordinate?'<button type="button" class="journey-secondary" data-route-to>'+icon('navigation')+' شوف الطريق للمكان</button>':publicLink(p.externalMapUrl)?'<a class="journey-secondary" href="'+esc(publicLink(p.externalMapUrl))+'" target="_blank" rel="noopener noreferrer">'+icon('map')+' افتح الموقع المشارَك في Google Maps</a>':'<p class="journey-hint">موقع الوصول على الخريطة لسه محتاج تأكيد.</p>')
     +(source?'<a class="journey-link" target="_blank" rel="noopener noreferrer" href="'+esc(source)+'">المصدر المنشور</a>':'')
     +'<p class="journey-hint">الاتصال أو واتساب للاستفسار فقط؛ مفيش طلب متأكد أو معاد محجوز قبل رد مقدم الخدمة.</p></div>';
   }else if(state.step==='bus'){
@@ -179,7 +207,7 @@ export function mountWelcomeJourney({root,stage,places=[],directory=[],busRoutes
    '<div class="journey-empty"><strong>لسه مش عندنا بيانات مؤكدة بالاختيار ده</strong><p>جرّب كلمة تانية أو افتح دليل الخدمات. مش هنضيف مكان أو رقم من عندنا.</p></div>';
   list.querySelectorAll('[data-provider]').forEach(button=>button.onclick=()=>{state.selected=publicRows.find(p=>p.id===button.dataset.provider);advance('detail');});
   const market=document.createElement('a');market.className='journey-secondary journey-market-more';
-  const query=state.query||state.filter;market.href='/market?'+(state.branch==='food'?'category=food':'view=directory')+(query?'&q='+encodeURIComponent(query):'');market.innerHTML=icon('bag')+' دور في السوق والدليل كمان';list.append(market);
+  const query=state.query||state.filter;market.href='/market?'+(state.branch==='food'?'category=food':'view=directory')+(query?'&q='+encodeURIComponent(query):'');market.innerHTML=icon('bag')+' دور في السوق والدليل كمان';list.append(market);if(!found.length&&['services','food'].includes(state.branch)){const add=document.createElement('a');add.className='journey-secondary';add.href='/market?add=service';add.innerHTML=icon('plus')+' بتقدم الخدمة دي؟ أضف نشاطك للمراجعة';list.append(add);}
  }
  function choosePlace(p){
   if(!p?.coordinate)return;
@@ -192,9 +220,10 @@ export function mountWelcomeJourney({root,stage,places=[],directory=[],busRoutes
  function open(branch,{query='',from=null,to=null}={}){
   if(branch==='market'){location.assign('/market');return;}
   if(branch==='round'){onRound();return;}
-  state={branch,step:'',from,to,mode:'walk',kind:'',filter:'',query:query||'',selected:null,store:{name:'',description:'',district:'yasmin'}};history=[];
+  const bankShortcut=branch==='banks';
+  state={branch:bankShortcut?'services':branch,step:'',from,to,mode:'walk',kind:'',filter:bankShortcut?'بنوك':'',query:query||'',selected:null,store:{name:'',description:'',district:'yasmin'}};history=[];
   if(branch==='navigate')state.step=from&&to?'mode':from?'destination':'origin';
-  else if(['food','places','services'].includes(branch))state.step=query?'results':'category';
+  else if(['food','places','services'].includes(state.branch))state.step=bankShortcut||query?'results':'category';
   else if(branch==='store')state.step='store-name';
   else if(branch==='add-product'||branch==='add-service')state.step='listing';
   else if(branch==='bus')state.step='bus';
@@ -215,11 +244,11 @@ export function mountWelcomeJourney({root,stage,places=[],directory=[],busRoutes
   if(intent==='navigate')return routeFromText(query)||open('navigate');
   if(intent==='shop'){
    const q=normalizeEgyptian(query);
-   if(/(?:صيدليه|صيدلي|سباك|سباكه|كهربائي|كهربا|صيانه|نجار|نجاره|حلاق|كوافير|طبيب|دكتور|خدمه)/.test(q))return open('services',{query:term||query});
-   if(/(?:اكل|جعان|جوعان|فطار|غدا|عشا|كشري|شاورما|بيتزا|برجر|سندوتش|قهوه|كافيه|كوفي|مطعم|مشروبات|عصير|شاي|كريب|حلويات)/.test(q))return open('food',{query:term||query});
+   if(/(?:صيدليه|صيدلي|سباك|سباكه|كهربائي|كهربا|صيانه|نجار|نجاره|حلاق|كوافير|طبيب|دكتور|خدمه|غسيل|بنزين|غاز طبيعي|بنوك|صراف|مكوي|ترزي|خياط|مواصلات|تنقل)/.test(q))return open('services',{query:term||query});
+   if(/(?:اكل|جعان|جوعان|فطار|غدا|عشا|كشري|شاورما|بيتزا|برجر|سندوتش|قهوه|كافيه|كوفي|مطعم|مشروبات|عصير|شاي|كريب|حلويات|اكل بيتي|مخبوزات)/.test(q))return open('food',{query:term||query});
    location.assign('/market?q='+encodeURIComponent(term||query));return;
   }
-  if(intent==='find')return open('places',{query:term||query});
+  if(intent==='find'||/(?:سينما|كارفور|حديقه|الحديقه الدوليه)/.test(normalizeEgyptian(query)))return open('places',{query:term||query});
   if(intent==='add-product')return open('add-product');
   if(intent==='add-service')return open('add-service');
   if(intent==='round')return onRound();
