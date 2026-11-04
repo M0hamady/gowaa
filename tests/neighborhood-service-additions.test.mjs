@@ -18,7 +18,7 @@ test('home removes only the extra colloquial input, keeping AI and service cards
  assert.doesNotMatch(html,/home-search-form|id="home-search"|قولنا بالبلدي/);
  assert.doesNotMatch(js,/home-search-form|searchInput=\$\('home-search'\)/);
  assert.match(html,/id="home-ai"/);
- assert.match(html,/id="home-shortcuts-title"|إيه اللي محتاجه دلوقتي\?/);
+ assert.match(html,/class="home-shortcuts-title"/);
  assert.match(html,/id="home-journey-stage"/);
 });
 
@@ -40,7 +40,7 @@ test('at-home wash service keeps exactly 5 user-advertised offers and published 
  assert.deepEqual(wash.priceOffers.map(p=>p.price),[250,300,450,200,100]);
  assert.deepEqual(wash.priceOffers.map(p=>p.visits),[3,4,6,1,1]);
  assert.equal(providerContact(wash).whatsapp,'');
- assert.match(renderPublishedPriceOffers(wash),/450/);
+ assert.match(renderPublishedPriceOffers(wash),/٤٥٠/);
  const html=renderPlace(wash,live);
  assert.match(html,/01116039386/);
  assert.match(html,/الأسعار والاشتراكات المعلنة/);
