@@ -11,7 +11,7 @@ export function seedState(now=Date.now()){
   'home-a':{id:'home-a',name:'عنوان تجربة أ — الياسمين',area:'الياسمين',coordinate:[31.626,29.931]},
   'home-b':{id:'home-b',name:'عنوان تجربة ب — النرجس',area:'النرجس',coordinate:[31.612,29.924]},
   'gate':{id:'gate',name:'نقطة ركوب تجريبية',area:'محيط كيان',coordinate:[31.631,29.937]}
- },applications:{},trials:{},shops:{},sections:{},products:{},team:{},courierLinks:{},availability:{},orders:{},tasks:{},bids:{},payments:{},taskPayments:{},ledger:[],settlements:{},shifts:{},cashEvents:[],stockEvents:[],promotions:{},platformBenefits:{
+ },applications:{},trials:{},shops:{},sections:{},products:{},team:{},courierLinks:{},availability:{},orders:{},tasks:{},bids:{},payments:{},onlinePayments:{},platformTransactions:[],taskPayments:{},ledger:[],settlements:{},shifts:{},cashEvents:[],stockEvents:[],promotions:{},platformBenefits:{
   'benefit-jowwa10':{id:'benefit-jowwa10',name:'كوبون جوه 10 جنيه',kind:'discount',type:'fixed',value:1000,scope:'global',scopeId:null,target:'goods',code:'JOWWA10',automatic:false,minimumPiastres:5000,capPiastres:1000,budgetPiastres:100000,maxUses:100,perCustomerMax:1,funder:'platform',enabled:true,startsAt:null,endsAt:null,used:0,spentPiastres:0,version:1},
   'benefit-cashback-test':{id:'benefit-cashback-test',name:'كاش باك جوه التجريبي',kind:'cashback',type:'percent',value:5,scope:'global',scopeId:null,target:'goods',code:null,automatic:true,minimumPiastres:5000,capPiastres:1000,budgetPiastres:100000,maxUses:100,perCustomerMax:3,funder:'platform',enabled:true,startsAt:null,endsAt:null,used:0,spentPiastres:0,version:1}
  },benefitUses:{},customerCredits:{},positions:{},consents:[],events:[],processed:{}};
