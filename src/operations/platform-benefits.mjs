@@ -12,7 +12,7 @@ export function validatePlatformBenefit(value,{existingId=null}={}){
  if(code&&!/^[A-Z0-9_-]+$/.test(code))throw Error('كود الخصم يحتوي حروفًا غير مسموحة.');
  const startsAt=iso(value.startsAt),endsAt=iso(value.endsAt);if(startsAt&&endsAt&&Date.parse(endsAt)<=Date.parse(startsAt))throw Error('نهاية العرض لازم تكون بعد البداية.');
  const amount=value.type==='percent'?int(value.value,1,100):int(value.value,1,100000000);
- const cap=int(value.cap??(value.type==='fixed'?amount:100000000),0,100000000),budget=int(value.budget,amount,100000000),maxUses=int(value.maxUses,1,1000000),perCustomerMax=int(value.perCustomerMax??1,1,10000);
+ const cap=int(value.capPiastres??value.cap??(value.type==='fixed'?amount:100000000),0,100000000),budget=int(value.budgetPiastres??value.budget,amount,100000000),maxUses=int(value.maxUses,1,1000000),perCustomerMax=int(value.perCustomerMax??1,1,10000);
  return Object.freeze({id,name:txt(value.name,2,100),kind:value.kind,type:value.type,value:amount,scope:value.scope,scopeId,target:value.target,code,automatic:value.automatic===true&&!code,minimumPiastres:int(value.minimumPiastres??0,0,100000000),capPiastres:cap,budgetPiastres:budget,maxUses,perCustomerMax,funder:'platform',enabled:value.enabled!==false,startsAt,endsAt,used:int(value.used??0,0,maxUses),spentPiastres:int(value.spentPiastres??0,0,budget),version:int(value.version??1,1,1000000)});
 }
 function active(r,now){const t=typeof now==='number'?now:Date.parse(now);return r.enabled&&(!r.startsAt||Date.parse(r.startsAt)<=t)&&(!r.endsAt||Date.parse(r.endsAt)>t)&&r.used<r.maxUses&&r.spentPiastres<r.budgetPiastres;}
