@@ -1,4 +1,5 @@
 import {icon} from './ui-icons.js';
+import './visitor-services.js';
 const esc=v=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 // Keep full accessible names while using compact, consistent visible controls.
 const controls=[
@@ -29,8 +30,8 @@ const controls=[
  ['#share-item,#share-seller,[data-share-url]','share','مشاركة'],
  ['[data-edit]','edit','تعديل'],['[data-stock]','grid','التوفر'],
  ['#privacy-button','shield','الخصوصية'],
- ['.contact-links a[href^="tel:"]','phone',null],['.contact-links a[href^="mailto:"]','mail','بريد'],
- ['.contact-links a[href^="/?to="]','navigation','الطريق'],
+ ['.contact-links a[href^="tel:"]','phone','اتصل'],['.contact-links a[href^="mailto:"]','mail','بريد'],
+ ['.contact-links a[href^="/?to="]','map','شوفه على الخريطة'],
  ['.contact-links a[href^="https://wa.me/"]','phone','واتساب'],
  ['.contact-links a[target="_blank"],.service-action','link',null],
  ['.card-actions a','info','التفاصيل'],['.place-detail>button[data-share-url]','share','مشاركة'],
