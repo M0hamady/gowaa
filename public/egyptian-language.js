@@ -52,7 +52,7 @@ export function buildingCandidates(mention,known){
  if(!mention||!Number.isInteger(mention.number)||mention.number<1)return [];
  const districts=mention.district?[mention.district]:['yasmin','narges'];
  const byId=id=>known instanceof Map?known.get(id):Array.isArray(known)?known.find(p=>p?.id===id):null;
- return districts.map(d=>byId(d+'-'+mention.number)).filter(p=>p&&p.coordinate!==null&&p.id);
+ return districts.map(d=>byId(d+'-'+mention.number)).filter(p=>p?.id&&(p.mapId||Array.isArray(p.coordinate)));
 }
 export function isPlaceRequest(query){
  const q=normalizeEgyptian(query);
