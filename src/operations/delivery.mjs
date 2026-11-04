@@ -1,8 +1,21 @@
 import {requireThat as ok,int,money,text,key,nextId,approved,isAdmin,requireShop,canShop,checkVersion,bump,activeTaskStates,taskVisible,taskParty,location,postDebt} from './core.mjs';
-import {collect,finalizePlatformBenefits} from './orders.mjs';
+import {collect,finalizePlatformBenefits,finalizeOrderFees} from './orders.mjs';
+import {applyFeeRules} from './dynamic-fees.mjs';
 const busy=(s,id,except)=>Object.values(s.tasks).some(t=>t.id!==except&&t.courierId===id&&activeTaskStates.includes(t.status));
 const requester=(s,a,t)=>a===t.requesterId||t.shopId&&canShop(s,a,t.shopId,'dispatch')||isAdmin(s,a);
 function checkCourier(s,a,t){ok(t.courierId===a,'FORBIDDEN','المهمة مش مسندة لحسابك.',403);ok(approved(s,a,t.kind==='ride'?'driver':'courier'),'ROLE','الدور المهني غير نشط.',403);}
+function deliveryFeeSnapshot(s,t,amount,now){
+ const shop=t.shopId?s.shops[t.shopId]:null,category=shop?.category||(t.kind==='ride'?'نقل أفراد':'توصيل');
+ return applyFeeRules(Object.values(s.settings.feeRules||{}),{trigger:'delivery',shopId:shop?.id||'standalone',category,goods:t.orderId?s.orders[t.orderId].goods:0,deliveryFee:amount,orderTotal:t.orderId?s.orders[t.orderId].total:amount,paymentAmount:0,lines:t.orderId?s.orders[t.orderId].lines:[]},{now});
+}
+function finalizeDeliveryFees(s,t,actorId,at){
+ if(t.platformFeesFinalized||t.status!=='delivered'||!t.courierId)return false;
+ for(const fee of t.platformFees||[]){if(!fee.amountPiastres||fee.bearer==='platform')continue;
+  const from=fee.bearer==='provider'?'courier:'+t.courierId:t.orderId?'shop:'+t.shopId:'courier:'+t.courierId;
+  postDebt(s,{from,to:'platform:jowwa',amount:fee.amountPiastres,kind:fee.bearer==='provider'?'courier_platform_fee':'customer_delivery_platform_fee',ref:t.id+':'+fee.id,actorId,at});
+ }
+ t.platformFeesFinalized=true;return true;
+}
 export function deliveryCommand(c){const{s,actorId:a,body:b,now,at}=c;
  switch(c.type){
  case 'task.create':{
@@ -22,9 +35,9 @@ export function deliveryCommand(c){const{s,actorId:a,body:b,now,at}=c;
  case 'task.select-bid':{
   const t=s.tasks[key(b.id)];checkVersion(t,b.version);ok(requester(s,a,t),'FORBIDDEN','طالب الخدمة بس يختار المندوب.',403);ok(t.status==='open'&&new Date(t.expiresAt)>now,'STATE','المهمة اتقفلت أو انتهت.');const bid=s.bids[key(b.bidId)];ok(bid?.taskId===t.id&&bid.status==='offered'&&new Date(bid.expiresAt)>now,'BID','العرض مش متاح دلوقتي.');
   ok(approved(s,bid.courierId,t.kind==='ride'?'driver':'courier')&&s.availability[bid.courierId]?.available&&!busy(s,bid.courierId),'BUSY','المندوب مش متاح أو دوره اتوقف.');ok(taskVisible(s,bid.courierId,t),'PRIVATE','المندوب مش ضمن النطاق المسموح للمهمة.');
-  let customerFee=bid.amount;if(t.orderId){const o=s.orders[t.orderId];customerFee=o.deliveryPayer==='shop'?0:Math.min(t.customerFeeCap,bid.amount);if(bid.amount>t.customerFeeCap&&o.deliveryPayer==='customer')ok(b.coverDifference===true,'FARE_CONSENT','الزيادة على المحل أو تحتاج موافقة جديدة من العميل.');const nextTotal=o.goods-o.discount+customerFee;const paid=Object.values(s.payments).filter(p=>p.orderId===o.id).reduce((n,p)=>n+(p.kind==='refund'?-p.amount:p.amount),0);ok(paid<=nextTotal,'OVERPAYMENT','اتحصّل مبلغ أكبر من السعر الجديد؛ سجّل رد الفرق الأول.');o.total=nextTotal;o.deliveryFee=customerFee;bump(o);}
+  const deliveryRules=deliveryFeeSnapshot(s,t,bid.amount,now);let customerFee=bid.amount;if(t.orderId){const o=s.orders[t.orderId];customerFee=o.deliveryPayer==='shop'?0:Math.min(t.customerFeeCap,bid.amount);if(bid.amount>t.customerFeeCap&&o.deliveryPayer==='customer')ok(b.coverDifference===true,'FARE_CONSENT','الزيادة على المحل أو تحتاج موافقة جديدة من العميل.');ok(!deliveryRules.totals.customer,'FEE_CONSENT','في رسوم توصيل إضافية على العميل تحتاج موافقته المباشرة قبل الإسناد.',409);const nextTotal=o.goods-o.discount-o.platformDiscount+o.customerPlatformFees+customerFee;const paid=Object.values(s.payments).filter(p=>p.orderId===o.id).reduce((n,p)=>n+(p.kind==='refund'?-p.amount:p.amount),0);ok(paid<=nextTotal,'OVERPAYMENT','اتحصّل مبلغ أكبر من السعر الجديد؛ سجّل رد الفرق الأول.');o.total=nextTotal;o.deliveryFee=customerFee;bump(o);}
   else ok(b.acceptFare===true,'FARE_CONSENT','أكد السعر النهائي قبل اختيار السائق.');
-  t.status='assigned';t.courierId=bid.courierId;t.bidId=bid.id;t.fare=bid.amount;t.customerFee=customerFee;t.sponsorAmount=t.orderId?bid.amount-customerFee:0;t.assignedAt=at;t.pickupEta=new Date(now+bid.pickupMinutes*60000).toISOString();t.travelMinutes=bid.travelMinutes;bump(t);
+  t.status='assigned';t.courierId=bid.courierId;t.bidId=bid.id;t.fare=bid.amount;t.customerFee=customerFee;t.platformFees=deliveryRules.fees;t.providerPlatformFees=deliveryRules.totals.provider;t.customerPlatformFees=deliveryRules.totals.customer;t.platformAbsorbedFees=deliveryRules.totals.platform;t.sponsorAmount=t.orderId?bid.amount-customerFee:0;t.assignedAt=at;t.pickupEta=new Date(now+bid.pickupMinutes*60000).toISOString();t.travelMinutes=bid.travelMinutes;bump(t);
   for(const row of Object.values(s.bids).filter(x=>x.taskId===t.id&&x.status==='offered')){row.status=row.id===bid.id?'selected':'not_selected';bump(row);}return {id:t.id,message:'المهمة اتأكدت للمندوب المحدد والسعر اتثبت.'};
  }
  case 'task.handoff':{
@@ -48,7 +61,7 @@ export function deliveryCommand(c){const{s,actorId:a,body:b,now,at}=c;
  }
  case 'task.confirm-receipt':{
   const t=s.tasks[key(b.id)];checkVersion(t,b.version);ok(t.customerId===a,'FORBIDDEN','تأكيد الاستلام من العميل نفسه.',403);ok(t.status==='awaiting_receipt','STATE','المندوب لسه ما أكدش التسليم.');ok(b.confirmed===true,'CONFIRM','أكد الاستلام.');t.status='delivered';t.completedAt=at;t.trackingConsent=false;delete s.positions[t.id];
-  if(t.orderId){const o=s.orders[t.orderId];o.status='completed';o.completedAt=at;finalizePlatformBenefits(s,o,a,at);bump(o);if(!t.feePosted){postDebt(s,{from:'shop:'+t.shopId,to:'courier:'+t.courierId,amount:t.fare,kind:'delivery_earned',ref:t.id,actorId:a,at});t.feePosted=true;}}
+  if(t.orderId){const o=s.orders[t.orderId];o.status='completed';o.completedAt=at;finalizePlatformBenefits(s,o,a,at);finalizeOrderFees(s,o,a,at);bump(o);if(!t.feePosted){postDebt(s,{from:'shop:'+t.shopId,to:'courier:'+t.courierId,amount:t.fare,kind:'delivery_earned',ref:t.id,actorId:a,at});t.feePosted=true;}}finalizeDeliveryFees(s,t,a,at);
   bump(t);return {id:t.id,message:'تم تأكيد الاستلام. التحصيل والتسوية ليهم حالتهم المنفصلة.'};
  }
  case 'task.collect':{
