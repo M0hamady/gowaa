@@ -45,7 +45,7 @@ export function providerContact(record){
 export function matchesNeed(record,branch,filter='',search=''){
  if(!record||typeof record.id!=='string'||!record.name)return false;
  const category=normalizeEgyptian(record.category),full=normalizeEgyptian([record.name,record.category,record.address,record.description,...(record.keywords||[])].join(' '));
- const food=/(?:مطعم|كافيه|قهوه|مشروب|حلويات|مخبز|وجبات|بقاله|سوبرماركت)/.test(category);
+ const food=/(?:مطعم|مطاعم|كافيه|قهوه|مشروب|حلويات|مخبز|وجبات|بقاله|سوبرماركت)/.test(category);
  if(branch==='food'&&!food)return false;
  const group=normalizeEgyptian(filter);
  if(group&&group!=='الكل'&&group!=='كل الخدمات'&&!category.includes(group)&&!full.includes(group))return false;
