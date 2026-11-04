@@ -1,0 +1,68 @@
+name: Merchant guide capture
+
+on:
+  push:
+    branches:
+      - feat/operations-test-workspace
+    paths:
+      - scripts/merchant-guide-capture.cjs
+      - .github/workflows/merchant-guide.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout test branch
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Install app and browser test dependencies
+        run: |
+          npm ci --ignore-scripts
+          npm install --no-save --no-package-lock playwright
+          npx playwright install --with-deps chromium
+
+      - name: Build isolated operations test
+        env:
+          JOWWA_OPERATIONS_TEST: 'true'
+          VERCEL_GIT_COMMIT_REF: feat/operations-test-workspace
+        run: node scripts/build-ops-test.mjs
+
+      - name: Start isolated server
+        run: |
+          nohup node server-full.mjs > /tmp/jowwa-guide-server.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:4177/work >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/jowwa-guide-server.log
+          exit 1
+
+      - name: Capture full merchant journey
+        run: node scripts/merchant-guide-capture.cjs
+
+      - name: Verify capture
+        run: |
+          test -f public/qa/merchant-guide/manifest.json
+          test "$(find public/qa/merchant-guide -maxdepth 1 -name '*.png' | wc -l)" -eq 66
+          node -e "const m=require('./public/qa/merchant-guide/manifest.json'); if(m.screenshots.length!==66||m.tests.browserErrors!==0||!m.tests.completed) process.exit(1);"
+
+      - name: Upload merchant guide source artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: jowwa-merchant-guide-source
+          path: |
+            public/qa/merchant-guide/manifest.json
+            public/qa/merchant-guide/*.png
+          if-no-files-found: error
+          retention-days: 3
