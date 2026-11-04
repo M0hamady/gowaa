@@ -24,3 +24,7 @@
 .home-feedback-choices button:hover{border-color:#63946a}
 .home-search-row:focus-within{border-color:#43875d;box-shadow:0 0 0 3px #6eaa7833}
 @media(max-width:760px){.home-shortcut-rail button{flex-basis:100px}.home-shortcut-rail button b{font-size:12px}.home-back{display:block;width:100%;text-align:right;margin:4px 0 8px}.home-search-row input{font-size:16px!important}}
+
+/* Explicit visibility when leaving the home screen; preserve collapsed map mode. */
+body:not(.home-mode):not(.sheet-collapsed) .panel:not([hidden]){display:block!important}
+.home-back[hidden]{display:none!important}
