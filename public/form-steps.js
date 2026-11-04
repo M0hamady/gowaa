@@ -42,6 +42,7 @@ export function formSteps(form,{questions=[],review,summary=true,onSubmitLabel='
   return page;
  });
  // Identified nodes can be populated later (e.g. a live basket quote). Do not detach them.
+ for(const extra of [...form.querySelectorAll('[data-step-for]')]){const page=pages.find(p=>p.id===extra.dataset.stepFor);if(page){extra.classList.add('question-context');page.el.append(extra);}}
  const intro=[...form.children].filter(node=>node!==submit&&node!==error&&!pages.some(p=>p.node===node)&&(node.id||node.textContent.trim()||node.querySelector('button,a')));
  const notice=document.createElement('div');notice.className='question-notice';notice.append(...intro);
  const progress=document.createElement('div');progress.className='question-progress';progress.innerHTML='<span aria-live="polite"></span><div role="progressbar" aria-label="تقدم الخطوات" aria-valuemin="1"><i></i></div>';
