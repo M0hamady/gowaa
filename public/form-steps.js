@@ -10,7 +10,8 @@ export function formSteps(form,{questions=[],review,summary=true,onSubmitLabel='
  if(!groups.length)return;
  form.dataset.stepsMounted='true';form.noValidate=true;form.classList.add('single-question-form');
  const pages=groups.map(({id,title,node})=>{const el=document.createElement('section'),heading=document.createElement('h3');el.dataset.questionId=id;el.className='question-page';heading.tabIndex=-1;heading.textContent=title;el.append(heading,node);return {id,title,node,el};});
- const intro=[...form.children].filter(node=>node!==submit&&node!==error&&(node.textContent.trim()||node.querySelector('button,a')));
+ // Identified nodes can be populated later (e.g. a live basket quote). Do not detach them.
+ const intro=[...form.children].filter(node=>node!==submit&&node!==error&&(node.id||node.textContent.trim()||node.querySelector('button,a')));
  const notice=document.createElement('div');notice.className='question-notice';notice.append(...intro);
  const progress=document.createElement('div');progress.className='question-progress';progress.innerHTML='<span aria-live="polite"></span><div role="progressbar" aria-label="تقدم الخطوات" aria-valuemin="1"><i></i></div>';
  const foot=document.createElement('div');foot.className='question-footer';foot.innerHTML=`<button type="button" data-prev aria-label="السابق">${icon('arrow')}</button><button type="button" data-next class="primary">التالي ${icon('back')}</button>`;submit.innerHTML=icon('check')+' '+onSubmitLabel;foot.append(submit);
