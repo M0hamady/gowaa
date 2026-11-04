@@ -111,7 +111,7 @@
     },
     {
       "source": "/market/category/:category",
-      "destination": "/market.html"
+      "destination": "/market"
     },
     {
       "source": "/seller/:id",
