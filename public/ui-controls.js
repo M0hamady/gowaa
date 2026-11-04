@@ -1,7 +1,7 @@
+import './customer.js';
 import {icon} from './ui-icons.js';
 import './visitor-services.js';
 const esc=v=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-// Keep full accessible names while using compact, consistent visible controls.
 const controls=[
  ['#saved-button','heart','',true],['#sources-button,#help-map','info','',true],
  ['#edit-trip','edit','',true],['#install-app','plus','تثبيت'],['.topbar .market-link','store','السوق'],
@@ -38,11 +38,9 @@ const controls=[
  ['.market-footer a[href*="view=mine"]','plus','أضف نشاطك']
 ];
 function apply(el,name,label,iconOnly=false){
- if(el.closest('#navigation-ui')||el.querySelector('.ui-icon'))return;
- const original=el.getAttribute('aria-label')||el.textContent.trim();
- el.setAttribute('aria-label',original);el.title=original;
- el.classList.add('ui-control');if(iconOnly)el.classList.add('ui-icon-only');
- el.innerHTML=icon(name)+(iconOnly?'':`<span class="ui-control-label">${esc(label??el.textContent.trim())}</span>`);
+ if(el.closest('#navigation-ui,#member-dialog,.provider-admin-dialog,.provider-basket-dialog')||el.querySelector('.ui-icon'))return;
+ const original=el.getAttribute('aria-label')||el.textContent.trim();el.setAttribute('aria-label',original);el.title=original;
+ el.classList.add('ui-control');if(iconOnly)el.classList.add('ui-icon-only');el.innerHTML=icon(name)+(iconOnly?'':`<span class="ui-control-label">${esc(label??el.textContent.trim())}</span>`);
 }
 export function enhanceControls(root=document){for(const [selector,...spec] of controls){if(root.matches?.(selector))apply(root,...spec);root.querySelectorAll?.(selector).forEach(el=>apply(el,...spec));}}
 enhanceControls();
