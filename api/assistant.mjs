@@ -6,9 +6,14 @@ import {validateQuestion,mergePublicRecords,buildGrounding,validContext,provider
 
 const reply=(res,status,data)=>{res.statusCode=status;res.setHeader('Content-Type','application/json; charset=utf-8');res.setHeader('Cache-Control','no-store');res.setHeader('X-Content-Type-Options','nosniff');res.end(JSON.stringify(data));};
 const answerCache=new Map();
+let mappedBuildings;
+function publicBuildings(){
+ mappedBuildings??=readFile(process.cwd()+'/public/data/map.json','utf8').then(text=>JSON.parse(text).buildings.filter(b=>/^(yasmin|narges)-\d+$/.test(b.id)&&['yasmin','narges'].includes(b.district)&&Number.isInteger(b.number)&&Array.isArray(b.coordinate)&&b.coordinate.length===2).map(b=>({id:b.id,name:b.name,number:b.number,district:b.district,category:'عمارة سكنية',mapId:b.id,mapLabel:'موقع العمارة تقريبي من المخطط',status:'رقم عمارة من مخطط الترقيم؛ راجع المدخل والبوابة'})));
+ return mappedBuildings;
+}
 export async function loadGrounding(db){
- const [placesText,transitText,menuText,overrides,products]=await Promise.all([
-  readFile(process.cwd()+'/public/data/places.json','utf8'),readFile(process.cwd()+'/public/data/transit.json','utf8'),readFile(process.cwd()+'/public/data/market-directory.json','utf8'),
+ const [placesText,transitText,menuText,buildings,overrides,products]=await Promise.all([
+  readFile(process.cwd()+'/public/data/places.json','utf8'),readFile(process.cwd()+'/public/data/transit.json','utf8'),readFile(process.cwd()+'/public/data/market-directory.json','utf8'),publicBuildings(),
   db.from('site_content').select('id,kind,data,archived').in('kind',['places','buses']),
   db.from('listings').select('id,title,description,kind,category,status,archived,price,offer_price,offer_until,price_mode,available,track_stock,quantity,seller_id,service_claim_id,catalog_id,sellers!inner(id,name,status,archived),catalogs(status,archived)').eq('status','approved').eq('archived',false).eq('sellers.status','approved').eq('sellers.archived',false).order('created_at',{ascending:false}).limit(300)
  ]);
@@ -17,7 +22,7 @@ export async function loadGrounding(db){
  for(let at=0;at<sellerIds.length;at+=100)gateCalls.push(db.rpc('jowwa_order_availability',{seller_ids:sellerIds.slice(at,at+100),directory_ids:[]}));
  const gates=(await Promise.all(gateCalls)).flatMap(result=>result.error?[]:result.data?.businesses||[]);
  const items=(products.data||[]).map(item=>({...item,orderGate:gates.find(g=>g.sellerId===item.seller_id&&(g.serviceClaimId??null)===(item.service_claim_id??null))||{canOrder:false,reason:'unavailable'}}));
- return buildGrounding({places:mergePublicRecords(JSON.parse(placesText),overrides.data,'places'),routes:mergePublicRecords(JSON.parse(transitText).routes||[],overrides.data,'buses'),items,menus:JSON.parse(menuText).items||[]});
+ return buildGrounding({places:[...mergePublicRecords(JSON.parse(placesText),overrides.data,'places'),...buildings],routes:mergePublicRecords(JSON.parse(transitText).routes||[],overrides.data,'buses'),items,menus:JSON.parse(menuText).items||[]});
 }
 export default async function handler(req,res){
  if(req.method!=='POST'){res.setHeader('Allow','POST');return reply(res,405,{error:'اكتب سؤالك من داخل جوه.'});}

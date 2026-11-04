@@ -1,0 +1,45 @@
+name: Feature branch quality checks
+
+on:
+  push:
+    branches:
+      - feat/egyptian-everyday-ux-ai
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  unit-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Check changed source syntax
+        run: |
+          node --check public/egyptian-language.js
+          node --check public/app.js
+          node --check public/assistant.js
+          node --check public/round-planner.js
+          node --check src/market.js
+          node --check src/market-discovery-ui.js
+          node --check src/server-assistant.mjs
+          node --check api/assistant.mjs
+      - name: Run all existing and new unit tests
+        run: npm test
+      - name: Rebuild generated assets
+        run: npm run build
+      - name: Check generated marketplace bundle
+        run: |
+          test -s public/market.js
+          test -s src/market-template.mjs
+          node --check public/market.js

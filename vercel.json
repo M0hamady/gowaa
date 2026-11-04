@@ -110,6 +110,10 @@
       "destination": "/api/service-claims?__serviceRoute=tracking"
     },
     {
+      "source": "/market/category/:category",
+      "destination": "/market.html"
+    },
+    {
       "source": "/seller/:id",
       "destination": "/api/page?type=seller&id=:id"
     },
@@ -161,7 +165,7 @@
       "includeFiles": "public/data/transit.json"
     },
     "api/assistant.mjs": {
-      "includeFiles": "public/data/{places,transit,market-directory}.json",
+      "includeFiles": "public/data/{map,places,transit,market-directory}.json",
       "maxDuration": 30
     },
     "api/notifications.mjs": {
