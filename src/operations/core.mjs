@@ -1,3 +1,4 @@
+import {applyPlatformBenefits} from './platform-benefits.mjs';
 /** Operations domain shared by the test workbench and the isolated server adapter.
  * Amounts are integer piastres. No function here sends money, SMS or creates a real account.
  * Authentication must supply actorId from a verified session, never from request JSON.
@@ -36,7 +37,7 @@ export function location(s,id){key(id);const p=s.locations[id];requireThat(p,'LO
 export function taskVisible(s,actorId,t){if(isAdmin(s,actorId)||t.requesterId===actorId||t.courierId===actorId||t.customerId===actorId||t.shopId&&canShop(s,actorId,t.shopId,'dispatch'))return true;if(t.status!=='open')return false;const role=t.kind==='ride'?'driver':'courier';if(!approved(s,actorId,role)||!s.availability[actorId]?.available)return false;if(t.visibility==='public')return s.availability[actorId]?.public===true;return Object.values(s.courierLinks).some(l=>l.shopId===t.shopId&&l.courierId===actorId&&l.status==='accepted');}
 export function taskParty(s,actorId,t){return isAdmin(s,actorId)||actorId===t.requesterId||actorId===t.customerId||actorId===t.courierId||t.shopId&&canShop(s,actorId,t.shopId,'dispatch');}
 export function suggestedFare(s,fromId,toId,kind='parcel'){const a=location(s,fromId).coordinate,b=location(s,toId).coordinate,rad=n=>n*Math.PI/180;const dLat=rad(b[1]-a[1]),dLon=rad(b[0]-a[0]);const h=Math.sin(dLat/2)**2+Math.cos(rad(a[1]))*Math.cos(rad(b[1]))*Math.sin(dLon/2)**2;const km=6371*2*Math.atan2(Math.sqrt(h),Math.sqrt(1-h));const r=s.settings.rates[kind];return {amount:Math.round((r.base+km*r.perKm)/100)*100,roughKm:Math.round(km*10)/10,estimated:true,label:'اقتراح تجريبي حسب المسافة التقريبية؛ قابل للتعديل'};}
-export function quote(s,shopId,lines,{promoId=null,deliveryFee=0,fulfillment='pickup',now=Date.now()}={}){
+export function quote(s,shopId,lines,{promoId=null,benefitCode='',customerId=null,deliveryFee=0,fulfillment='pickup',now=Date.now()}={}){
  const shop=s.shops[shopId];requireThat(shop&&!shop.archived,'SHOP','النشاط غير متاح.');requireThat(Array.isArray(lines)&&lines.length>0&&lines.length<=40,'LINES','اختار من ١ إلى ٤٠ صنف.');money(deliveryFee);
  const consolidated=new Map();for(const l of lines){key(l.productId);const quantity=int(l.quantity,1,999),variantId=l.variantId?key(l.variantId):'';const k=l.productId+':'+variantId;const old=consolidated.get(k);consolidated.set(k,{productId:l.productId,variantId,quantity:quantity+(old?.quantity||0)});}
  const totalsByProduct=new Map();
@@ -49,7 +50,9 @@ export function quote(s,shopId,lines,{promoId=null,deliveryFee=0,fulfillment='pi
  for(const[id,q]of totalsByProduct){const p=s.products[id];requireThat(p.stock===null||p.stock>=q,'STOCK','الكمية المتاحة اتغيرت.');}
  let goods=rows.reduce((n,l)=>n+l.total,0),discount=0,fee=fulfillment==='delivery'?deliveryFee:0,promo=null;
  if(promoId){promo=s.promotions[promoId];requireThat(promo&&promo.shopId===shopId&&promo.active&&new Date(promo.starts)<=now&&new Date(promo.ends)>now,'PROMO','العرض مش متاح دلوقتي.');requireThat(goods>=promo.minimum,'PROMO','قيمة الطلب أقل من الحد الأدنى للعرض.');requireThat(promo.used<promo.maxUses,'PROMO','عدد استخدامات العرض خلص.');const base=promo.kind==='delivery'?fee:goods;const reduction=Math.min(base,promo.type==='percent'?Math.floor(base*promo.value/100):promo.value,promo.cap);requireThat(promo.spent+reduction<=promo.budget,'PROMO','ميزانية العرض خلصت.');if(promo.kind==='delivery')fee-=reduction;else discount=reduction;promo={id:promo.id,reduction,version:promo.version};}
- const total=goods-discount+fee;money(total);return {shopId,lines:rows,goods,discount,deliveryFee:fee,requestedDeliveryFee:deliveryFee,promo,total,currency:'EGP',final:true,fulfillment};
+ const beforePlatform=goods-discount+fee;money(beforePlatform);
+ const platform=customerId?applyPlatformBenefits(s.platformBenefits||{},{shopId,category:shop.category,customerId,goods,deliveryFee:fee,orderBeforePlatformDiscount:beforePlatform,lines:rows},{code:benefitCode,now,usages:Object.values(s.benefitUses||{})}):{benefits:[],discountPiastres:0,cashbackPiastres:0};
+ const total=beforePlatform-platform.discountPiastres;money(total);return {shopId,lines:rows,goods,discount,deliveryFee:fee,requestedDeliveryFee:deliveryFee,promo,platformBenefits:platform.benefits,platformDiscount:platform.discountPiastres,cashback:platform.cashbackPiastres,total,currency:'EGP',final:true,fulfillment};
 }
 export function trackingView(t,position,now=Date.now()){
  if(!position)return {kind:'estimated',label:t.etaAt?'وصول تقديري':'موعد الوصول لسه مش محدد',etaAt:t.etaAt||null,position:null};
