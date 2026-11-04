@@ -1,196 +1,44 @@
 {
-  "version": 2,
-  "outputDirectory": "public",
-  "cleanUrls": true,
-  "headers": [
-    {
-      "source": "/(.*)",
-      "headers": [
-        {
-          "key": "X-Content-Type-Options",
-          "value": "nosniff"
-        },
-        {
-          "key": "Referrer-Policy",
-          "value": "strict-origin-when-cross-origin"
-        }
-      ]
-    },
-    {
-      "source": "/(.*)",
-      "headers": [
-        {
-          "key": "Permissions-Policy",
-          "value": "camera=(), microphone=(), geolocation=(self)"
-        },
-        {
-          "key": "X-Frame-Options",
-          "value": "DENY"
-        }
-      ]
-    },
-    {
-      "source": "/order",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "private, no-store"
-        },
-        {
-          "key": "X-Robots-Tag",
-          "value": "noindex, nofollow"
-        },
-        {
-          "key": "Referrer-Policy",
-          "value": "no-referrer"
-        }
-      ]
-    },
-    {
-      "source": "/order.html",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "private, no-store"
-        },
-        {
-          "key": "X-Robots-Tag",
-          "value": "noindex, nofollow"
-        },
-        {
-          "key": "Referrer-Policy",
-          "value": "no-referrer"
-        }
-      ]
-    },
-    {
-      "source": "/receipt",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "private, no-store"
-        },
-        {
-          "key": "X-Robots-Tag",
-          "value": "noindex, nofollow"
-        },
-        {
-          "key": "Referrer-Policy",
-          "value": "no-referrer"
-        }
-      ]
-    },
-    {
-      "source": "/receipt.html",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "private, no-store"
-        },
-        {
-          "key": "X-Robots-Tag",
-          "value": "noindex, nofollow"
-        },
-        {
-          "key": "Referrer-Policy",
-          "value": "no-referrer"
-        }
-      ]
-    }
-  ],
-  "buildCommand": "npm run build",
-  "installCommand": "npm ci",
-  "rewrites": [
-    {
-      "source": "/api/seller-orders",
-      "destination": "/api/service-claims?__serviceRoute=orders"
-    },
-    {
-      "source": "/api/order-track",
-      "destination": "/api/service-claims?__serviceRoute=tracking"
-    },
-    {
-      "source": "/market/category/:category",
-      "destination": "/market"
-    },
-    {
-      "source": "/seller/:id",
-      "destination": "/api/page?type=seller&id=:id"
-    },
-    {
-      "source": "/item/:id",
-      "destination": "/api/page?type=item&id=:id"
-    },
-    {
-      "source": "/sitemap.xml",
-      "destination": "/api/sitemap"
-    },
-    {
-      "source": "/catalog/:id",
-      "destination": "/api/page?type=catalog&id=:id"
-    },
-    {
-      "source": "/place/:id",
-      "destination": "/api/place?id=:id"
-    },
-    {
-      "source": "/places",
-      "destination": "/api/place"
-    },
-    {
-      "source": "/guide/:category",
-      "destination": "/api/place?category=:category"
-    },
-    {
-      "source": "/buses",
-      "destination": "/api/bus"
-    },
-    {
-      "source": "/bus/:id",
-      "destination": "/api/bus?id=:id"
-    },
-    {
-      "source": "/menu/:id",
-      "destination": "/api/menu?id=:id"
-    }
-  ],
-  "functions": {
-    "api/page.mjs": {
-      "includeFiles": "public/market.html"
-    },
-    "api/place.mjs": {
-      "includeFiles": "public/data/{places,business-hours}.json"
-    },
-    "api/bus.mjs": {
-      "includeFiles": "public/data/transit.json"
-    },
-    "api/assistant.mjs": {
-      "includeFiles": "public/data/{map,places,transit,market-directory}.json",
-      "maxDuration": 30
-    },
-    "api/notifications.mjs": {
-      "maxDuration": 120
-    },
-    "api/rounds.mjs": {
-      "maxDuration": 30
-    },
-    "api/sms-hook.mjs": {
-      "maxDuration": 10
-    },
-    "api/menu.mjs": {
-      "includeFiles": "public/data/{places,market-directory}.json"
-    },
-    "api/sitemap.mjs": {
-      "includeFiles": "public/data/{places,market-directory}.json"
-    },
-    "api/notifications-daily.mjs": {
-      "maxDuration": 60
-    }
-  },
-  "crons": [
-    {
-      "path": "/api/notifications-daily",
-      "schedule": "5 22 * * *"
-    }
-  ]
+ "version":2,"outputDirectory":"public","cleanUrls":true,
+ "headers":[
+  {"source":"/(.*)","headers":[{"key":"X-Content-Type-Options","value":"nosniff"},{"key":"Referrer-Policy","value":"strict-origin-when-cross-origin"}]},
+  {"source":"/(.*)","headers":[{"key":"Permissions-Policy","value":"camera=(), microphone=(), geolocation=(self)"},{"key":"X-Frame-Options","value":"DENY"}]},
+  {"source":"/order","headers":[{"key":"Cache-Control","value":"private, no-store"},{"key":"X-Robots-Tag","value":"noindex, nofollow"},{"key":"Referrer-Policy","value":"no-referrer"}]},
+  {"source":"/order.html","headers":[{"key":"Cache-Control","value":"private, no-store"},{"key":"X-Robots-Tag","value":"noindex, nofollow"},{"key":"Referrer-Policy","value":"no-referrer"}]},
+  {"source":"/receipt","headers":[{"key":"Cache-Control","value":"private, no-store"},{"key":"X-Robots-Tag","value":"noindex, nofollow"},{"key":"Referrer-Policy","value":"no-referrer"}]},
+  {"source":"/receipt.html","headers":[{"key":"Cache-Control","value":"private, no-store"},{"key":"X-Robots-Tag","value":"noindex, nofollow"},{"key":"Referrer-Policy","value":"no-referrer"}]}
+ ],
+ "buildCommand":"npm run build","installCommand":"npm ci",
+ "rewrites":[
+  {"source":"/api/member","destination":"/api/service-claims?__serviceRoute=member"},
+  {"source":"/api/provider-catalog","destination":"/api/service-claims?__serviceRoute=provider-catalog"},
+  {"source":"/api/provider-admin","destination":"/api/service-claims?__serviceRoute=provider-admin"},
+  {"source":"/api/seller-orders","destination":"/api/service-claims?__serviceRoute=orders"},
+  {"source":"/api/order-track","destination":"/api/service-claims?__serviceRoute=tracking"},
+  {"source":"/market/category/:category","destination":"/market"},
+  {"source":"/seller/:id","destination":"/api/page?type=seller&id=:id"},
+  {"source":"/item/:id","destination":"/api/page?type=item&id=:id"},
+  {"source":"/sitemap.xml","destination":"/api/sitemap"},
+  {"source":"/catalog/:id","destination":"/api/page?type=catalog&id=:id"},
+  {"source":"/place/:id","destination":"/api/place?id=:id"},
+  {"source":"/places","destination":"/api/place"},
+  {"source":"/guide/:category","destination":"/api/place?category=:category"},
+  {"source":"/buses","destination":"/api/bus"},
+  {"source":"/bus/:id","destination":"/api/bus?id=:id"},
+  {"source":"/menu/:id","destination":"/api/menu?id=:id"}
+ ],
+ "functions":{
+  "api/page.mjs":{"includeFiles":"public/market.html"},
+  "api/place.mjs":{"includeFiles":"public/data/{places,business-hours}.json"},
+  "api/bus.mjs":{"includeFiles":"public/data/transit.json"},
+  "api/assistant.mjs":{"includeFiles":"public/data/{map,places,transit,market-directory}.json","maxDuration":30},
+  "api/notifications.mjs":{"maxDuration":120},
+  "api/rounds.mjs":{"maxDuration":30},
+  "api/sms-hook.mjs":{"maxDuration":10},
+  "api/menu.mjs":{"includeFiles":"public/data/{places,market-directory}.json"},
+  "api/sitemap.mjs":{"includeFiles":"public/data/{places,market-directory}.json"},
+  "api/notifications-daily.mjs":{"maxDuration":60},
+  "api/service-claims.mjs":{"includeFiles":"public/data/{places,market-directory}.json","maxDuration":30}
+ },
+ "crons":[{"path":"/api/notifications-daily","schedule":"5 22 * * *"}]
 }
