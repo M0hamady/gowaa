@@ -4,6 +4,9 @@ export const providerFields=['name','category','description','address','phone','
 const text=(v,max)=>typeof v==='string'?v.trim().slice(0,max):'';
 export const validKey=v=>typeof v==='string'&&/^[a-zA-Z0-9_-]{1,100}$/.test(v);
 function assert(ok,message){if(!ok)throw Object.assign(Error(message),{status:400});}
+const number=v=>typeof v==='number'?v:typeof v==='string'&&v.trim()!==''?Number(v):NaN;
+const optional=v=>v===null||v===undefined||v===''?null:number(v);
+function isoDate(v){if(!/^\d{4}-\d{2}-\d{2}$/.test(v))return false;const d=new Date(v+'T00:00:00Z');return Number.isFinite(d.getTime())&&d.toISOString().slice(0,10)===v;}
 export function safeProductImage(value){if(!value)return '';if(typeof value!=='string')return null;if(/^\/(?!\/)[a-zA-Z0-9/_%.-]+\.(?:png|jpe?g|webp)$/i.test(value)&&!value.includes('..'))return value;return publicLink(value);}
 export function validateProviderFields(raw){
  assert(raw&&typeof raw==='object'&&!Array.isArray(raw),'راجع بيانات مقدم الخدمة.');assert(Object.keys(raw).every(k=>providerFields.includes(k)),'حقل غير مسموح بتعديله.');const out={};
@@ -19,11 +22,11 @@ export function validateProviderFields(raw){
 }
 export function validateProduct(raw){
  assert(raw&&typeof raw==='object'&&!Array.isArray(raw)&&Object.keys(raw).every(k=>productFields.includes(k)),'راجع حقول المنتج.');
- const p={title:text(raw.title,100),description:text(raw.description,2000),category:text(raw.category,80),section:text(raw.section,80),kind:raw.kind||'product',priceMode:raw.priceMode||'fixed',price:raw.price===null?null:Number(raw.price),offerPrice:raw.offerPrice===null||raw.offerPrice===undefined||raw.offerPrice===''?null:Number(raw.offerPrice),offerUntil:text(raw.offerUntil,10),imageUrl:raw.imageUrl||'',stockStatus:raw.stockStatus||'unknown',quantity:raw.quantity===null||raw.quantity===undefined||raw.quantity===''?null:Number(raw.quantity),unit:text(raw.unit,30)||'قطعة',sortOrder:Number(raw.sortOrder||0),taxIncluded:typeof raw.taxIncluded==='boolean'?raw.taxIncluded:null,taxRate:raw.taxRate===null||raw.taxRate===undefined||raw.taxRate===''?null:Number(raw.taxRate)};
+ const p={title:text(raw.title,100),description:text(raw.description,2000),category:text(raw.category,80),section:text(raw.section,80),kind:raw.kind||'product',priceMode:raw.priceMode||'fixed',price:number(raw.price),offerPrice:optional(raw.offerPrice),offerUntil:text(raw.offerUntil,10),imageUrl:raw.imageUrl||'',stockStatus:raw.stockStatus||'unknown',quantity:optional(raw.quantity),unit:text(raw.unit,30)||'قطعة',sortOrder:raw.sortOrder===undefined?0:number(raw.sortOrder),taxIncluded:typeof raw.taxIncluded==='boolean'?raw.taxIncluded:null,taxRate:optional(raw.taxRate)};
  assert(p.title.length>=2&&p.category.length>=2,'اكتب اسم المنتج وتصنيفه.');assert(['product','service'].includes(p.kind),'اختار منتج أو خدمة.');assert(['fixed','inquiry','free'].includes(p.priceMode),'راجع طريقة السعر.');
  if(p.priceMode==='free')p.price=0;if(p.priceMode==='inquiry')p.price=null;
  assert(p.price===null&&p.priceMode==='inquiry'||Number.isFinite(p.price)&&p.price>=0&&p.price<=1e7,'السعر غير صحيح.');
- assert(p.offerPrice===null||p.priceMode==='fixed'&&Number.isFinite(p.offerPrice)&&p.offerPrice>=0&&p.offerPrice<p.price&&/^\d{4}-\d{2}-\d{2}$/.test(p.offerUntil)&&new Date(p.offerUntil+'T00:00:00Z').toISOString().slice(0,10)===p.offerUntil,'راجع العرض وتاريخ انتهائه.');
+ assert(p.offerPrice===null||p.priceMode==='fixed'&&Number.isFinite(p.offerPrice)&&p.offerPrice>=0&&p.offerPrice<p.price&&isoDate(p.offerUntil),'راجع العرض وتاريخ انتهائه.');
  assert(['unknown','available','unavailable'].includes(p.stockStatus),'راجع التوفر.');assert(p.quantity===null||Number.isInteger(p.quantity)&&p.quantity>=0&&p.quantity<=1000000,'راجع المخزون.');assert(Number.isInteger(p.sortOrder)&&p.sortOrder>=0&&p.sortOrder<=99999,'راجع الترتيب.');assert(!p.imageUrl||safeProductImage(p.imageUrl),'رابط الصورة غير صحيح.');assert(p.taxRate===null||Number.isFinite(p.taxRate)&&p.taxRate>=0&&p.taxRate<=100,'راجع نسبة الضريبة.');return p;
 }
 export function catalogForProvider(provider,base=[],overrides=[]){
@@ -35,7 +38,7 @@ export function catalogForProvider(provider,base=[],overrides=[]){
 }
 export function catalogPrice(product,date=new Intl.DateTimeFormat('en-CA',{timeZone:'Africa/Cairo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date())){
  if(product.priceMode==='inquiry'||!Number.isFinite(product.price))return null;
- return Number.isFinite(product.offerPrice)&&product.offerPrice>=0&&product.offerPrice<product.price&&product.offerUntil>=date?product.offerPrice:product.price;
+ return Number.isFinite(product.offerPrice)&&product.offerPrice>=0&&product.offerPrice<product.price&&isoDate(product.offerUntil)&&product.offerUntil>=date?product.offerPrice:product.price;
 }
 export function basketTotal(products,lines,providerId){
  const map=new Map(products.filter(p=>p.providerId===providerId).map(p=>[p.id,p]));let subtotal=0,tax=0,unknownTax=false,unpriced=0;const details=[],seen=new Set();
@@ -43,7 +46,7 @@ export function basketTotal(products,lines,providerId){
   if(!validKey(row?.id)||seen.has(row.id)||!Number.isInteger(row.quantity)||row.quantity<1||row.quantity>99)continue;seen.add(row.id);
   const p=map.get(row.id);if(!p){details.push({id:row.id,quantity:row.quantity,missing:true});continue;}
   const price=catalogPrice(p),cents=price===null?null:Math.round(price*100),line=cents===null?null:cents*row.quantity;
-  const unavailable=p.stockStatus==='unavailable'||p.quantity!==null&&p.quantity!==undefined&&p.quantity<row.quantity;
+  const unavailable=p.stockStatus==='unavailable'||p.quantity!==null&&p.quantity!==undefined&&p.quantity<row.quantity||p.requiresVariant===true;
   if(line===null)unpriced++;else{subtotal+=line;if(p.taxIncluded===false&&Number.isFinite(p.taxRate))tax+=Math.round(line*p.taxRate/100);else if(p.taxIncluded!==true)unknownTax=true;}
   details.push({id:p.id,title:p.title,quantity:row.quantity,unitPrice:price,lineTotal:line===null?null:line/100,unavailable,sourceKind:p.sourceKind});
  }
