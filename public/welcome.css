@@ -130,3 +130,13 @@ body.home-mode .home-screen.is-guided .home-greeting,body.home-mode .home-screen
  .home-shortcut-rail button,.journey-choice{transition:none!important;transform:none!important}
  body.home-mode .home-shortcut-rail{scroll-behavior:auto}
 }
+
+/* Sourced neighborhood offers rendered inside the existing guided provider detail. */
+.journey-price-offers{background:#f7faf4;border:1px solid #dbe9d4;border-radius:17px;padding:15px;margin:16px 0}
+.journey-price-offers h4{margin:0 0 12px;color:#285c3e;font-size:15px}
+.journey-price-offers ul{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.journey-price-offers li{border:1px solid #e7eee1;background:#fff;padding:10px 12px;border-radius:10px;display:flex;align-items:center;justify-content:space-between;gap:13px}
+.journey-price-offers li strong{color:#175440;font-size:14px;white-space:nowrap}
+.journey-price-offers li span{font-size:12px;line-height:1.6}
+.journey-price-offers p{font-size:11px;color:#748377;line-height:1.7;margin:10px 0 0}
+@media(max-width:640px){.journey-price-offers li{align-items:flex-start;flex-direction:column;gap:2px}}
