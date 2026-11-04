@@ -20,16 +20,16 @@ test('provider-borne online fee deducts from payout while full order principal i
  const w=world(),id=order(w);accept(w,id);const intent=w.run('customer','payment.online.prepare',{orderId:id,version:w.s.orders[id].version}).intent;
  const result=w.run('admin','payment.online.test-result',{id:intent.id,version:intent.version,status:'paid'});
  assert.ok(result.paymentId);assert.equal(paidNet(w.s,id),12000);assert.equal(w.s.onlinePayments[intent.id].providerNetPiastres,11340);
- assert.equal(debtBalance(w.s,'platform:jowwa','shop:shop-a'),11340);
- assert.equal(w.s.platformTransactions.filter(x=>x.intentId===intent.id&&x.kind==='platform_fee_revenue').reduce((n,x)=>n+x.amount,0),660);
+ assert.equal(debtBalance(w.s,'platform:jowwa','shop:shop-a'),0);assert.equal(w.s.onlinePayments[intent.id].payoutFinalized,false);
+ assert.equal(w.s.platformTransactions.filter(x=>x.intentId===intent.id&&x.kind==='platform_fee_revenue'&&x.status==='held').reduce((n,x)=>n+x.amount,0),660);
  assert.equal(w.s.platformTransactions.some(x=>x.intentId===intent.id&&x.bearer==='provider'),true);
 });
 test('customer-borne online fee increases gateway charge but provider payout remains full principal',()=>{
  const w=world();rule(w,'customer');const id=order(w);accept(w,id);const intent=w.run('customer','payment.online.prepare',{orderId:id,version:w.s.orders[id].version}).intent;
  assert.equal(intent.principalPiastres,12000);assert.equal(intent.customerChargePiastres,12660);assert.equal(intent.providerDeductionPiastres,0);
  w.run('admin','payment.online.test-result',{id:intent.id,version:intent.version,status:'paid'});
- assert.equal(paidNet(w.s,id),12000);assert.equal(debtBalance(w.s,'platform:jowwa','shop:shop-a'),12000);
- assert.equal(w.s.platformTransactions.filter(x=>x.intentId===intent.id&&x.bearer==='customer').reduce((n,x)=>n+x.amount,0),660);
+ assert.equal(paidNet(w.s,id),12000);assert.equal(debtBalance(w.s,'platform:jowwa','shop:shop-a'),0);
+ assert.equal(w.s.platformTransactions.filter(x=>x.intentId===intent.id&&x.bearer==='customer'&&x.status==='held').reduce((n,x)=>n+x.amount,0),660);
 });
 test('failed gateway result creates no payment payout or platform revenue',()=>{
  const w=world(),id=order(w);accept(w,id);const intent=w.run('customer','payment.online.prepare',{orderId:id,version:w.s.orders[id].version}).intent;
@@ -47,6 +47,8 @@ test('same outstanding order reuses prepared intent and paid intent cannot be se
 test('completed online-paid order finalizes cashback and order fees only once',()=>{
  const w=world(),id=order(w);accept(w,id);const intent=w.run('customer','payment.online.prepare',{orderId:id,version:w.s.orders[id].version}).intent;w.run('admin','payment.online.test-result',{id:intent.id,version:intent.version,status:'paid'});
  w.run('owner','order.transition',{id,version:w.s.orders[id].version,state:'ready'});w.run('owner','order.transition',{id,version:w.s.orders[id].version,state:'completed'});
- assert.equal(w.s.customerCredits.customer,600);assert.equal(w.s.orders[id].platformBenefitsFinalized,true);assert.equal(w.s.orders[id].platformFeesFinalized,true);
- assert.equal(w.s.ledger.filter(x=>x.kind==='cashback_earned').length,1);
+ assert.equal(w.s.customerCredits.customer,600);assert.equal(w.s.orders[id].platformBenefitsFinalized,true);assert.equal(w.s.orders[id].platformFeesFinalized,true);assert.equal(w.s.orders[id].onlinePayoutsFinalized,true);
+ assert.equal(w.s.ledger.filter(x=>x.kind==='cashback_earned').length,1);assert.equal(debtBalance(w.s,'platform:jowwa','shop:shop-a'),11340);assert.equal(w.s.platformTransactions.filter(x=>x.intentId===intent.id&&x.status==='finalized').length,1);
 });
+
+test('customer-fee online payout is held until completion then full principal becomes provider payable',()=>{const w=world();rule(w,'customer');const id=order(w);accept(w,id);const intent=w.run('customer','payment.online.prepare',{orderId:id,version:w.s.orders[id].version}).intent;w.run('admin','payment.online.test-result',{id:intent.id,version:intent.version,status:'paid'});assert.equal(debtBalance(w.s,'platform:jowwa','shop:shop-a'),0);w.run('owner','order.transition',{id,version:w.s.orders[id].version,state:'ready'});w.run('owner','order.transition',{id,version:w.s.orders[id].version,state:'completed'});assert.equal(debtBalance(w.s,'platform:jowwa','shop:shop-a'),12000);assert.equal(w.s.platformTransactions.filter(x=>x.intentId===intent.id&&x.status==='finalized').reduce((n,x)=>n+x.amount,0),660);});
