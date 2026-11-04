@@ -1,4 +1,5 @@
 import {requireThat as ok,fail,int,money,text,key,nextId,calendarMonthEnd,normalizePhone,roles,permissions,approved,isAdmin,requireShop,checkVersion,bump} from './core.mjs';
+import {validateFeeRule} from './dynamic-fees.mjs';
 const object=(v)=>{ok(v&&typeof v==='object'&&!Array.isArray(v),'FIELDS','راجع البيانات.');return v;};
 const only=(v,keys)=>{object(v);ok(Object.keys(v).every(k=>keys.includes(k)),'FIELDS','في بيانات غير مسموح بتعديلها.');};
 export function businessCommand(c){
@@ -32,6 +33,14 @@ export function businessCommand(c){
   const id=shop?.id||nextId(s,'shop');s.shops[id]={...shop,id,ownerId:shop?.ownerId||a,name,category:f.category,address:text(f.address,3,250),locationId:f.locationId,description:text(f.description||'',0,500),accepting:f.accepting===true,deliveryPolicy:f.deliveryPolicy,suggestedFee:money(f.suggestedFee),prepMinutes:int(f.prepMinutes,1,240),archived:f.archived===true,version:(shop?.version||0)+1};return {id,message:'بيانات النشاط اتحفظت.'};
  }
  case 'platform.category':{admin();const value=text(b.name,2,60);ok(!s.settings.categories.includes(value),'CATEGORY','التصنيف موجود.');s.settings.categories.push(value);return {id:value,message:'التصنيف العام اتضاف.'};}
+ case 'fee.rule.save':{
+  admin();const prior=b.id?s.settings.feeRules?.[key(b.id)]:null;if(b.id){ok(prior,'NOT_FOUND','قاعدة الرسوم مش موجودة.',404);checkVersion(prior,b.version);}
+  const id=prior?.id||nextId(s,'fee-rule'),validated=validateFeeRule({...b.rule,id,version:(prior?.version||0)+1},{existingId:id});
+  s.settings.feeRules??={};s.settings.feeRules[id]={...validated};return {id,message:'قاعدة الرسوم اتحفظت في بيئة الاختبار.'};
+ }
+ case 'fee.rule.archive':{
+  admin();const rule=s.settings.feeRules?.[key(b.id)];checkVersion(rule,b.version);rule.enabled=false;bump(rule);return {id:rule.id,message:'قاعدة الرسوم اتوقفت؛ العمليات القديمة محتفظة بنسختها.'};
+ }
  case 'section.save':{
   requireShop(s,a,key(b.shopId),'catalog');const row=b.id?s.sections[key(b.id)]:null;if(b.id){ok(row?.shopId===b.shopId,'FORBIDDEN','القسم مش تابع لنشاطك.',403);checkVersion(row,b.version);}
   const name=text(b.name,2,60);ok(!Object.values(s.sections).some(x=>x.shopId===b.shopId&&x.id!==row?.id&&x.name===name&&!x.archived),'SECTION','اسم القسم موجود.');
