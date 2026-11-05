@@ -7,6 +7,7 @@
   {"source":"/order","headers":[{"key":"Cache-Control","value":"private, no-store"},{"key":"X-Robots-Tag","value":"noindex, nofollow"},{"key":"Referrer-Policy","value":"no-referrer"}]},
   {"source":"/order.html","headers":[{"key":"Cache-Control","value":"private, no-store"},{"key":"X-Robots-Tag","value":"noindex, nofollow"},{"key":"Referrer-Policy","value":"no-referrer"}]},
   {"source":"/receipt","headers":[{"key":"Cache-Control","value":"private, no-store"},{"key":"X-Robots-Tag","value":"noindex, nofollow"},{"key":"Referrer-Policy","value":"no-referrer"}]},
+  {"source":"/track(\\.html)?","headers":[{"key":"Cache-Control","value":"private, no-store"},{"key":"X-Robots-Tag","value":"noindex, nofollow"},{"key":"Referrer-Policy","value":"no-referrer"}]},
   {"source":"/receipt.html","headers":[{"key":"Cache-Control","value":"private, no-store"},{"key":"X-Robots-Tag","value":"noindex, nofollow"},{"key":"Referrer-Policy","value":"no-referrer"}]}
  ],
  "buildCommand":"node scripts/build-live.mjs","installCommand":"npm ci",
@@ -16,6 +17,7 @@
   {"source":"/api/provider-admin","destination":"/api/service-claims?__serviceRoute=provider-admin"},
   {"source":"/api/seller-orders","destination":"/api/service-claims?__serviceRoute=orders"},
   {"source":"/api/order-track","destination":"/api/service-claims?__serviceRoute=tracking"},
+  {"source":"/api/operations","destination":"/api/service-claims?__serviceRoute=operations"},
   {"source":"/market/category/:category","destination":"/market"},
   {"source":"/seller/:id","destination":"/api/page?type=seller&id=:id"},
   {"source":"/item/:id","destination":"/api/page?type=item&id=:id"},

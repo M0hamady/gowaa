@@ -1,0 +1,51 @@
+.ops-live,.ops-track{background:var(--bg,#f7f5f0);min-height:100vh}
+.ops-header{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+#ops-head{display:flex;gap:10px;align-items:center;flex:1;min-width:0}#ops-head small{display:block;opacity:.7}
+#ops-head select{max-width:60vw}
+.ops-sync{font-size:.85rem;padding:4px 10px;border-radius:99px;background:#e8f5ec;color:#185c33}
+.ops-sync.is-syncing{background:#fff4d6;color:#6b4b00}.ops-sync.is-offline{background:#eee;color:#333}.ops-sync.is-attention{background:#fde3e1;color:#8a1c12}
+.ops-nav{display:flex;gap:6px;overflow-x:auto;padding:8px 16px;position:sticky;top:0;background:inherit;z-index:2;scrollbar-width:none}
+.ops-nav button{white-space:nowrap;border-radius:99px;padding:8px 14px;border:1px solid #ddd;background:#fff}
+.ops-nav button.active{background:#1d3b2a;color:#fff;border-color:#1d3b2a}.ops-nav i{font-style:normal;background:#c0392b;color:#fff;border-radius:99px;padding:0 6px;margin-inline-start:4px}
+#ops-main{padding:12px 16px 120px;max-width:1100px;margin:0 auto}
+.ops-card{background:#fff;border-radius:14px;padding:14px;margin:10px 0;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.ops-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.ops-row>h2,.ops-row>span{flex:1}
+.ops-inline{display:flex;gap:6px;flex-wrap:wrap;align-items:center}.ops-inline input,.ops-inline select{min-width:0;flex:1 1 110px}
+.ops-tables{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px}
+.ops-table{display:flex;flex-direction:column;align-items:center;padding:16px 8px;border-radius:14px;border:2px solid #cfe5d6;background:#f3fbf5;min-height:84px}
+.ops-table.is-occupied{border-color:#e6b84f;background:#fff8e6}.ops-table.is-disabled{opacity:.5}.ops-table b{font-size:1.3rem}
+.ops-list{display:grid;gap:8px}
+.ops-order{display:flex;flex-wrap:wrap;gap:8px;align-items:center;text-align:start;padding:12px;border-radius:12px;border:1px solid #e3e3e3;background:#fff;width:100%}
+.ops-order em{color:#a3410f;font-style:normal}.ops-order small{flex-basis:100%;color:#1d6b3a}
+.ops-lines{list-style:none;padding:0;margin:8px 0}.ops-lines li{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:8px 0;border-bottom:1px solid #f0f0f0}
+.ops-lines li>span:first-child{flex:1}.ops-lines small{display:block;color:#666}.ops-lines em{font-style:normal;font-size:.8rem;background:#f2f2f2;border-radius:99px;padding:2px 8px}
+.ops-lines li.is-ready em{background:#dff3e6}.ops-lines li.is-void{opacity:.45;text-decoration:line-through}
+.ops-total{font-size:1.05rem}.ops-note{background:#fff8e6;padding:6px 10px;border-radius:8px}
+.ops-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.ops-actions button{flex:1 1 140px}
+.ops-menu{margin-top:10px}.ops-menu-item{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px dashed #eee}.ops-menu-item span{flex:1}.ops-menu-item small{display:block;color:#666}.ops-menu-item input{width:72px}
+.ops-kds{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.ops-ticket{background:#fff;border-radius:14px;padding:12px;border-top:6px solid #e6b84f}.ops-ticket.is-ready{border-top-color:#2e8b57}
+.ops-ticket header{display:flex;gap:8px;flex-wrap:wrap;justify-content:space-between}.ops-ticket ul{list-style:none;padding:0}.ops-ticket li{display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid #f2f2f2;font-size:1.1rem}
+.ops-ticket li span{flex:1}.ops-ticket li small{display:block;color:#a3410f;font-size:.9rem}.ops-ticket li em{font-style:normal;color:#2e8b57}
+.ops-table-list{width:100%;border-collapse:collapse;display:block;overflow-x:auto}.ops-table-list td,.ops-table-list th{padding:8px;border-bottom:1px solid #eee;text-align:start}.ops-table-list tr.is-low td{background:#fde3e1}
+.ops-kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}.ops-kpis div{background:#fff;border-radius:12px;padding:10px}.ops-kpis b{display:block;font-size:1.2rem}
+.ops-empty{text-align:center;padding:40px 16px}.ops-loading{text-align:center;opacity:.7}
+.ops-queue{position:fixed;bottom:0;inset-inline:0;background:#fff;box-shadow:0 -2px 8px rgba(0,0,0,.1);padding:0 16px;max-height:40vh;overflow:auto}.ops-queue:empty{display:none}.ops-queue h3{margin:10px 0 4px}
+.ops-qrow{display:flex;gap:8px;align-items:center;padding:6px 0}.ops-qrow span{flex:1}
+.ops-toast{position:fixed;bottom:16px;inset-inline:16px;max-width:520px;margin:0 auto;background:#1d3b2a;color:#fff;padding:12px 16px;border-radius:12px;z-index:9;text-align:center}
+button.ghost,a.ghost{background:transparent;border:1px solid #ccc;color:inherit}button.danger{background:#b3261e;color:#fff}
+#ops-invite-link input{width:100%;margin:6px 0}
+.ops-track main{max-width:520px;margin:20px auto;text-align:center}.track-state{font-size:1.4rem;font-weight:700}.stars{display:flex;flex-direction:column;gap:4px;align-items:center;color:#e6a100}
+@media (max-width:600px){.ops-actions button{flex-basis:100%}#ops-head select{max-width:100%}}
+.ops-live main button,.ops-live .ops-queue button,.ops-track button{font:inherit;cursor:pointer;border-radius:10px;padding:10px 16px;min-height:44px;border:1px solid #1d3b2a;background:#1d3b2a;color:#fff;font-weight:600}
+.ops-live main button.ghost,.ops-live .ops-queue button.ghost{background:#fff;color:#1d3b2a;border-color:#c9d6cd}
+.ops-live main button.danger{background:#b3261e;border-color:#b3261e}
+.ops-live main button:disabled{opacity:.5;cursor:progress}
+.ops-live main .ops-table,.ops-live main .ops-order{background:#fff;color:inherit;font-weight:400;border-color:#e3e3e3}
+.ops-live main .ops-table{background:#f3fbf5;border:2px solid #cfe5d6}.ops-live main .ops-table.is-occupied{background:#fff8e6;border-color:#e6b84f}
+.ops-live main input,.ops-live main select,.ops-live main textarea{font:inherit;border:1px solid #d5d5d5;border-radius:10px;padding:8px 10px;min-height:44px;background:#fff}
+.ops-live main label{display:block;margin:8px 0}
+.ops-detail header{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.ops-live main label.ops-menu-item{display:flex;margin:0}
+.ops-live main .ops-menu-item input{width:76px;flex:none;text-align:center}
+.ops-live main .ops-inline label{display:flex;gap:6px;align-items:center;margin:0}

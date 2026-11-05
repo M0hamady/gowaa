@@ -1,0 +1,19 @@
+// Public delivery tracking (/track#<token>): status + ETA only. No login, no customer data.
+const $=s=>document.querySelector(s);
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const STATE={assigned:'الطيار هيستلم طلبك قريب',picked_up:'طلبك في الطريق',delivered:'طلبك اتسلّم',failed:'التوصيل متعملش — المحل هيتواصل معاك'};
+const token=(location.hash.match(/[a-f0-9]{64}/)||[])[0];
+async function load(){
+ if(!token){$('#track').innerHTML='<p>رابط التتبع مش كامل.</p>';return;}
+ const r=await fetch('/api/operations?'+new URLSearchParams({action:'track',token}),{cache:'no-store'});const b=await r.json().catch(()=>({}));
+ if(!r.ok){$('#track').innerHTML=`<p>${esc(b.error||'مش لاقيين الطلب.')}</p>`;return;}
+ const d=b.data;
+ $('#track').innerHTML=`<h1>${esc(d.shop)}</h1><p class="track-num">طلب #${d.number}</p><p class="track-state">${d.delivery?STATE[d.delivery]:d.state==='closed'?'طلبك خلص':'المحل بيجهز طلبك'}</p>
+ ${d.etaAt&&d.delivery!=='delivered'?`<p>الوصول المتوقع حوالي <b>${new Date(d.etaAt).toLocaleTimeString('ar-EG',{hour:'numeric',minute:'2-digit'})}</b></p>`:''}
+ ${d.courier?`<p><a target="_blank" rel="noopener" href="https://www.google.com/maps?q=${d.courier.lat},${d.courier.lng}">مكان الطيار التقريبي</a></p>`:''}
+ ${d.canRate?`<form id="rate"><p>قيّم التوصيل</p><div class="stars">${[1,2,3,4,5].map(n=>`<label><input type="radio" name="stars" value="${n}" required>${'★'.repeat(n)}</label>`).join('')}</div><textarea name="comment" maxlength="300" placeholder="تعليق (اختياري)"></textarea><button>ابعت التقييم</button></form>`:''}`;
+ $('#rate')?.addEventListener('submit',async e=>{e.preventDefault();const f=new FormData(e.target);
+  const r=await fetch('/api/operations',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'rate',token,stars:Number(f.get('stars')),comment:f.get('comment')||''})});
+  e.target.outerHTML=r.ok?'<p>شكرًا على تقييمك!</p>':'<p>تعذر إرسال التقييم.</p>';});
+}
+load();setInterval(()=>{if(!document.hidden&&!$('#rate'))load();},30000);

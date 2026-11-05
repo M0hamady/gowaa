@@ -29,10 +29,24 @@ test('live config builds with the production-refusing-test-UI build',()=>{
 });
 
 test('operations test workbench is not shipped from public/',async()=>{
-  for(const f of ['public/operations.html','public/work.html','public/operations-ui.js']){
+  for(const f of ['public/operations.html','public/operations-ui.js']){
     await assert.rejects(access(new URL('../'+f,import.meta.url)),f+' must only be produced by the isolated test build');
   }
   await access(new URL('../src/operations/page.html',import.meta.url));
+  const work=await readFile(new URL('../public/work.html',import.meta.url),'utf8');
+  for(const bad of ['ops-persona','اختبار معزول','ops-test-banner','operations-ui.js'])assert.ok(!work.includes(bad),'live /work contains '+bad);
+});
+
+test('live operations bundle has no test store, fixtures, personas or service-role key',async()=>{
+  const {build}=await import('esbuild');
+  for(const entry of ['src/operations/live-ui.mjs','src/operations/track-ui.mjs','src/server-operations.mjs']){
+    const out=await build({entryPoints:[entry],bundle:true,write:false,format:'esm',platform:entry.includes('server')?'node':'browser',external:['@supabase/supabase-js'],logLevel:'silent'});
+    const code=out.outputFiles[0].text;
+    const banned=['openTestStore','browser-store','fixtures.mjs','jowwa_ops_test','ops-persona','SERVICE_ROLE','service_role'];
+    // The server file may mention sb_secret_ only to refuse such a key; browser bundles may not mention it at all.
+    if(!entry.includes('server'))banned.push('sb_secret_');
+    for(const bad of banned)assert.ok(!code.includes(bad),entry+' bundles '+bad);
+  }
 });
 
 test('test-only routes stay noindex if ever reachable',()=>{
