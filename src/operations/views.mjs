@@ -115,6 +115,11 @@ export function render(app){const s=app.raw,m=app.model,own=m.shops.filter(x=>x.
 }
 export function navItems(app){
  const m=app.model,s=app.raw,shopId=app.shopId,per=p=>hasShopPermission(s,app.actor,shopId,p);let items=[];
+ const staffRole=m.employeeRoles.find(x=>x.shopId===shopId)?.role;
+ if(staffRole==='kitchen')return [['kitchen','المطبخ','bag']];
+ if(staffRole==='waiter')return [['floor','الصالة','grid']];
+ if(staffRole==='cashier')return [['restaurant-pos','الكاشير','save']];
+ if(staffRole==='floor_manager')return [['floor','الصالة','grid'],['messages','الرسائل','mail']];
  if(m.roles.includes('admin'))items=[['approvals','المراجعات','shield'],['areas','الكمبوندات','map'],['catalog','الأنشطة والمنتجات','grid'],['orders','الطلبات','bag'],['missions','التوصيل','car'],['economy','الرسوم والعروض','bank'],['finance','الحسابات','bank'],['audit','السجل','clock']];
  else if(m.roles.includes('courier')||m.roles.includes('driver'))items=[['missions','شغلي','car'],['finance','حساباتي','bank'],['shops','كعميل','store']];
  else if(m.shops.some(x=>x.canOrders||x.canCash)||m.employeeRoles.length){if(per('edit_open_order')||per('manage_tables'))items.push(['floor','الصالة','grid']);if(per('create_pos_order')||per('take_payment'))items.push(['restaurant-pos','الكاشير','save']);if(per('view_kitchen'))items.push(['kitchen','المطبخ','bag']);if(per('view_inventory')||per('adjust_inventory')||per('manage_recipes'))items.push(['inventory','المخزن','layers']);if(per('manage_products'))items.push(['catalog','المنتجات','grid']);if(per('manage_staff')||s.shops[shopId]?.ownerId===app.actor)items.push(['staff','فريق المحل','user']);if(per('view_reports')||s.shops[shopId]?.ownerId===app.actor)items.push(['reports','التقارير','bank']);items.push(['orders','طلبات أونلاين','bag'],['missions','التوصيل','car'],['shops','كعميل','store']);}
