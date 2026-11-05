@@ -18,6 +18,7 @@
   {"source":"/api/seller-orders","destination":"/api/service-claims?__serviceRoute=orders"},
   {"source":"/api/order-track","destination":"/api/service-claims?__serviceRoute=tracking"},
   {"source":"/api/operations","destination":"/api/service-claims?__serviceRoute=operations"},
+  {"source":"/api/admin-sms","destination":"/api/service-claims?__serviceRoute=admin-sms"},
   {"source":"/market/category/:category","destination":"/market"},
   {"source":"/seller/:id","destination":"/api/page?type=seller&id=:id"},
   {"source":"/item/:id","destination":"/api/page?type=item&id=:id"},

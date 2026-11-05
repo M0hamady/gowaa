@@ -5,6 +5,7 @@ export function notificationMessage(item){
  const p=item?.payload||{};
  if(item?.kind==='registration'){const ref=messageReference(p.user_id);return ['جوه | تسجيل جديد'+(ref?' #'+ref:''),'حساب جديد أكّد رقم موبايله.'].join('\n');}
  if(item?.kind==='daily_summary'&&/^\d{4}-\d{2}-\d{2}$/.test(p.day||''))return ['جوه | '+p.day,'الزيارات: '+count(p.sessions),'الزوار: '+count(p.visitors),'مشاهدات: '+count(p.pageviews)].join('\n');
+ if(item?.kind==='provider_invitation'&&p.name&&p.url)return ['جوه | دعوة انضمام',`مرحبًا ${p.name}، جهزنا لك صفحة نشاط على جوه.`,'راجع البيانات وكمّل ملكية النشاط من الرابط: '+p.url].join('\n');
  throw Object.assign(Error('Unsupported notification policy'),{code:'sms_invalid'});
 }
 
