@@ -30,9 +30,12 @@ export function execute(state,actorId,command,{now=Date.now()}={}){
 /** The deployed server returns only this projection; never the whole workspace/processed requests. */
 export function project(state,actorId,{now=Date.now()}={}){
  const s=state,user=s.users[actorId];ok(user?.verified,'AUTH','الحساب غير متاح.',401);const admin=isAdmin(s,actorId);
+ const workerRoles=Object.values(s.team||{}).filter(m=>m.userId===actorId&&m.status==='active').map(m=>m.role);
+ const limitedRetail=workerRoles.some(r=>['waiter','kitchen','floor_manager','cashier'].includes(r));
+ const kitchenOnly=workerRoles.includes('kitchen')&&!admin;
  const shopIds=Object.values(s.shops).filter(sh=>canShop(s,actorId,sh.id,'orders')||canShop(s,actorId,sh.id,'catalog')||canShop(s,actorId,sh.id,'cash')).map(sh=>sh.id);
  const cashShops=Object.values(s.shops).filter(sh=>canShop(s,actorId,sh.id,'cash')).map(sh=>sh.id);
- const ownOrders=Object.values(s.orders).filter(o=>admin||o.customerId===actorId||canShop(s,actorId,o.shopId,'orders')||canShop(s,actorId,o.shopId,'cash')||s.tasks[o.taskId]?.courierId===actorId);
+ const ownOrders=Object.values(s.orders).filter(o=>admin||o.customerId===actorId||!limitedRetail&&(canShop(s,actorId,o.shopId,'orders')||canShop(s,actorId,o.shopId,'cash'))||s.tasks[o.taskId]?.courierId===actorId);
  const tasks=Object.values(s.tasks).filter(t=>taskVisible(s,actorId,t)&&(targetVisible(t,actorId)||admin||t.shopId&&canShop(s,actorId,t.shopId,'dispatch'))).map(t=>{
   if(!taskParty(s,actorId,t))return {id:t.id,kind:t.kind,status:t.status,version:t.version,visibility:t.visibility,proposedFare:t.proposedFare,fromArea:s.locations[t.fromId]?.area||'منطقة الاستلام',toArea:s.locations[t.toId]?.area||'منطقة التسليم',description:t.description,load:t.load,riders:t.riders,expiresAt:t.expiresAt,shopId:t.shopId};
   return {...t,tracking:trackingView(t,s.positions[t.id],now)};
@@ -50,12 +53,13 @@ export function project(state,actorId,{now=Date.now()}={}){
  const employeeRoles=Object.values(s.team||{}).filter(x=>x.userId===actorId&&x.status==='active').map(x=>({shopId:x.shopId,role:x.role,permissions:[...shopPermissionSet(s,actorId,x.shopId)]}));
  const restaurantOrders=Object.values(s.restaurantOrders||{}).filter(o=>admin||restaurantOrderVisible(s,actorId,o)).map(o=>restaurantOrderProjection(s,actorId,o));
  const inventory=inventoryProjection(s,actorId,Object.values(s.shops).map(x=>x.id));
+ if(kitchenOnly)inventory.items=inventory.items.map(({unitCost,supplier,...row})=>row);
  const offline=offlineProjection(s,actorId);
  const reports=restaurantReports(s,actorId,{now});
  const floorShopIds=Object.values(s.shops).filter(sh=>hasShopPermission(s,actorId,sh.id,'manage_tables')||hasShopPermission(s,actorId,sh.id,'edit_open_order')||hasShopPermission(s,actorId,sh.id,'view_kitchen')||hasShopPermission(s,actorId,sh.id,'take_payment')).map(sh=>sh.id);
  return {schema:s.schema,revision:s.revision,mode:'test',user:{id:user.id,name:user.name,admin},roles:rolesFor(s,actorId),employeeRoles,settings:{categories:s.settings.categories,compounds:Object.values(s.settings.compounds||{}).filter(x=>admin||x.active),policyVersion:s.settings.policyVersion,identityUploadsEnabled:false,passengerLaunchEnabled:false,customerAlwaysFree:true,noPaidPlans:true,rates:s.settings.rates,support:s.settings.support,supportWhatsApp:s.settings.supportWhatsApp,supportWhatsAppE164:s.settings.supportWhatsAppE164,feeRules:admin?Object.values(s.settings.feeRules||{}):[],platformBenefits:admin?Object.values(s.platformBenefits||{}):[]},trial:s.trials[actorId]||null,messages:(s.messages||[]).filter(x=>x.recipientId===actorId).slice(-100),buildings:Object.values(s.compoundBuildings||{}).filter(x=>admin||x.active),residences:Object.values(s.userResidences||{}).filter(x=>x.userId===actorId),buildingResidentCounts,
   shops:Object.values(s.shops).filter(sh=>!sh.archived||shopIds.includes(sh.id)||admin).map(sh=>({...sh,canCatalog:canShop(s,actorId,sh.id,'catalog'),canOrders:canShop(s,actorId,sh.id,'orders'),canCash:canShop(s,actorId,sh.id,'cash'),canDispatch:canShop(s,actorId,sh.id,'dispatch')})),
-  sections:Object.values(s.sections).filter(x=>admin||shopIds.includes(x.shopId)||!x.archived),products:Object.values(s.products).filter(x=>admin||shopIds.includes(x.shopId)||!x.archived),promotions:Object.values(s.promotions).filter(x=>admin||shopIds.includes(x.shopId)||x.active),applications:apps,team,courierLinks,
+  sections:kitchenOnly?[]:Object.values(s.sections).filter(x=>admin||shopIds.includes(x.shopId)||!x.archived),products:kitchenOnly?[]:Object.values(s.products).filter(x=>admin||shopIds.includes(x.shopId)||!x.archived),promotions:kitchenOnly?[]:Object.values(s.promotions).filter(x=>admin||shopIds.includes(x.shopId)||x.active),applications:apps,team,courierLinks,
   availability:s.availability[actorId]||{available:false,public:false},orders:ownOrders.map(o=>({...o,paid:paidNet(s,o.id)})),tasks,bids,payments,onlinePayments:Object.values(s.onlinePayments||{}).filter(x=>admin||x.customerId===actorId||cashShops.includes(x.shopId)),platformTransactions:admin?s.platformTransactions||[]:[],
   taskPayments:Object.values(s.taskPayments).filter(p=>admin||p.actorId===actorId||s.tasks[p.taskId]?.customerId===actorId),ledger,
   settlements:Object.values(s.settlements).filter(x=>admin||parties.has(x.from)||parties.has(x.to)),shifts:Object.values(s.shifts).filter(x=>admin||x.actorId===actorId||s.shops[x.shopId]?.ownerId===actorId).map(x=>({...x,expected:expectedCash(s,x.id)})),
