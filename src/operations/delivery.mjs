@@ -1,4 +1,4 @@
-import {requireThat as ok,int,money,text,key,nextId,approved,isAdmin,requireShop,canShop,checkVersion,bump,activeTaskStates,taskVisible,taskParty,location,postDebt} from './core.mjs';
+import {requireThat as ok,int,money,text,key,nextId,approved,isAdmin,requireShop,canShop,checkVersion,bump,activeTaskStates,taskVisible,taskParty,location,postDebt,allowedDeliveryVisibility} from './core.mjs';
 import {collect,finalizePlatformBenefits,finalizeOrderFees,finalizeOnlinePaymentPayouts} from './orders.mjs';
 import {applyFeeRules} from './dynamic-fees.mjs';
 const busy=(s,id,except)=>Object.values(s.tasks).some(t=>t.id!==except&&t.courierId===id&&activeTaskStates.includes(t.status));
@@ -22,8 +22,8 @@ export function deliveryCommand(c){const{s,actorId:a,body:b,now,at}=c;
   let order=null,shop=null;if(b.orderId){order=s.orders[key(b.orderId)];ok(order&&['accepted','preparing','ready'].includes(order.status)&&order.fulfillment==='delivery','ORDER','اختار طلب توصيل مقبول من المحل.');shop=requireShop(s,a,order.shopId,'dispatch');ok(!order.taskId||s.tasks[order.taskId]?.status==='cancelled','DUPLICATE','الطلب له مهمة توصيل بالفعل.');}
   const kind=order?'parcel':b.kind;ok(['parcel','ride'].includes(kind),'TYPE','اختار توصيل منتجات أو نقل أفراد.');
   const fromId=order?shop.locationId:key(b.fromId),toId=order?order.destinationId:key(b.toId);location(s,fromId);location(s,toId);ok(fromId!==toId,'LOCATION','نقطتا البداية والوصول متطابقتان.');
-  const fare=money(b.proposedFare);ok(['private','public'].includes(b.visibility),'VISIBILITY','حدد فريق المحل أو توصيل جوه.');ok(b.visibility!=='private'||shop,'PRIVATE','الفريق الخاص مرتبط بنشاط.');
-  const id=nextId(s,'task');s.tasks[id]={id,kind,orderId:order?.id||null,shopId:shop?.id||null,customerId:order?.customerId||a,requesterId:a,fromId,toId,proposedFare:fare,customerFeeCap:order?order.deliveryFee:fare,visibility:b.visibility,status:'open',courierId:null,bidId:null,version:1,createdAt:at,description:text(b.description||'توصيل طلب',2,250),riders:kind==='ride'?int(b.riders||1,1,6):null,load:kind==='parcel'?text(b.load||'طلب خفيف',2,100):'',expiresAt:new Date(now+30*60000).toISOString(),handoff:false,feePosted:false,trackingConsent:false};
+  const fare=money(b.proposedFare);ok(['private','public'].includes(b.visibility),'VISIBILITY','حدد فريق المحل أو توصيل جوه.');ok(b.visibility!=='private'||shop,'PRIVATE','الفريق الخاص مرتبط بنشاط.');if(shop)ok(allowedDeliveryVisibility(shop,b.visibility),'DELIVERY_SOURCE','مصدر المندوب لا يطابق إعداد التوصيل للنشاط.');
+  const id=nextId(s,'task');s.tasks[id]={id,kind,orderId:order?.id||null,shopId:shop?.id||null,customerId:order?.customerId||a,requesterId:a,fromId,toId,proposedFare:fare,quotedFare:order?.deliveryQuotedFare??fare,customerFeeCap:order?order.deliveryFee:fare,visibility:b.visibility,status:'open',courierId:null,bidId:null,version:1,createdAt:at,description:text(b.description||'توصيل طلب',2,250),riders:kind==='ride'?int(b.riders||1,1,6):null,load:kind==='parcel'?text(b.load||'طلب خفيف',2,100):'',expiresAt:new Date(now+30*60000).toISOString(),handoff:false,feePosted:false,trackingConsent:false};
   if(order){order.taskId=id;bump(order);}return {id,message:'طلب التوصيل اتنشر، منتظرين العروض.'};
  }
  case 'bid.offer':{
