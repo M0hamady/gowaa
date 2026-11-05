@@ -128,6 +128,46 @@ function benefitForm(id){
   await send('benefit.save',{...(b?{id:b.id,version:b.version}:{}),benefit:{name:v.name,kind:v.kind,type:v.type,value:isPercent?Math.round(raw):number(v.value),scope:v.scope,scopeId,target:v.target,code:v.code.trim().toUpperCase()||null,automatic:v.automatic,minimumPiastres:number(v.minimum||'0'),capPiastres:number(v.cap),budgetPiastres:number(v.budget),maxUses:Number(v.maxUses),perCustomerMax:Number(v.perCustomerMax),funder:'platform',enabled:v.enabled,startsAt:null,endsAt:null}},cid);
  },{label:'احفظ العرض'});
 }
+
+function staffForm(id){
+ const m=id?app.raw.team[id]:null,roleChoices=[['shop_manager','مدير المحل'],['floor_manager','مدير الصالة'],['waiter','عامل الصالة'],['cashier','كاشير'],['kitchen','عامل المطبخ']],granted=new Set(m?.grantedPermissions||[]),denied=new Set(m?.deniedPermissions||[]);
+ const multi=(name,label,selected)=>`<label>${esc(label)}<select name="${name}" multiple size="8">${staffPermissions.map(p=>`<option value="${esc(p)}" ${selected.has(p)?'selected':''}>${esc(p)}</option>`).join('')}</select></label>`;
+ return form(m?'تعديل حساب الموظف':'موظف جديد',input('name','اسم الموظف',m?app.raw.users[m.userId]?.name:'','text',m?'disabled':'required minlength="2"')+input('internalCode','الرقم الداخلي / كود الدخول',m?.internalCode||'','text','required minlength="2" maxlength="30"')+input('pin','PIN تجريبي'+(m?' — سيبه فاضي لو مش هتغيره':''),'','password',m?'pattern="\\d{4,6}"':'required pattern="\\d{4,6}"')+select('role','الدور',roleChoices,m?.role||'cashier')+multi('grantedPermissions','صلاحيات إضافية',granted)+multi('deniedPermissions','صلاحيات ممنوعة لهذا الموظف',denied)+input('reason','سبب الإنشاء / التعديل',m?'تحديث صلاحيات تشغيلية':'إنشاء حساب تشغيل تجريبي','text','required minlength="3" maxlength="300"'),async(v,f,cid)=>{
+  const grantedPermissions=[...f.elements.grantedPermissions.selectedOptions].map(x=>x.value),deniedPermissions=[...f.elements.deniedPermissions.selectedOptions].map(x=>x.value);
+  if(m)await send('staff.update',{id:m.id,version:m.version,role:v.role,internalCode:v.internalCode,pin:v.pin||undefined,grantedPermissions,deniedPermissions,reason:v.reason},cid);
+  else await send('staff.create',{shopId:app.shopId,name:v.name,internalCode:v.internalCode,pin:v.pin,role:v.role,status:'active',grantedPermissions,deniedPermissions,reason:v.reason},cid);
+ },{label:m?'احفظ الصلاحيات':'أنشئ الموظف'});
+}
+function floorZoneForm(id){
+ const z=id?app.raw.restaurantZones[id]:null;return form(z?'تعديل منطقة':'منطقة صالة جديدة',input('name','اسم المنطقة',z?.name||'','text','required minlength="1" maxlength="60"')+input('sort','الترتيب',z?.sort||0,'number','min="0" step="1"')+input('reason','سبب التعديل',z?'تحديث منطقة الصالة':'إضافة منطقة صالة','text','required minlength="3"'),async(v,f,cid)=>send('floor.zone.save',{shopId:app.shopId,...(z?{id:z.id,version:z.version}:{}),name:v.name,sort:Number(v.sort),archived:false,reason:v.reason},cid),{label:'احفظ المنطقة'});
+}
+function floorTableForm(id){
+ const t=id?app.raw.restaurantTables[id]:null,zones=app.model.restaurantZones.filter(z=>z.shopId===app.shopId&&!z.archived);return form(t?'تعديل طاولة':'طاولة جديدة',select('zoneId','منطقة الصالة',zones.map(z=>[z.id,z.name]),t?.zoneId||zones[0]?.id)+input('name','رقم أو اسم الطاولة',t?.name||'','text','required minlength="1" maxlength="40"')+input('seats','عدد المقاعد',t?.seats||4,'number','min="1" max="50" required')+select('shape','شكل الطاولة',[['square','مربعة'],['round','دائرية'],['rectangle','مستطيلة']],t?.shape||'square')+check('outOfService','خارج الخدمة',false,t?.status==='out_of_service')+input('reason','سبب التعديل',t?'تحديث الطاولة':'إضافة طاولة','text','required minlength="3"'),async(v,f,cid)=>send('floor.table.save',{shopId:app.shopId,...(t?{id:t.id,version:t.version}:{}),zoneId:v.zoneId,name:v.name,seats:Number(v.seats),shape:v.shape,outOfService:v.outOfService,archived:false,reason:v.reason},cid),{label:'احفظ الطاولة'});
+}
+function restaurantOrderDialog(id){
+ const o=app.raw.restaurantOrders[id];if(!o)return;const editable=o.status==='open'&&hasShopPermission(app.raw,app.actor,o.shopId,'edit_open_order'),products=Object.values(app.raw.products).filter(p=>p.shopId===o.shopId&&!p.archived&&p.available);
+ show('طلب #'+o.queue,`<section class="op-card"><header><strong>#${o.queue}</strong>${badge(o.status)}</header><p>${o.mode==='dine_in'?'طاولة '+esc(app.raw.restaurantTables[o.tableId]?.name||''):'تيك أواي'} · المسؤول ${esc(app.raw.users[o.assignedStaffId]?.name||'')}</p><ul class="op-lines">${o.lines.map(l=>`<li><span>${esc(l.title)} × ${l.quantity}${l.notes?' — '+esc(l.notes):''}</span><b>${money(l.unitPrice*l.quantity)}</b></li>`).join('')||'<li>لسه مفيش أصناف.</li>'}</ul><div class="op-total"><span>الإجمالي</span><b>${money(o.total)}</b></div>${o.recipeWarnings?.length?'<p class="op-warning">'+esc(o.recipeWarnings.join(' • '))+'</p>':''}<div class="op-actions">${editable&&o.lines.length?btn('floor-send','إرسال للمطبخ',o.id,'primary'):''}${hasShopPermission(app.raw,app.actor,o.shopId,'move_table_order')&&o.mode==='dine_in'?btn('floor-move','نقل الطاولة',o.id):''}${hasShopPermission(app.raw,app.actor,o.shopId,'approve_discount')?btn('floor-discount','خصم',o.id):''}</div></section>${editable?'<h3>إضافة صنف</h3><div class="op-grid">'+products.map(p=>'<article class="op-card op-product"><h3>'+esc(p.name)+'</h3><b>'+money(p.price||0)+'</b>'+btn('floor-add','+ إضافة',o.id+'__'+p.id,'primary')+btn('floor-add-note','إضافة بملاحظة',o.id+'__'+p.id)+'</article>').join('')+'</div>':''}`);
+}
+function restaurantReceipt(id){
+ const o=app.raw.restaurantOrders[id],r=o?.receiptSnapshot;if(!r)throw Error('الإيصال لسه مش متاح.');show('إيصال #'+r.queue,`<section class="op-receipt"><h3>${esc(app.raw.shops[r.shopId]?.name||'النشاط')}</h3><p>Snapshot محفوظ وقت التحصيل</p>${r.lines.map(l=>`<p>${esc(l.title)} × ${l.quantity}<b>${money(l.total)}</b></p>`).join('')}<hr><p>الإجمالي <b>${money(r.total)}</b></p><p>المحصّل <b>${money(r.paid)}</b></p></section>${btn('print','طباعة','','primary')}`);
+}
+function restaurantPaymentForm(id){
+ const o=app.raw.restaurantOrders[id],confirmed=app.model.restaurantPayments.filter(p=>p.orderId===id&&p.kind==='payment'&&p.verificationStatus!=='unverified_offline').reduce((n,p)=>n+p.amount,0)-app.model.restaurantPayments.filter(p=>p.orderId===id&&p.kind==='refund').reduce((n,p)=>n+p.amount,0),remaining=Math.max(0,o.total-confirmed);
+ return form('تحصيل طلب #'+o.queue,select('method','وسيلة الدفع',[['cash','نقدي'],['card_external','بطاقة خارجية'],['transfer_external','تحويل خارجي']])+input('amount','المبلغ',remaining/100,'number','min="0.01" step="0.01" required')+check('confirmed','تم استلام/تسجيل المبلغ بهذه الوسيلة',true),async(v,f,cid)=>send('restaurant.payment.collect',{id,version:o.version,amount:number(v.amount),method:v.method,offline:!navigator.onLine,note:!navigator.onLine?'تسجيل محلي أثناء انقطاع الاتصال':'تحصيل من شاشة الكاشير'},cid),{label:'سجّل التحصيل',steps:false});
+}
+function inventoryMoveForm(kind){
+ const items=app.model.inventory.items.filter(x=>x.shopId===app.shopId&&!x.archived),stores=app.model.inventory.stores.filter(x=>x.shopId===app.shopId&&!x.archived),isWaste=kind==='waste';return form(isWaste?'تسجيل هالك':'إضافة توريد',select('itemId','الصنف',items.map(x=>[x.id,x.name]))+select(isWaste?'fromStoreId':'toStoreId','المخزن',stores.map(x=>[x.id,x.name]))+input('quantity','الكمية','','number','min="1" step="1" required')+input('reason','السبب','','text','required minlength="3"'),async(v,f,cid)=>send('inventory.move',{shopId:app.shopId,kind,itemId:v.itemId,...(isWaste?{fromStoreId:v.fromStoreId}:{toStoreId:v.toStoreId}),quantity:Number(v.quantity),reason:v.reason},cid),{label:isWaste?'سجّل الهالك':'سجّل التوريد'});
+}
+function recipeForm(){
+ const products=Object.values(app.raw.products).filter(p=>p.shopId===app.shopId&&!p.archived),items=app.model.inventory.items.filter(x=>x.shopId===app.shopId&&!x.archived),stores=app.model.inventory.stores.filter(x=>x.shopId===app.shopId&&!x.archived),ingredientChoice=[['','— بدون خامة —'],...items.map(x=>[x.id,x.name])];
+ let html=select('productId','المنتج المباع',products.map(x=>[x.id,x.name]))+input('name','اسم الوصفة','وصفة جديدة','text','required minlength="2"')+select('storeId','مخزن الخصم',stores.map(x=>[x.id,x.name]));
+ for(let i=0;i<5;i++)html+=select('item'+i,'الخامة '+(i+1),ingredientChoice)+input('qty'+i,'كمية الخامة '+(i+1),i===0?1:0,'number','min="0" step="1"');
+ html+=check('approved','اعتماد الوصفة للاستهلاك',true)+input('reason','سبب الاعتماد','إعداد وصفة تشغيل','text','required minlength="3"');
+ return form('وصفة منتج',html,async(v,f,cid)=>{const ingredients=[];for(let i=0;i<5;i++)if(v['item'+i]&&Number(v['qty'+i])>0)ingredients.push({itemId:v['item'+i],quantity:Number(v['qty'+i])});await send('recipe.save',{shopId:app.shopId,productId:v.productId,name:v.name,storeId:v.storeId,ingredients,approved:v.approved,reason:v.reason},cid);},{label:'احفظ الوصفة'});
+}
+async function syncPendingOffline(){
+ if(!navigator.onLine||app.busy)return;const rows=(app.model?.offline?.queue||[]).filter(x=>x.status==='pending_sync');for(const q of rows){try{await send('offline.sync',{id:q.id,outcome:'success'});}catch{}}
+}
 async function action(op,id,button){const s=app.raw,t=s.tasks[id],o=s.orders[id];
  switch(op){
  case 'close':return close();
