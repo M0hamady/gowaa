@@ -117,6 +117,7 @@ function benefitForm(id){
 async function action(op,id,button){const s=app.raw,t=s.tasks[id],o=s.orders[id];
  switch(op){
  case 'close':return close();
+ case 'message-go':app.tab=id||'account';app.search='';app.section='';return draw();
  case 'reset':return form('نبدأ تجربة جديدة؟','<p>هتمسح بيانات الاختبار الموجودة في متصفحك فقط. مفيش تأثير على اللايف.</p>'+check('confirm','امسح بيانات التجربة المحلية وابدأ من جديد',true),async()=>{await trip?.destroy();trip=null;trackingTask=null;await app.store.reset();app.tab='';app.cart=[];for(let i=sessionStorage.length-1;i>=0;i--){const k=sessionStorage.key(i);if(k.startsWith('jowwa-test-cart:'))sessionStorage.removeItem(k);}await load();notify('التجربة اتصفرت، اللايف لم يتغير.');},{label:'ابدأ من جديد',steps:false});
  case 'fee-rule-new':return feeRuleForm();case 'fee-rule-edit':return feeRuleForm(id);case 'fee-rule-archive':return confirm('إيقاف قاعدة الرسوم','العمليات القديمة هتفضل محتفظة بالنسخة اللي اتطبقت عليها.',()=>send('fee.rule.archive',{id,version:s.settings.feeRules[id].version}));
  case 'benefit-new':return benefitForm();case 'benefit-edit':return benefitForm(id);case 'benefit-archive':return confirm('إيقاف عرض المنصة','الطلبات اللي ثبت عليها العرض قبل الإيقاف هتفضل محتفظة بحقوقها.',()=>send('benefit.archive',{id,version:s.platformBenefits[id].version}));
