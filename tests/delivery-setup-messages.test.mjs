@@ -7,7 +7,7 @@ import {quote,deliverySetupQuote} from '../src/operations/core.mjs';
 const NOW=Date.parse('2026-11-05T05:00:00Z');
 function world(){let s=seedState(NOW),n=0;return{get s(){return s},run(actor,type,body={}){const out=execute(s,actor,{id:'delivery-setup-'+(++n),type,body,expectedRevision:s.revision},{now:NOW});s=out.state;return out.result;},reject(actor,type,body,code){const before=structuredClone(s);assert.throws(()=>this.run(actor,type,body),e=>e.code===code);assert.deepEqual(s,before);}};}
 function saveShop(w,patch={}){
- const sh=w.s.shops['shop-a'];return w.run('owner','shop.save',{id:sh.id,version:sh.version,fields:{name:sh.name,category:sh.category,address:sh.address,locationId:sh.locationId,description:sh.description,accepting:sh.accepting,deliveryPolicy:sh.deliveryPolicy,deliverySourceMode:sh.deliverySourceMode,areaFees:sh.areaFees,suggestedFee:sh.suggestedFee,prepMinutes:sh.prepMinutes,archived:sh.archived,...patch}});
+ const sh=w.s.shops['shop-a'];return w.run('owner','shop.save',{id:sh.id,version:sh.version,fields:{name:sh.name,category:sh.category,address:sh.address,locationId:sh.locationId,description:sh.description,accepting:sh.accepting,deliveryPolicy:sh.deliveryPolicy,deliverySourceMode:sh.deliverySourceMode,compoundFees:sh.compoundFees,areaFees:sh.areaFees,suggestedFee:sh.suggestedFee,prepMinutes:sh.prepMinutes,archived:sh.archived,...patch}});
 }
 function createDeliveryOrder(w,destinationId='home-b'){
  const d=deliverySetupQuote(w.s,'shop-a',destinationId),sh=w.s.shops['shop-a'],lines=[{productId:'meal',quantity:2},{productId:'juice',quantity:2}];
@@ -16,7 +16,7 @@ function createDeliveryOrder(w,destinationId='home-b'){
 }
 
 test('merchant setup stores delivery source and per-area default fares',()=>{
- const w=world();saveShop(w,{deliverySourceMode:'private',areaFees:{'الياسمين':2000,'النرجس':4500,'محيط كيان':5000}});
+ const w=world();saveShop(w,{deliverySourceMode:'private',compoundFees:{'compound-yasmin':2000,'compound-narges':4500}});
  assert.equal(w.s.shops['shop-a'].deliverySourceMode,'private');
  assert.equal(deliverySetupQuote(w.s,'shop-a','home-a').amount,2000);
  assert.equal(deliverySetupQuote(w.s,'shop-a','home-b').amount,4500);
@@ -24,7 +24,7 @@ test('merchant setup stores delivery source and per-area default fares',()=>{
 });
 
 test('checkout automatically locks the destination area fare into the order',()=>{
- const w=world();saveShop(w,{deliveryPolicy:'customer',deliverySourceMode:'private',areaFees:{'الياسمين':2000,'النرجس':4500,'محيط كيان':5000}});
+ const w=world();saveShop(w,{deliveryPolicy:'customer',deliverySourceMode:'private',compoundFees:{'compound-yasmin':2000,'compound-narges':4500}});
  const id=createDeliveryOrder(w,'home-b'),o=w.s.orders[id];
  assert.equal(o.deliveryArea,'النرجس');
  assert.equal(o.deliveryQuotedFare,4500);
@@ -44,7 +44,7 @@ test('private-only shops cannot dispatch to Jowwa public couriers, and Jowwa-onl
 });
 
 test('merchant can change courier offer per order without silently increasing the customer charge',()=>{
- const w=world();saveShop(w,{deliveryPolicy:'customer',deliverySourceMode:'private',areaFees:{'الياسمين':2500,'النرجس':4500,'محيط كيان':5000}});
+ const w=world();saveShop(w,{deliveryPolicy:'customer',deliverySourceMode:'private',compoundFees:{'compound-yasmin':2500,'compound-narges':4500}});
  const id=createDeliveryOrder(w,'home-b');w.run('owner','order.transition',{id,version:w.s.orders[id].version,state:'accepted'});
  const task=w.run('owner','task.create',{orderId:id,proposedFare:6000,visibility:'private'}).id;
  const bid=w.run('courier','bid.offer',{taskId:task,fare:6000,pickupMinutes:5,travelMinutes:10}).id;
