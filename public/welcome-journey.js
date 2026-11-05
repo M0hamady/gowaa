@@ -179,9 +179,12 @@ export function mountWelcomeJourney({root,stage,places=[],directory=[],busRoutes
   });
   if(q('#journey-place-search')){
    const input=q('#journey-place-search'),results=q('#journey-place-options');
+   // A listed place without a confirmed location: say so and offer its page or a map pick, instead of an empty list.
+   const unmapped=term=>{const hits=placeResults(publicRows.filter(p=>!p.coordinate&&!known.has(p.id)),term).slice(0,3);if(!hits.length)return '';
+    return '<p>'+hits.map(p=>'<b>'+esc(p.name)+'</b>').join('، ')+' موجود في الدليل بس مكانه على الخريطة لسه مش محدد. لو عارف مكانه اضغط «اختار من الخريطة»، أو افتح صفحته وكلّمهم.</p>'+hits.map(p=>'<a class="journey-link" href="'+esc(typeof p.url==='string'&&/^\/place\/[a-zA-Z0-9_-]+$/.test(p.url)?p.url:'/place/'+encodeURIComponent(p.id))+'">صفحة '+esc(p.name)+' ↗</a>').join('');};
    const refresh=()=>{
     const term=input.value.trim(),matches=term?placeResults(places.filter(p=>p.coordinate&&!p.external),term).slice(0,7):[];
-    results.innerHTML=matches.map(p=>'<button type="button" role="option" data-select-place="'+esc(p.id)+'">'+icon(p.number?'building':'map')+'<span>'+esc(p.name)+'<small>'+(p.number?'العمارة من المخطط • الموقع تقريبي':'موقع من بيانات جوه')+'</small></span></button>').join('')||(term?'<p>مش لاقي المكان بالاسم ده؛ جرّب رقم العمارة أو اختاره على الخريطة.</p>':'<p>ابدأ بكتابة رقم العمارة واسم المجمع.</p>');
+    results.innerHTML=matches.map(p=>'<button type="button" role="option" data-select-place="'+esc(p.id)+'">'+icon(p.number?'building':'map')+'<span>'+esc(p.name)+'<small>'+(p.number?'العمارة من المخطط • الموقع تقريبي':'موقع من بيانات جوه')+'</small></span></button>').join('')||(term?unmapped(term)||'<p>مش لاقي المكان بالاسم ده؛ جرّب رقم العمارة أو اختاره على الخريطة.</p>':'<p>ابدأ بكتابة رقم العمارة واسم المجمع.</p>');
     input.setAttribute('aria-expanded',String(matches.length>0));
     results.querySelectorAll('[data-select-place]').forEach(b=>b.onclick=()=>choosePlace(known.get(b.dataset.selectPlace)));
    };input.oninput=refresh;refresh();

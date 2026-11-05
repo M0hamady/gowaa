@@ -9,10 +9,23 @@ export function makeGraph(roads,mode='walk'){
  return {nodes,adj,segments};
 }
 class Heap{constructor(){this.a=[];}push(v){let a=this.a,i=a.push(v)-1;while(i){let p=(i-1)>>1;if(a[p][0]<=v[0])break;a[i]=a[p];i=p;}a[i]=v;}pop(){const a=this.a,root=a[0],v=a.pop();if(a.length){let i=0;while(i*2+1<a.length){let c=i*2+1;if(c+1<a.length&&a[c+1][0]<a[c][0])c++;if(a[c][0]>=v[0])break;a[i]=a[c];i=c;}a[i]=v;}return root;}}
-export function findRoute(graph,start,end,{maxSnap=180}={}){
+// Nodes reachable from `from` (forward) or that can reach it (backward), cached per graph.
+function reach(graph,from,backward){
+ const key=(backward?'<':'>')+from.join('|');graph.reachCache??=new Map();if(graph.reachCache.has(key))return graph.reachCache.get(key);
+ if(backward&&!graph.radj){graph.radj=new Map();for(const [a,list] of graph.adj)for(const [b] of list){if(!graph.radj.has(b))graph.radj.set(b,[]);graph.radj.get(b).push(a);}}
+ const seen=new Set(from),stack=[...from];while(stack.length){const n=stack.pop();for(const x of backward?(graph.radj.get(n)||[]):(graph.adj.get(n)||[]).map(e=>e[0]))if(!seen.has(x)){seen.add(x);stack.push(x);}}
+ if(graph.reachCache.size>40)graph.reachCache.clear();graph.reachCache.set(key,seen);return seen;
+}
+export function findRoute(graph,start,end,{maxSnap=180,connected=false}={}){
  if(haversine(start,end)<2)return {distance:0,roadDistance:0,connectors:0,points:[start,end],snapStart:start,snapEnd:end};
  const snap=p=>{let best=null;for(const s of graph.segments){const q=project(p,s.pa,s.pb);if(!best||q.distance<best.distance)best={...s,...q};}return best;};
- const s=snap(start),t=snap(end);if(!s||!t||s.distance>maxSnap||t.distance>maxSnap)return {error:'snap',startDistance:s?.distance,endDistance:t?.distance};
+ let s=snap(start),t=snap(end);
+ // Far from the network the nearest road may belong to an unconnected piece; snap the far end
+ // only to roads connected with the other end.
+ if(connected&&s&&t){const near=(p,ok)=>{let best=null;for(const g of graph.segments){if(!ok(g))continue;const q=project(p,g.pa,g.pb);if(!best||q.distance<best.distance)best={...g,...q};}return best;};
+  if(connected!=='end'){const r=reach(graph,[t.a,t.b],true);s=near(start,g=>(g.forward&&r.has(g.b))||(g.backward&&r.has(g.a)))||s;}
+  else{const r=reach(graph,[s.a,s.b],false);t=near(end,g=>(g.forward&&r.has(g.a))||(g.backward&&r.has(g.b)))||t;}}
+ if(!s||!t||s.distance>maxSnap||t.distance>maxSnap)return {error:'snap',startDistance:s?.distance,endDistance:t?.distance};
  const adj=new Map(graph.adj);const add=(a,b,d)=>adj.set(a,[...(adj.get(a)||[]),[b,d]]);
  if(s.forward)add('@start',s.b,haversine(s.point,s.pb));
  if(s.backward)add('@start',s.a,haversine(s.point,s.pa));
@@ -23,7 +36,22 @@ export function findRoute(graph,start,end,{maxSnap=180}={}){
  while(heap.a.length){const [cost,id]=heap.pop();if(cost!==dist.get(id))continue;if(id==='@end')break;for(const [next,w] of adj.get(id)||[]){const nc=cost+w;if(nc<(dist.get(next)??Infinity)){dist.set(next,nc);prev.set(next,id);heap.push([nc,next]);}}}
  if(!dist.has('@end'))return {error:'disconnected'};
  const path=[];let cur='@end';while(cur){path.push(cur);cur=prev.get(cur);}path.reverse();const points=path.map(n=>n==='@start'?s.point:n==='@end'?t.point:graph.nodes.get(n));
- return {distance:dist.get('@end')+s.distance+t.distance,roadDistance:dist.get('@end'),connectors:s.distance+t.distance,points,snapStart:s.point,snapEnd:t.point};
+ return {distance:dist.get('@end')+s.distance+t.distance,roadDistance:dist.get('@end'),connectors:s.distance+t.distance,startDistance:s.distance,endDistance:t.distance,points,snapStart:s.point,snapEnd:t.point};
+}
+// Route from anywhere: near the network the gap is walked as a dashed connector; farther than
+// `area` metres the person is outside Kayan, so we route from the nearest network point (the
+// entry) and the trip up to it is handed to an outside map.
+export const NEAR_SNAP=180,AREA_SNAP=2500;
+export function planRoute(graph,start,end){
+ const strict=findRoute(graph,start,end);if(!strict.error)return {...strict,offRoad:false,outside:null};
+ if(strict.error!=='snap'&&strict.error!=='disconnected')return strict;
+ let loose=findRoute(graph,start,end,{maxSnap:Infinity,connected:'start'});if(loose.error)loose=findRoute(graph,start,end,{maxSnap:Infinity,connected:'end'});if(loose.error)return loose;
+ const outside=loose.startDistance>AREA_SNAP?'start':loose.endDistance>AREA_SNAP?'end':null;
+ return {...loose,offRoad:true,outside,insideDistance:loose.roadDistance+(outside==='start'?loose.endDistance:outside==='end'?loose.startDistance:loose.connectors)};
+}
+export function outsideMapsLink(from,to,mode){
+ const p=c=>Number(c[1]).toFixed(6)+','+Number(c[0]).toFixed(6);
+ return 'https://www.google.com/maps/dir/?api=1&origin='+p(from)+'&destination='+p(to)+'&travelmode='+({walk:'walking',bike:'bicycling',car:'driving'}[mode]||'driving');
 }
 export function estimateMinutes(distance,mode){return Math.max(1,Math.ceil(distance/({walk:4.5,bike:12,car:20}[mode]||4.5)/1000*60));}
 export function cairoParts(date=new Date()){const p=Object.fromEntries(new Intl.DateTimeFormat('en-GB',{timeZone:'Africa/Cairo',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',weekday:'long',hourCycle:'h23'}).formatToParts(date).map(x=>[x.type,x.value]));return {...p,iso:`${p.year}-${p.month}-${p.day}`,minutes:Number(p.hour)*60+Number(p.minute)};}
