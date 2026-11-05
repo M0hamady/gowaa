@@ -20,10 +20,30 @@ export const nextId=(s,prefix)=>prefix+'-'+(++s.nextId);
 export function calendarMonthEnd(iso){const d=new Date(iso);requireThat(Number.isFinite(+d),'DATE','تاريخ غير صحيح.');const day=d.getUTCDate();d.setUTCDate(1);d.setUTCMonth(d.getUTCMonth()+1);const end=new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth()+1,0)).getUTCDate();d.setUTCDate(Math.min(day,end));return d.toISOString();}
 export const roles=['merchant','service_provider','courier','driver'];
 export const activeTaskStates=['assigned','at_pickup','picked_up','en_route','arrived','awaiting_receipt','issue'];
-export const permissions=['catalog','orders','cash','dispatch','reports'];
+export const staffRoles=['shop_manager','floor_manager','waiter','cashier','kitchen'];
+export const staffPermissions=['view_orders','create_pos_order','edit_open_order','send_to_kitchen','view_kitchen','update_kitchen_status','take_payment','refund_payment','manage_tables','move_table_order','merge_checks','manage_products','manage_recipes','view_inventory','adjust_inventory','record_waste','view_reports','approve_discount','manage_staff','manage_settings','manage_managers'];
+export const rolePermissionDefaults=Object.freeze({
+ shop_manager:['view_orders','create_pos_order','edit_open_order','send_to_kitchen','view_kitchen','update_kitchen_status','take_payment','refund_payment','manage_tables','move_table_order','merge_checks','manage_products','manage_recipes','view_inventory','adjust_inventory','record_waste','view_reports','approve_discount'],
+ floor_manager:['view_orders','edit_open_order','send_to_kitchen','manage_tables','move_table_order','merge_checks','approve_discount'],
+ waiter:['view_orders','edit_open_order','send_to_kitchen'],
+ cashier:['view_orders','create_pos_order','edit_open_order','send_to_kitchen','take_payment','refund_payment'],
+ kitchen:['view_kitchen','update_kitchen_status','view_inventory','record_waste']
+});
+export const permissions=staffPermissions;
+const legacyPermissionMap={catalog:'manage_products',orders:'view_orders',cash:'create_pos_order',dispatch:'view_orders',reports:'view_reports'};
+export function employeeMembership(s,id,shopId){return Object.values(s.team||{}).find(m=>m.shopId===shopId&&m.userId===id&&m.status==='active');}
+export function shopPermissionSet(s,id,shopId){
+ const shop=s.shops?.[shopId];if(!shop)return new Set();if(isAdmin(s,id)||shop.ownerId===id)return new Set(staffPermissions);
+ const member=employeeMembership(s,id,shopId);if(!member)return new Set();
+ const set=new Set(rolePermissionDefaults[member.role]||[]);
+ for(const p of member.permissions||member.grantedPermissions||[])if(staffPermissions.includes(p))set.add(p);
+ for(const p of member.deniedPermissions||[])set.delete(p);
+ return set;
+}
+export function hasShopPermission(s,id,shopId,permission){return shopPermissionSet(s,id,shopId).has(permission);}
 export function approved(s,actorId,role){return Object.values(s.applications).some(a=>a.userId===actorId&&a.role===role&&a.status==='approved');}
 export function isAdmin(s,id){return s.users[id]?.admin===true;}
-export function canShop(s,id,shopId,permission='orders'){const shop=s.shops[shopId];if(!shop)return false;if(isAdmin(s,id))return true;if(shop.ownerId===id)return ['merchant','service_provider'].some(r=>approved(s,id,r));return Object.values(s.team).some(m=>m.shopId===shopId&&m.userId===id&&m.status==='accepted'&&m.permissions.includes(permission));}
+export function canShop(s,id,shopId,permission='orders'){const shop=s.shops[shopId];if(!shop)return false;if(isAdmin(s,id))return true;if(shop.ownerId===id)return ['merchant','service_provider'].some(r=>approved(s,id,r));const granular=legacyPermissionMap[permission]||permission;return hasShopPermission(s,id,shopId,granular);}
 export function requireShop(s,id,shopId,permission='orders'){requireThat(canShop(s,id,shopId,permission),'FORBIDDEN','مش عندك صلاحية على النشاط ده.',403);return s.shops[shopId];}
 export function ownsParty(s,id,party){if(party==='courier:'+id)return true;if(party.startsWith('shop:'))return canShop(s,id,party.slice(5),'cash');return isAdmin(s,id);}
 export function debtBalance(s,debtor,creditor){return s.ledger.reduce((total,e)=>total+(e.from===debtor&&e.to===creditor?e.amount:0)-(e.from===creditor&&e.to===debtor?e.amount:0),0);}
