@@ -69,8 +69,8 @@ test('provider API rejects nonadmins before any admin read or save; normal quote
 });
 test('admin can edit a provider, create/edit/archive/restore its product with audited RPCs',async()=>{
  const h=harness({admin:true}),handler=createProviderHandler({...h.options,admin:true});
- const save=response();await handler({method:'POST',headers,body:{action:'save-provider',providerId:provider.id,expectedUpdatedAt:null,fields:{name:'اسم جديد',category:'خدمات'}}},save);assert.equal(save.statusCode,200);assert.equal(h.stores.places[0].data.category,'خدمات');
- const p=response();await handler({method:'POST',headers,body:{action:'save-product',providerId:provider.id,fields:raw}},p);assert.equal(p.statusCode,200);const id=p.json().productId;assert.equal(h.stores.settings[0].id,catalogOverrideKey(provider.id,id));
+ const save=response();await handler({method:'POST',headers,body:{action:'save-provider',providerId:provider.id,expectedUpdatedAt:null,fields:{name:'اسم جديد',category:'خدمات'}}},save);assert.equal(save.statusCode,200);assert.match(save.json().savedAt,/^\d{4}-/);assert.equal(h.stores.places[0].data.category,'خدمات');
+ const p=response();await handler({method:'POST',headers,body:{action:'save-product',providerId:provider.id,fields:raw}},p);assert.equal(p.statusCode,200);assert.match(p.json().savedAt,/^\d{4}-/);const id=p.json().productId;assert.equal(h.stores.settings[0].id,catalogOverrideKey(provider.id,id));
  const stale=response();await handler({method:'POST',headers,body:{action:'save-product',providerId:provider.id,productId:id,expectedUpdatedAt:null,fields:raw}},stale);assert.equal(stale.statusCode,409);
  const hide=response();await handler({method:'POST',headers,body:{action:'save-product',providerId:provider.id,productId:id,expectedUpdatedAt:h.stores.settings[0].updated_at,fields:raw,archived:true}},hide);assert.equal(hide.statusCode,200);
  const listing=response();await handler({method:'GET',headers,query:{provider:provider.id}},listing);assert.ok(listing.json().products.some(p=>p.id===id&&p.archived));

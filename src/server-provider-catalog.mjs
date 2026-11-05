@@ -27,10 +27,28 @@ export function createProviderHandler({admin=false,...options}={}){return async(
    if(!id){if(!admin)return reply(400,{error:'اختار مقدم الخدمة.'});return reply(200,{providers:state.providers.filter(p=>!p.directoryGroup).map(p=>{const products=catalogForProvider(p,state.menus,state.overrides);return {id:p.id,name:p.name,category:p.category,archived:p._archived,updatedAt:p._updatedAt,productCount:products.length,analytics:metricsFor(p,products)};})});}
    if(!validKey(id))return reply(400,{error:'مقدم الخدمة غير صحيح.'});const provider=state.providers.find(p=>p.id===id);
    if(!provider||provider._archived&&!admin)return reply(404,{error:'مقدم الخدمة غير متاح.'});
-   let orderGate={canOrder:false,reason:'unclaimed'},products=catalogForProvider(provider,state.menus,state.overrides);
+   let orderGate={canOrder:false,reason:'unclaimed'},products=catalogForProvider(provider,state.menus,state.overrides),readiness={claimStatus:'missing',ownerLinked:false,managedProducts:0,approvedProducts:0,orderGate,updatedAt:provider._updatedAt||null,nextAction:'أضف سجل المطالبة للمالك ثم اطلب منه تأكيد الرقم.'};
    if(!admin){const linked=await linkedProviderCatalog(member.db,id);orderGate=linked.gate;products=[...products,...linked.products];}
-   else for(const row of state.overrides.filter(r=>r.archived&&r.data?.providerId===id)){try{products.push({...validateProduct(row.data.fields),id:row.data.productId,providerId:id,sourceKind:'admin-catalog',archived:true});}catch{}}
-   return reply(200,{provider,products,orderGate,admin,analytics:metricsFor(provider,products),versions:admin?Object.fromEntries(state.overrides.filter(x=>x.data?.providerId===id).map(x=>[x.data.productId,x.updated_at])):undefined});
+   else {
+    for(const row of state.overrides.filter(r=>r.archived&&r.data?.providerId===id)){try{products.push({...validateProduct(row.data.fields),id:row.data.productId,providerId:id,sourceKind:'admin-catalog',archived:true});}catch{}}
+    try {
+     const claims=(await member.db.rpc('jowwa_admin_service_claims')).data?.claims||[];
+     const claim=claims.find(x=>x.directoryId===id);
+     if(claim){
+      let gate={canOrder:false,reason:'notapproved'};
+      let managed=[];
+      if(claim.sellerId&&claim.id){
+       const gateResult=await member.db.rpc('jowwa_order_gate',{p_seller_id:claim.sellerId,p_service_claim_id:claim.id});
+       gate=gateResult.error?gate:gateResult.data||gate;
+       const rows=await member.db.from('listings').select('id,title,status,archived,available').eq('seller_id',claim.sellerId).eq('service_claim_id',claim.id).limit(500);
+       managed=rows.error?[]:rows.data||[];
+      }
+      const approved=managed.filter(x=>x.status==='approved'&&!x.archived).length;
+      readiness={claimStatus:claim.status,ownerLinked:true,managedProducts:managed.length,approvedProducts:approved,orderGate:gate,updatedAt:claim.updatedAt||provider._updatedAt||null,nextAction:claim.status!=='approved'?'راجع طلب المالك واعتمده.':approved===0?'اطلب من المالك إضافة المنتجات المدارة ثم راجعها.':gate.canOrder?'جاهز للتعامل مع الجمهور.':'فعّل استقبال الطلبات ومواعيد العمل من حساب المالك.'};
+     }
+    } catch {}
+   }
+   return reply(200,{provider,products,orderGate,readiness,admin,analytics:metricsFor(provider,products),versions:admin?Object.fromEntries(state.overrides.filter(x=>x.data?.providerId===id).map(x=>[x.data.productId,x.updated_at])):undefined});
   }
   let body;try{body=typeof req.body==='string'?JSON.parse(req.body):req.body;}catch{fail('بيانات غير صحيحة.');}
   if(!body||typeof body!=='object'||Array.isArray(body)||JSON.stringify(body).length>24000)fail('حجم البيانات أكبر من المسموح.');
@@ -44,7 +62,7 @@ export function createProviderHandler({admin=false,...options}={}){return async(
    const current=state.providers.find(p=>p.id===id);if(body.providerId&&!current)fail('مقدم الخدمة غير موجود.',404);if(!current&&(!fields.name||!fields.category))fail('اسم النشاط وتصنيفه مطلوبان.');
    if(current&&body.expectedUpdatedAt!==current._updatedAt)fail('البيانات اتغيرت؛ حدّث الصفحة قبل الحفظ.',409);
    const {_archived,_updatedAt,...old}=current||{};const data={...old,...fields,id};
-   const saved=await member.db.rpc('jowwa_admin_save',{target_type:'places',target_id:id,fields:{data,archived:typeof body.archived==='boolean'?body.archived:!!_archived}});if(saved.error)throw saved.error;return reply(200,{providerId:id,saved:true});
+   const saved=await member.db.rpc('jowwa_admin_save',{target_type:'places',target_id:id,fields:{data,archived:typeof body.archived==='boolean'?body.archived:!!_archived}});if(saved.error)throw saved.error;return reply(200,{providerId:id,saved:true,savedAt:new Date().toISOString()});
   }
   if(body.action==='save-product'){
    if(!validKey(body.providerId))fail('اختار مقدم الخدمة.');const provider=state.providers.find(p=>p.id===body.providerId);if(!provider)fail('مقدم الخدمة غير موجود.',404);
@@ -54,7 +72,7 @@ export function createProviderHandler({admin=false,...options}={}){return async(
    if((prior?.updated_at||null)!==(body.expectedUpdatedAt||null))fail('المنتج اتغير؛ حدّث البيانات قبل الحفظ.',409);
    const fields=validateProduct(body.fields),data={providerId:provider.id,productId:id,fields,editor:'admin',catalogVersion:1};
    const saved=await member.db.rpc('jowwa_admin_save',{target_type:'settings',target_id:catalogOverrideKey(provider.id,id),fields:{data,archived:body.archived===true}});if(saved.error)throw saved.error;
-   return reply(200,{providerId:provider.id,productId:id,saved:true});
+   return reply(200,{providerId:provider.id,productId:id,saved:true,savedAt:new Date().toISOString()});
   }
   fail('الإجراء غير مدعوم.');
  }catch(error){if(error?.code==='42501')return reply(403,{error:'مش عندك صلاحية للتعديل.'});return reply(error.status||503,{error:error.status?error.message:'تعذر الحفظ أو التحميل. حاول مرة تانية.'});}
