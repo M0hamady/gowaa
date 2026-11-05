@@ -4,7 +4,7 @@ import {makeGraph,findRoute} from '../../public/routing.js';
 import {openTestStore,testActor} from './browser-store.mjs';import {personas} from './fixtures.mjs';import {render,navItems,roleLabels,btn,badge,time,taskCard} from './views.mjs';
 import {quote,egpInput,moneyLabel as money,debtBalance,canShop,trackingView,suggestedFare,activeTaskStates,paidNet,approved,deliverySetupQuote,staffRoles,staffPermissions,hasShopPermission} from './core.mjs';import {createTripMode} from './trip-mode.mjs';
 const $=id=>document.getElementById(id),app={store:null,actor:testActor(),raw:null,model:null,tab:'',shopId:'shop-a',cart:[],rposCart:[],floorOrderId:null,kdsSound:false,search:'',section:'',busy:false};
-let leafMap=null,mapGeneration=0,trip=null,trackingTask=null,refreshQueued=false,pendingDispatch=null,kdsAudio=null,kdsSeen=0;
+let leafMap=null,mapGeneration=0,trip=null,trackingTask=null,refreshQueued=false,pendingDispatch=null,kdsAudio=null,kdsSeen=0,offlineSyncScheduled=false,offlineSyncRunning=false;
 const notify=(message,error=false)=>{const el=$('ops-status');el.textContent=message;el.classList.toggle('is-error',error);};
 const number=v=>egpInput(String(v).replace(/[٠-٩]/g,d=>String('٠١٢٣٤٥٦٧٨٩'.indexOf(d))).replace('٫','.'));
 const input=(name,label,value='',type='text',extra='')=>`<label>${esc(label)}<input name="${name}" type="${type}" value="${esc(value)}" ${extra}></label>`;
@@ -32,7 +32,7 @@ function close(){if(leafMap){leafMap.remove();leafMap=null;}mapGeneration++;$('o
 function show(title,html){close();$('ops-dialog').innerHTML=`<div class="op-dialog-head"><h2>${esc(title)}</h2><button type="button" data-op="close" aria-label="إغلاق">${icon('close')}</button></div>${html}`;$('ops-modal').showModal();}
 async function send(type,body,commandId=crypto.randomUUID()){
  if(app.busy)throw Error('استنى تأكيد العملية الحالية.');app.busy=true;notify('بنحفظ العملية التجريبية…');$('ops-main').setAttribute('aria-busy','true');const command={id:commandId,type,body,expectedRevision:app.raw.revision};
- try{await new Promise(r=>setTimeout(r,100));const result=await app.store.dispatch(app.actor,command);await load();notify(result.message||'تم حفظ العملية.');return result;}catch(e){await load();notify(e.message||'تعذر الحفظ.',true);throw e;}finally{app.busy=false;$('ops-main').setAttribute('aria-busy','false');}
+ try{await new Promise(r=>setTimeout(r,100));const result=await app.store.dispatch(app.actor,command);await load();notify(result.message||'تم حفظ العملية.');return result;}catch(e){await load();notify(e.message||'تعذر الحفظ.',true);throw e;}finally{app.busy=false;$('ops-main').setAttribute('aria-busy','false');if(navigator.onLine&&(type.startsWith('restaurant.')||type==='offline.retry'))scheduleOfflineSync();}
 }
 function form(title,html,onSubmit,{label='حفظ',steps=true,review,visible=()=>true}={}){
  show(title,`<form id="ops-form" class="market-form">${html}<div class="form-error" role="alert"></div><button type="submit" class="primary">${esc(label)}</button></form>`);const f=$('ops-form'),id=crypto.randomUUID();if(steps!==false)formSteps(f,{onSubmitLabel:label,review,summary:true,visible});else f.classList.add('compact-form');
@@ -167,17 +167,23 @@ function recipeForm(){
  html+=check('approved','اعتماد الوصفة للاستهلاك',true)+input('reason','سبب الاعتماد','إعداد وصفة تشغيل','text','required minlength="3"');
  return form('وصفة منتج',html,async(v,f,cid)=>{const ingredients=[];for(let i=0;i<5;i++)if(v['item'+i]&&Number(v['qty'+i])>0)ingredients.push({itemId:v['item'+i],quantity:Number(v['qty'+i])});await send('recipe.save',{shopId:app.shopId,productId:v.productId,name:v.name,storeId:v.storeId,ingredients,approved:v.approved,reason:v.reason},cid);},{label:'احفظ الوصفة'});
 }
+function scheduleOfflineSync(){
+ if(!navigator.onLine||offlineSyncScheduled||offlineSyncRunning)return;
+ offlineSyncScheduled=true;
+ setTimeout(async()=>{offlineSyncScheduled=false;if(app.busy){scheduleOfflineSync();return;}await syncPendingOffline();},220);
+}
 async function syncPendingOffline(){
- if(!navigator.onLine||app.busy)return;
- const rows=(app.model?.offline?.queue||[]).filter(x=>x.status==='pending_sync').sort((a,b)=>new Date(a.createdAt)-new Date(b.createdAt));
- for(const q of rows){
-  if(!navigator.onLine)break;
-  try{
+ if(offlineSyncRunning||!navigator.onLine)return;
+ if(app.busy){scheduleOfflineSync();return;}
+ offlineSyncRunning=true;
+ try{
+  const rows=(app.model?.offline?.queue||[]).filter(x=>x.status==='pending_sync').sort((a,b)=>new Date(a.createdAt)-new Date(b.createdAt));
+  for(const q of rows){if(!navigator.onLine)break;try{
    const order=app.raw.restaurantOrders[q.orderId];
    const reply=await syncWithLocalAuthority(q,order,{online:navigator.onLine});
    await send('offline.sync',{id:q.id,...reply});
-  }catch(error){notify('الطلب محفوظ محليًا؛ محاكي المزامنة لم يؤكد العملية: '+error.message,true);break;}
- }
+  }catch(error){notify('العملية محفوظة محليًا؛ محاكي المزامنة لم يؤكد الحفظ: '+error.message,true);break;}}
+ }finally{offlineSyncRunning=false;}
 }
 async function action(op,id,button){const s=app.raw,t=s.tasks[id],o=s.orders[id];
  switch(op){
@@ -244,10 +250,10 @@ async function action(op,id,button){const s=app.raw,t=s.tasks[id],o=s.orders[id]
  }
 }
 async function init(){
- $('ops-persona').innerHTML=personas.map(([id,name])=>`<option value="${id}">${esc(name)}</option>`).join('');app.store=await openTestStore();await load();app.store.subscribe(()=>{if(refreshQueued)return;refreshQueued=true;queueMicrotask(async()=>{refreshQueued=false;await load();});});
+ $('ops-persona').innerHTML=personas.map(([id,name])=>`<option value="${id}">${esc(name)}</option>`).join('');app.store=await openTestStore();await load();if(navigator.onLine)scheduleOfflineSync();app.store.subscribe(()=>{if(refreshQueued)return;refreshQueued=true;queueMicrotask(async()=>{refreshQueued=false;await load();});});
  $('ops-persona').onchange=async e=>{await trip?.destroy();trip=null;trackingTask=null;close();app.actor=e.target.value;sessionStorage.setItem('jowwa-test-actor',app.actor);app.tab='';app.shopId=app.actor==='otherOwner'?'shop-b':'shop-a';app.search='';app.section='';app.rposCart=[];app.floorOrderId=null;await load();notify('إنت دلوقتي بتجرب دور '+app.model.user.name+'. كل البيانات محلية ووهمية.');};
  document.addEventListener('click',async e=>{const tab=e.target.closest('[data-tab]');if(tab){close();app.tab=tab.dataset.tab;app.search='';app.section='';loadCart();draw();return;}const button=e.target.closest('[data-op]');if(!button||button.disabled)return;const old=button.innerHTML;button.disabled=true;try{await action(button.dataset.op,button.dataset.id,button);}catch(error){notify(error.message,true);}finally{if(button.isConnected){button.disabled=false;button.innerHTML=old;}}});
- window.addEventListener('offline',()=>notify('الاتصال اتقطع — طلبات الكاشير الجديدة هتتحفظ محليًا.'));window.addEventListener('online',async()=>{notify('الاتصال رجع — بنراجع العمليات المنتظرة للمزامنة…');await syncPendingOffline();});
+ window.addEventListener('offline',()=>notify('الاتصال اتقطع — طلبات الكاشير الجديدة هتتحفظ محليًا.'));window.addEventListener('online',()=>{notify('الاتصال رجع — بنراجع العمليات في محاكي محلي، مش خادم حقيقي…');scheduleOfflineSync();});
   $('ops-modal').addEventListener('cancel',()=>close());notify('جاهز للتجربة. ابدأ كعميل، وبعدها بدّل للمحل ثم المندوب لمتابعة نفس الطلب.');
 }
 init().catch(error=>{notify('تعذر فتح مساحة الاختبار: '+error.message,true);$('ops-main').innerHTML='<p>فعّل تخزين المتصفح وأعد فتح الصفحة. مفيش تأثير على اللايف.</p>';});
