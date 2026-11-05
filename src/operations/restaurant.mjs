@@ -1,4 +1,4 @@
-import {requireThat as ok,key,text,int,money,nextId,checkVersion,bump,hasShopPermission,paidNet,openShift,addCash} from './core.mjs';
+import {requireThat as ok,key,text,int,money,nextId,checkVersion,bump,hasShopPermission,paidNet,openShift,addCash,employeeMembership} from './core.mjs';
 
 const orderStates=['open','sent_to_kitchen','preparing','ready','served','account_open','paid','cancelled','merged'];
 const kitchenStates=['new','preparing','ready','served'];
@@ -79,7 +79,7 @@ export function restaurantCommand(c){
  default:return null;
  }
 }
-export function restaurantOrderVisible(s,a,o){if(hasShopPermission(s,a,o.shopId,'view_orders')||hasShopPermission(s,a,o.shopId,'view_kitchen')||hasShopPermission(s,a,o.shopId,'take_payment'))return true;return o.assignedStaffId===a;}
+export function restaurantOrderVisible(s,a,o){const member=employeeMembership(s,a,o.shopId);if(member?.role==='waiter')return o.assignedStaffId===a;if(hasShopPermission(s,a,o.shopId,'view_orders')||hasShopPermission(s,a,o.shopId,'view_kitchen')||hasShopPermission(s,a,o.shopId,'take_payment'))return true;return o.assignedStaffId===a;}
 export function restaurantOrderProjection(s,a,o){
  const kitchenOnly=hasShopPermission(s,a,o.shopId,'view_kitchen')&&!hasShopPermission(s,a,o.shopId,'view_orders');
  if(kitchenOnly)return{id:o.id,queue:o.queue,shopId:o.shopId,mode:o.mode,tableId:o.tableId,status:o.status,assignedStaffId:o.assignedStaffId,createdAt:o.createdAt,sentAt:o.sentAt,lines:o.lines.map(l=>({id:l.id,title:l.title,quantity:l.quantity,notes:l.notes,kitchenStatus:l.kitchenStatus,sentAt:l.sentAt,readyAt:l.readyAt,servedAt:l.servedAt})),version:o.version};
