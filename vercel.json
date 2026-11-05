@@ -1,7 +1,8 @@
 {
  "version":2,"outputDirectory":"public","cleanUrls":true,
  "headers":[
-  {"source":"/(.*)","headers":[{"key":"X-Content-Type-Options","value":"nosniff"},{"key":"Referrer-Policy","value":"same-origin"},{"key":"X-Robots-Tag","value":"noindex, nofollow"},{"key":"Content-Security-Policy","value":"connect-src 'self'; form-action 'self'; frame-src 'none'; object-src 'none'; base-uri 'self'"}]},
+  {"source":"/(.*)","headers":[{"key":"X-Content-Type-Options","value":"nosniff"},{"key":"Referrer-Policy","value":"strict-origin-when-cross-origin"}]},
+  {"source":"/(work|operations)(\\.html)?","headers":[{"key":"X-Robots-Tag","value":"noindex, nofollow"},{"key":"Cache-Control","value":"no-store"}]},
   {"source":"/(.*)","headers":[{"key":"Permissions-Policy","value":"camera=(), microphone=(), geolocation=(self), screen-wake-lock=(self)"},{"key":"X-Frame-Options","value":"DENY"}]},
   {"source":"/order","headers":[{"key":"Cache-Control","value":"private, no-store"},{"key":"X-Robots-Tag","value":"noindex, nofollow"},{"key":"Referrer-Policy","value":"no-referrer"}]},
   {"source":"/order.html","headers":[{"key":"Cache-Control","value":"private, no-store"},{"key":"X-Robots-Tag","value":"noindex, nofollow"},{"key":"Referrer-Policy","value":"no-referrer"}]},
@@ -32,13 +33,13 @@
   "api/place.mjs":{"includeFiles":"public/data/{places,business-hours}.json"},
   "api/bus.mjs":{"includeFiles":"public/data/transit.json"},
   "api/assistant.mjs":{"includeFiles":"public/data/{map,places,transit,market-directory}.json","maxDuration":30},
-  "api/notifications.mjs":{"maxDuration":30},
+  "api/notifications.mjs":{"maxDuration":120},
   "api/rounds.mjs":{"maxDuration":30},
   "api/sms-hook.mjs":{"maxDuration":10},
   "api/menu.mjs":{"includeFiles":"public/data/{places,market-directory}.json"},
   "api/sitemap.mjs":{"includeFiles":"public/data/{places,market-directory}.json"},
-  "api/notifications-daily.mjs":{"maxDuration":30},
+  "api/notifications-daily.mjs":{"maxDuration":60},
   "api/service-claims.mjs":{"includeFiles":"public/data/{places,market-directory}.json","maxDuration":30}
  },
- "crons":[]
+ "crons":[{"path":"/api/notifications-daily","schedule":"5 22 * * *"}]
 }

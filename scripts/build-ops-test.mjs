@@ -14,7 +14,10 @@ export async function buildTest(){
  // Fully offline rendering: no font CDN requests from this isolated test artifact.
  for(const cssPath of ['public/market.css','public/style.css']){const css=await readFile(cssPath,'utf8');await writeFile(cssPath,css.split('\n').filter(line=>!line.includes('fonts.googleapis.com')).join('\n'));}
  await build({entryPoints:['src/operations/ui.mjs'],outfile:'public/operations-ui.js',bundle:true,format:'esm',minify:true,target:'es2022',legalComments:'eof'});
- const page=await readFile('public/operations.html','utf8');
+ // The test workbench lives outside public/ so the live build can never serve it.
+ const page=await readFile('src/operations/page.html','utf8');
+ await copyFile('src/operations/operations.css','public/operations.css');
+ await writeFile('public/operations.html',page);
  await writeFile('public/explore.html',originalHome.replace('<body','<body data-operations-preview="true"').replace('</body>','<aside style="position:fixed;bottom:8px;left:8px;right:8px;z-index:99999;background:#fff2d9;padding:10px;text-align:center">واجهة مرجعية في نسخة اختبار؛ حسابات اللايف والطلبات الحقيقية مقفولة. <a href="/work">افتح مساحة اختبار التشغيل</a></aside></body>'));
  await Promise.all(['public/index.html','public/work.html','public/market.html'].map(path=>writeFile(path,page)));
  await writeFile('public/config.js','export default '+JSON.stringify({url:'',key:'',publicSignup:false,phoneAuth:false,operationsTest:true})+';\n');
