@@ -34,7 +34,7 @@ const controls=[
  ['.contact-links a[href^="/?to="]','map','شوفه على الخريطة'],
  ['.contact-links a[href^="https://wa.me/"]','phone','واتساب'],
  ['.contact-links a[target="_blank"],.service-action','link',null],
- ['.card-actions a','info','التفاصيل'],['.place-detail>button[data-share-url]','share','مشاركة'],
+ ['.card-actions a:first-child','info','التفاصيل'],['.place-detail>button[data-share-url]','share','مشاركة'],
  ['.market-footer a[href*="view=mine"]','plus','أضف نشاطك']
 ];
 function apply(el,name,label,iconOnly=false){
