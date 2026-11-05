@@ -8,7 +8,7 @@
   {"source":"/receipt","headers":[{"key":"Cache-Control","value":"private, no-store"},{"key":"X-Robots-Tag","value":"noindex, nofollow"},{"key":"Referrer-Policy","value":"no-referrer"}]},
   {"source":"/receipt.html","headers":[{"key":"Cache-Control","value":"private, no-store"},{"key":"X-Robots-Tag","value":"noindex, nofollow"},{"key":"Referrer-Policy","value":"no-referrer"}]}
  ],
- "buildCommand":"node scripts/build-ops-test.mjs","installCommand":"npm ci",
+ "buildCommand":"node scripts/build-live.mjs","installCommand":"npm ci",
  "rewrites":[
   {"source":"/api/member","destination":"/api/service-claims?__serviceRoute=member"},
   {"source":"/api/provider-catalog","destination":"/api/service-claims?__serviceRoute=provider-catalog"},

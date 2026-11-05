@@ -1,6 +1,7 @@
 import {requireThat as ok,fail,int,money,text,key,nextId,calendarMonthEnd,normalizePhone,roles,permissions,approved,isAdmin,requireShop,checkVersion,bump} from './core.mjs';
 import {validateFeeRule} from './dynamic-fees.mjs';
 import {validatePlatformBenefit} from './platform-benefits.mjs';
+import {normalizeBusinessType} from './business-types.mjs';
 const object=(v)=>{ok(v&&typeof v==='object'&&!Array.isArray(v),'FIELDS','راجع البيانات.');return v;};
 const only=(v,keys)=>{object(v);ok(Object.keys(v).every(k=>keys.includes(k)),'FIELDS','في بيانات غير مسموح بتعديلها.');};
 export function businessCommand(c){
@@ -26,14 +27,14 @@ export function businessCommand(c){
   row.status=b.decision;row.reviewNote=note;row.reviewerId=a;row.reviewedAt=at;bump(row);return {id:row.id,message:'قرار المراجعة اتحفظ.'};
  }
  case 'shop.save':{
-  only(b.fields,['name','category','address','locationId','description','accepting','deliveryPolicy','deliverySourceMode','compoundFees','areaFees','suggestedFee','prepMinutes','archived']);
+  only(b.fields,['name','category','businessType','address','locationId','description','accepting','deliveryPolicy','deliverySourceMode','compoundFees','areaFees','suggestedFee','prepMinutes','archived']);
   let shop=b.id?s.shops[key(b.id)]:null;if(b.id){requireShop(s,a,b.id,'catalog');checkVersion(shop,b.version);}
   else ok(approved(s,a,'merchant')||approved(s,a,'service_provider'),'ROLE','اعتماد النشاط مطلوب قبل إنشاء المحل.',403);
   const f=b.fields,name=text(f.name,2,100);ok(s.settings.categories.includes(f.category),'CATEGORY','اختار تصنيفًا عامًا معتمدًا.');ok(s.locations[f.locationId],'LOCATION','حدد نقطة النشاط.');
   ok(['customer','shop'].includes(f.deliveryPolicy),'FEE','حدد مين بيتحمل التوصيل.');ok(['jowwa','private','hybrid'].includes(f.deliverySourceMode),'DELIVERY_SOURCE','حدد هتعتمد على طيارين جوه أو طيارين المحل أو الاثنين.');
   object(f.compoundFees||{});const compounds=s.settings.compounds||{},compoundFees={};for(const[id,value]of Object.entries(f.compoundFees||{})){const c=compounds[id];ok(c&&c.active,'DELIVERY_AREA','الكمبوند غير متاح للتسعير.');compoundFees[id]=money(value);}ok(Object.keys(compoundFees).length>0,'DELIVERY_AREA','حدد سعر توصيل افتراضي لكمبوند واحد على الأقل.');
   const areaFees={};for(const[id,value]of Object.entries(compoundFees)){const c=compounds[id];if(c)areaFees[c.name]=value;}
-  const id=shop?.id||nextId(s,'shop');s.shops[id]={...shop,id,ownerId:shop?.ownerId||a,name,category:f.category,address:text(f.address,3,250),locationId:f.locationId,description:text(f.description||'',0,500),accepting:f.accepting===true,deliveryPolicy:f.deliveryPolicy,deliverySourceMode:f.deliverySourceMode,compoundFees,areaFees,suggestedFee:money(f.suggestedFee),prepMinutes:int(f.prepMinutes,1,240),archived:f.archived===true,version:(shop?.version||0)+1};return {id,message:'بيانات النشاط والتوصيل اتحفظت.'};
+  const id=shop?.id||nextId(s,'shop');s.shops[id]={...shop,id,ownerId:shop?.ownerId||a,name,category:f.category,businessType:normalizeBusinessType(f.businessType||f.category),address:text(f.address,3,250),locationId:f.locationId,description:text(f.description||'',0,500),accepting:f.accepting===true,deliveryPolicy:f.deliveryPolicy,deliverySourceMode:f.deliverySourceMode,compoundFees,areaFees,suggestedFee:money(f.suggestedFee),prepMinutes:int(f.prepMinutes,1,240),archived:f.archived===true,version:(shop?.version||0)+1};return {id,message:'بيانات النشاط والتوصيل اتحفظت.'};
  }
  case 'platform.category':{admin();const value=text(b.name,2,60);ok(!s.settings.categories.includes(value),'CATEGORY','التصنيف موجود.');s.settings.categories.push(value);return {id:value,message:'التصنيف العام اتضاف.'};}
  case 'compound.save':{
@@ -101,7 +102,10 @@ export function businessCommand(c){
  }
  case 'courier.availability':{
   ok(approved(s,a,'courier')||approved(s,a,'driver'),'ROLE','اعتماد المندوب أو السائق مطلوب.',403);ok(typeof b.available==='boolean'&&typeof b.public==='boolean','FIELDS','حدد التوفر والظهور.');
-  s.availability[a]={available:b.available,public:b.public,updatedAt:at};return {id:a,message:b.available?'إنت متاح للمهام المناسبة.':'اتوقفت عن استقبال مهام جديدة.'};
+  s.availability[a]={...s.availability[a],available:b.available,public:b.public,maxOrders:s.availability[a]?.maxOrders||1,updatedAt:at};return {id:a,message:b.available?'إنت متاح للمهام المناسبة.':'اتوقفت عن استقبال مهام جديدة.'};
+ }
+ case 'courier.capacity':{
+  admin();const userId=key(b.userId);ok(approved(s,userId,'courier'),'ROLE','اختار طيار منتجات معتمد.');const maxOrders=int(b.maxOrders,1,8);const prior=s.availability[userId]||{available:false,public:false};s.availability[userId]={...prior,maxOrders,capacityUpdatedAt:at,capacityUpdatedBy:a};return {id:userId,message:'سعة الطيار اتحددّت من الإدارة.'};
  }
  case 'promotion.save':{
   requireShop(s,a,key(b.shopId),'catalog');const old=b.id?s.promotions[key(b.id)]:null;if(b.id){ok(old?.shopId===b.shopId,'FORBIDDEN','العرض مش تابع للنشاط.',403);checkVersion(old,b.version);}

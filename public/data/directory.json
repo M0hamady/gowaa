@@ -58,7 +58,10 @@
     "checkedAt": "2026-11-03",
     "mapId": "poi-1021898717",
     "mapLabel": "موقع المول",
-    "description": "ماكينة صراف آلي تابعة لـQNB داخل صن مول الياسمين، واردة في دليل البنك الرسمي. توافر النقد وتشغيل الماكينة يحتاجان تأكيدًا في الموقع."
+    "description": "ماكينة صراف آلي تابعة لـQNB داخل صن مول الياسمين، واردة في دليل البنك الرسمي. توافر النقد وتشغيل الماكينة يحتاجان تأكيدًا في الموقع.",
+    "bankName": "QNB",
+    "serviceKind": "atm",
+    "visitorNote": "ماكينة صراف وليست فرع بنك؛ توافر النقد والتشغيل غير مؤكدين."
   },
   {
     "id": "directory-we",
@@ -82,7 +85,9 @@
     "checkedAt": "2026-11-03",
     "mapId": "poi-1021898717",
     "mapLabel": "موقع المول",
-    "description": "مجموعة ماكينات صراف مدرجة داخل صن مول الياسمين بأسماء بنك مصر والإسكان والتعمير والقاهرة. خدمات كل ماكينة وتوافر النقد قد تختلف."
+    "description": "مجموعة ماكينات صراف مدرجة داخل صن مول الياسمين بأسماء بنك مصر والإسكان والتعمير والقاهرة. خدمات كل ماكينة وتوافر النقد قد تختلف.",
+    "directoryGroup": true,
+    "visitorNote": "مجموعة ماكينات صراف، مش فروع بنوك. تشغيل كل ماكينة وتوافر النقد غير مؤكدين."
   },
   {
     "id": "directory-noor-hashem",
@@ -258,7 +263,16 @@
       "محلات بوابة 4",
       "استراحة الأكاديمية",
       "مول بوابة 4"
-    ]
+    ],
+    "coordinate": [
+      31.6140625,
+      29.9735625
+    ],
+    "mapId": "directory-gate4-mall",
+    "mapCategory": "shopping",
+    "plusCode": "7GXHXJF7+CJ",
+    "precision": "shared_map_plus_code_center",
+    "visitorNote": "الوصول لمحيط المجمع؛ تأكد من المدخل وإتاحة الدخول."
   },
   {
     "id": "directory-northgate",
@@ -803,7 +817,8 @@
     "providerManaged": false,
     "status": "خدمة وأسعار من إعلان مشارَك من المستخدم. لم نتحقق من ملكية مقدم الخدمة أو استمرار الأسعار/التغطية. الاتصال للاستفسار والحجز المباشر، وليس طلبًا مؤكدًا داخل جوه.",
     "precision": "unlocated_service_area",
-    "schemaType": "Service"
+    "schemaType": "Service",
+    "visitorNote": "الخدمة بتجيلك أمام البيت. أكد السعر والتغطية والميعاد بالاتصال؛ مفيش حجز مؤكد بمجرد الضغط."
   },
   {
     "id": "directory-international-garden-kayan",
@@ -823,14 +838,22 @@
       "مساحات خضراء"
     ],
     "address": "الكيان العسكري — موقع مشارَك من المستخدم في خرائط Google",
-    "source": "https://maps.app.goo.gl/QcxrqHDhefkdnnmjSA",
-    "externalMapUrl": "https://maps.app.goo.gl/QcxrqHDhefkdnnmjSA",
+    "source": "https://maps.app.goo.gl/QcxrqHDhefkdnmjSA",
+    "externalMapUrl": "https://maps.app.goo.gl/QcxrqHDhefkdnmjSA",
     "sourceType": "user_supplied_google_map_link",
     "checkedAt": "2026-11-04",
     "description": "الحديقة الدولية الواردة في رابط خرائط Google الذي شاركه المستخدم. افتح المصدر لمعرفة النقطة المدرجة؛ لم نتحقق من البوابات أو دخول الزوار أو ساعات العمل.",
-    "status": "رابط خريطة مشارَك من المستخدم؛ إتاحة الدخول والتشغيل الحاليين غير مؤكدين. لا يوجد مدخل موثوق داخل شبكة مسارات جوه.",
-    "precision": "unlocated_map_link",
-    "schemaType": "Park"
+    "status": "الموقع من رابط الخريطة المشارك؛ مركز Plus Code وليس بوابة دخول مؤكدة. التشغيل والمواعيد يحتاجان تأكيدًا.",
+    "precision": "shared_map_plus_code_center",
+    "schemaType": "Park",
+    "coordinate": [
+      31.657796875,
+      29.9577625
+    ],
+    "mapId": "directory-international-garden-kayan",
+    "mapCategory": "park",
+    "plusCode": "7GXHXM55+443",
+    "visitorNote": "موقع تقريبي؛ تأكد من مواعيد الزيارة وإتاحة الدخول."
   },
   {
     "id": "directory-fuel-near-sunmall",
@@ -851,45 +874,57 @@
     ],
     "address": "قرب صن مول الياسمين — وفق نقطة مشارَكة من المستخدم",
     "coordinate": [
-      31.6347222,
-      29.9288056
+      31.6347077,
+      29.9287987
     ],
-    "source": "https://maps.app.goo.gl/8DNNJuzi6MGeDPr7",
-    "externalMapUrl": "https://maps.app.goo.gl/8DNNJuzi6MGeDPr7",
+    "source": "https://maps.app.goo.gl/8DNNUzi6uMg6ceDR7",
+    "externalMapUrl": "https://maps.app.goo.gl/8DNNUzi6uMg6ceDR7",
     "checkedAt": "2026-11-04",
     "sourceType": "user_supplied_google_map_link",
     "description": "نقطة مشارَكة لمحطة وقود قرب صن مول، مع إحداثيات ظاهرة في معاينة الرابط: 29°55′43.7″N، 31°38′05.0″E. اسم العلامة التجارية والخدمات المتاحة غير متحقق منهما.",
     "status": "موضع محطة الوقود من مشاركة المستخدم ولم يُراجع ميدانيًا. لا نفترض ساعات تشغيل أو أنواع وقود أو أسعار أو علامة تجارية.",
-    "precision": "user_supplied_coordinates_unverified",
-    "schemaType": "GasStation"
+    "precision": "user_shared_map_point",
+    "schemaType": "GasStation",
+    "mapId": "directory-fuel-near-sunmall",
+    "mapCategory": "fuel",
+    "visitorNote": "موقع مشارك؛ أنواع الوقود والتشغيل الحالي غير مؤكدين."
   },
   {
     "id": "directory-madkour-yasmin-330",
-    "name": "شركة مدكور — عمارة 330 الياسمين",
+    "name": "شركة مدكور — عمارة 30 الياسمين",
     "category": "مكاتب وشركات",
     "aliases": [
       "مدكور",
-      "شركة مدكور",
+      "شركة المدكور",
       "Madkour",
-      "مدكور الياسمين"
+      "مدكور الياسمين",
+      "شركة مدكور عمارة 30"
     ],
     "keywords": [
-      "شركة",
+      "مدكور",
+      "شركة المدكور",
       "مكتب",
-      "الياسمين 330",
-      "عمارة 330"
+      "الياسمين 30",
+      "عمارة 30"
     ],
-    "address": "الياسمين — عمارة 330، وفق رابط خرائط مشارَك",
-    "mapId": "yasmin-330",
-    "mapLabel": "العمارة 330 من مخطط الترقيم — موقع تقريبي",
+    "address": "الياسمين — عمارة 30 حسب الرسالة المرفقة",
+    "mapId": "directory-madkour-yasmin-330",
+    "mapLabel": "شوفه على الخريطة",
     "source": "https://maps.app.goo.gl/iiz9oPkRi4DQSVz48",
     "externalMapUrl": "https://maps.app.goo.gl/iiz9oPkRi4DQSVz48",
     "checkedAt": "2026-11-04",
     "sourceType": "user_supplied_google_map_link",
-    "description": "اسم شركة مدكور مرتبط بعمارة 330 بالياسمين حسب رابط شاركه المستخدم؛ تواصل الشركة وخدماتها وإمكانية استقبال الزوار لم يتم تأكيدها.",
-    "status": "موقع واسم مشارَكان من المستخدم؛ ليس إثباتًا لهوية مقر الشركة أو إتاحة الزيارة. الخريطة تُظهر العمارة تقريبًا.",
-    "precision": "mapped_building_only",
-    "schemaType": "Organization"
+    "description": "شركة مدكور في الياسمين؛ الرسالة المرفقة تذكر عمارة 30. عنوان الزيارة والمواعيد يحتاجان تأكيدًا من الجهة.",
+    "status": "تم تصحيح قراءة رقم العمارة من الصورة إلى 30، مع إبقاء الرابط القديم صالحًا. مركز نقطة Google Maps لا يثبت المدخل أو أوقات استقبال الجمهور.",
+    "precision": "shared_map_plus_code_center",
+    "schemaType": "Organization",
+    "mapCategory": "office",
+    "coordinate": [
+      31.6096875,
+      29.9328125
+    ],
+    "plusCode": "7GXHWJM5+4V",
+    "visitorNote": "العنوان من مشاركة المستخدم؛ تأكد من استقبال الزوار."
   },
   {
     "id": "directory-gas-office-yasmin-188",
@@ -906,7 +941,7 @@
       "الياسمين 188"
     ],
     "address": "الياسمين — عمارة 188، وفق رابط خرائط مشارَك",
-    "mapId": "yasmin-188",
+    "mapId": "directory-gas-office-yasmin-188",
     "mapLabel": "العمارة 188 من مخطط الترقيم — موقع تقريبي",
     "source": "https://maps.app.goo.gl/ZF94YnrNDk3k1i546",
     "externalMapUrl": "https://maps.app.goo.gl/ZF94YnrNDk3k1i546",
@@ -914,7 +949,14 @@
     "sourceType": "user_supplied_google_map_link",
     "description": "نقطة مسماة «شركة الغاز» عند عمارة 188 الياسمين حسب الرابط المشارك؛ اسم الجهة الرسمي ورقم التواصل وساعات خدمة الجمهور غير مؤكدة.",
     "status": "الموقع مشارَك ولم نؤكد هوية الجهة أو أوقات خدمة العملاء. رقم العمارة من مخطط الترقيم.",
-    "precision": "mapped_building_only"
+    "precision": "shared_map_plus_code_center",
+    "coordinate": [
+      31.604953125,
+      29.9342375
+    ],
+    "mapCategory": "office",
+    "plusCode": "7GXHWJM3+MXW",
+    "visitorNote": "النقطة تخص عمارة 188؛ اسم الجهة ومواعيد خدمة الجمهور يحتاجان تأكيدًا."
   },
   {
     "id": "directory-projects-office-kayan",
@@ -930,13 +972,21 @@
       "مكتب مشروعات"
     ],
     "address": "الكيان العسكري — موقع رابط مشارَك دون رقم مبنى موثوق",
-    "source": "https://maps.app.goo.gl/hMMg2dZvFWi2jpfk7",
-    "externalMapUrl": "https://maps.app.goo.gl/hMMg2dZvFWi2jpfk7",
+    "source": "https://maps.app.goo.gl/hMMg2dZvFWi2Jpfk7",
+    "externalMapUrl": "https://maps.app.goo.gl/hMMg2dZvFWi2Jpfk7",
     "checkedAt": "2026-11-04",
     "sourceType": "user_supplied_google_map_link",
     "description": "موقع بعنوان «إدارة المشروعات (كرفانات)» ورد في خريطة مشارَكة من المستخدم. لا معلومات مؤكدة عن المواعيد أو استقبال الجمهور.",
     "status": "العنوان غير متحقق وإتاحة دخول الموقع غير مؤكدة؛ يرجى التواصل مع الجهة قبل الزيارة.",
-    "precision": "unlocated_map_link"
+    "precision": "shared_map_plus_code_center",
+    "coordinate": [
+      31.628140625,
+      29.9804125
+    ],
+    "mapId": "directory-projects-office-kayan",
+    "mapCategory": "office",
+    "plusCode": "7GXHXJJH+576",
+    "visitorNote": "موقع تقريبي؛ تأكد من إمكانية استقبال الزوار قبل الذهاب."
   },
   {
     "id": "poi-1122262346",
@@ -969,5 +1019,104 @@
     "status": "موقع مرجعي من OSM مع رابط مشارك. اتصل بالجهة قبل التحرك؛ لا يوجد تتبع لحظي أو ضمان للتشغيل.",
     "precision": "osm_approximate",
     "schemaType": "GasStation"
+  },
+  {
+    "id": "directory-bank-misr-sunmall-atm",
+    "name": "ماكينة بنك مصر — صن مول الياسمين",
+    "category": "صراف آلي",
+    "bankName": "بنك مصر",
+    "serviceKind": "atm",
+    "aliases": [
+      "بنك مصر",
+      "Banque Misr",
+      "ATM بنك مصر"
+    ],
+    "keywords": [
+      "بنوك",
+      "صراف آلي",
+      "سحب نقدي",
+      "ماكينة صراف",
+      "بنك مصر",
+      "Banque Misr"
+    ],
+    "address": "داخل صن مول الياسمين",
+    "mapId": "poi-1021898717",
+    "mapLabel": "شوفه على الخريطة",
+    "source": "https://www.google.com/maps/place/Atm+%D8%A8%D9%86%D9%83+%D9%85%D8%B5%D8%B1+%D8%A8%D9%86%D9%83+%D8%A7%D9%84%D8%A7%D8%B3%D9%83%D8%A7%D9%86+%D9%88%D8%A7%D9%84%D8%AA%D8%B9%D9%85%D9%8A%D8%B1+%D8%A8%D9%86%D9%83+%D8%A7%D9%84%D9%82%D8%A7%D9%87%D8%B1%D8%A9%E2%80%AD/@29.9265219,31.6405235,2978m/data=!3m1!1e3!4m14!1m7!3m6!1s0x14582789834ff067:0x5416a661544d5cf4!2z2LXZhiDZhdmI2YQg2KfZhNmK2KfYs9mF2YrZhi4!8m2!3d29.9265232!4d31.6220695!16s%2Fg%2F11hfsnnjzd!3m5!1s0x1458272ec14e9765:0xa420d2a0fe3e3dd5!8m2!3d29.9266333!4d31.6220952!16s%2Fg%2F11v03m9jsd?entry=ttu&g_ep=EgoyMDI2MTAyOC4wIKXMDSoASAFQAw%3D%3D",
+    "sourceType": "existing_public_map_listing",
+    "checkedAt": "2026-11-04",
+    "description": "ماكينة صراف لـبنك مصر مذكورة ضمن مجموعة ماكينات صن مول الياسمين. الوصول لمحيط المول، ومكان الماكينة بالتحديد وتشغيلها يحتاجان تأكيدًا.",
+    "status": "إدراج منفصل من نفس بطاقة الخرائط الموجودة؛ ليس إثباتًا لفرع بنك أو لخدمات إيداع أو توافر نقد. لا توجد مواعيد أو أرقام خاصة بالماكينة مؤكدة.",
+    "visitorNote": "ماكينة صراف، مش فرع بنك. تأكد من التشغيل وتوافر النقد.",
+    "businessOwnerVerified": false,
+    "sourceGroupId": "directory-atms-sunmall",
+    "precision": "mall_location_only",
+    "schemaType": "AutomatedTeller"
+  },
+  {
+    "id": "directory-bank-hdb-sunmall-atm",
+    "name": "ماكينة بنك التعمير والإسكان — صن مول الياسمين",
+    "category": "صراف آلي",
+    "bankName": "بنك التعمير والإسكان",
+    "serviceKind": "atm",
+    "aliases": [
+      "بنك التعمير والإسكان",
+      "Housing and Development Bank HDB",
+      "ATM بنك التعمير والإسكان"
+    ],
+    "keywords": [
+      "بنوك",
+      "صراف آلي",
+      "سحب نقدي",
+      "ماكينة صراف",
+      "بنك التعمير والإسكان",
+      "Housing and Development Bank HDB"
+    ],
+    "address": "داخل صن مول الياسمين",
+    "mapId": "poi-1021898717",
+    "mapLabel": "شوفه على الخريطة",
+    "source": "https://www.google.com/maps/place/Atm+%D8%A8%D9%86%D9%83+%D9%85%D8%B5%D8%B1+%D8%A8%D9%86%D9%83+%D8%A7%D9%84%D8%A7%D8%B3%D9%83%D8%A7%D9%86+%D9%88%D8%A7%D9%84%D8%AA%D8%B9%D9%85%D9%8A%D8%B1+%D8%A8%D9%86%D9%83+%D8%A7%D9%84%D9%82%D8%A7%D9%87%D8%B1%D8%A9%E2%80%AD/@29.9265219,31.6405235,2978m/data=!3m1!1e3!4m14!1m7!3m6!1s0x14582789834ff067:0x5416a661544d5cf4!2z2LXZhiDZhdmI2YQg2KfZhNmK2KfYs9mF2YrZhi4!8m2!3d29.9265232!4d31.6220695!16s%2Fg%2F11hfsnnjzd!3m5!1s0x1458272ec14e9765:0xa420d2a0fe3e3dd5!8m2!3d29.9266333!4d31.6220952!16s%2Fg%2F11v03m9jsd?entry=ttu&g_ep=EgoyMDI2MTAyOC4wIKXMDSoASAFQAw%3D%3D",
+    "sourceType": "existing_public_map_listing",
+    "checkedAt": "2026-11-04",
+    "description": "ماكينة صراف لـبنك التعمير والإسكان مذكورة ضمن مجموعة ماكينات صن مول الياسمين. الوصول لمحيط المول، ومكان الماكينة بالتحديد وتشغيلها يحتاجان تأكيدًا.",
+    "status": "إدراج منفصل من نفس بطاقة الخرائط الموجودة؛ ليس إثباتًا لفرع بنك أو لخدمات إيداع أو توافر نقد. لا توجد مواعيد أو أرقام خاصة بالماكينة مؤكدة.",
+    "visitorNote": "ماكينة صراف، مش فرع بنك. تأكد من التشغيل وتوافر النقد.",
+    "businessOwnerVerified": false,
+    "sourceGroupId": "directory-atms-sunmall",
+    "precision": "mall_location_only",
+    "schemaType": "AutomatedTeller"
+  },
+  {
+    "id": "directory-bank-cairo-sunmall-atm",
+    "name": "ماكينة بنك القاهرة — صن مول الياسمين",
+    "category": "صراف آلي",
+    "bankName": "بنك القاهرة",
+    "serviceKind": "atm",
+    "aliases": [
+      "بنك القاهرة",
+      "Banque du Caire",
+      "ATM بنك القاهرة"
+    ],
+    "keywords": [
+      "بنوك",
+      "صراف آلي",
+      "سحب نقدي",
+      "ماكينة صراف",
+      "بنك القاهرة",
+      "Banque du Caire"
+    ],
+    "address": "داخل صن مول الياسمين",
+    "mapId": "poi-1021898717",
+    "mapLabel": "شوفه على الخريطة",
+    "source": "https://www.google.com/maps/place/Atm+%D8%A8%D9%86%D9%83+%D9%85%D8%B5%D8%B1+%D8%A8%D9%86%D9%83+%D8%A7%D9%84%D8%A7%D8%B3%D9%83%D8%A7%D9%86+%D9%88%D8%A7%D9%84%D8%AA%D8%B9%D9%85%D9%8A%D8%B1+%D8%A8%D9%86%D9%83+%D8%A7%D9%84%D9%82%D8%A7%D9%87%D8%B1%D8%A9%E2%80%AD/@29.9265219,31.6405235,2978m/data=!3m1!1e3!4m14!1m7!3m6!1s0x14582789834ff067:0x5416a661544d5cf4!2z2LXZhiDZhdmI2YQg2KfZhNmK2KfYs9mF2YrZhi4!8m2!3d29.9265232!4d31.6220695!16s%2Fg%2F11hfsnnjzd!3m5!1s0x1458272ec14e9765:0xa420d2a0fe3e3dd5!8m2!3d29.9266333!4d31.6220952!16s%2Fg%2F11v03m9jsd?entry=ttu&g_ep=EgoyMDI2MTAyOC4wIKXMDSoASAFQAw%3D%3D",
+    "sourceType": "existing_public_map_listing",
+    "checkedAt": "2026-11-04",
+    "description": "ماكينة صراف لـبنك القاهرة مذكورة ضمن مجموعة ماكينات صن مول الياسمين. الوصول لمحيط المول، ومكان الماكينة بالتحديد وتشغيلها يحتاجان تأكيدًا.",
+    "status": "إدراج منفصل من نفس بطاقة الخرائط الموجودة؛ ليس إثباتًا لفرع بنك أو لخدمات إيداع أو توافر نقد. لا توجد مواعيد أو أرقام خاصة بالماكينة مؤكدة.",
+    "visitorNote": "ماكينة صراف، مش فرع بنك. تأكد من التشغيل وتوافر النقد.",
+    "businessOwnerVerified": false,
+    "sourceGroupId": "directory-atms-sunmall",
+    "precision": "mall_location_only",
+    "schemaType": "AutomatedTeller"
   }
 ]
