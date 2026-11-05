@@ -21,6 +21,14 @@ if (key.startsWith('eyJ')) {
   if (payload.role !== 'anon') throw new Error('Expected public anon key.');
 }
 
+// Production deploys apply pending database migrations first, guarded against data loss.
+// A failed migration fails the build, so the current live version stays up.
+if (process.env.VERCEL_ENV === 'production' && process.env.JOWWA_SKIP_MIGRATIONS !== 'true') {
+  const {spawnSync} = await import('node:child_process');
+  const run = spawnSync(process.execPath, ['scripts/migrate-guarded.mjs'], {stdio: 'inherit', env: process.env});
+  if (run.status !== 0) throw new Error('Migrations failed; production deploy stopped. Live stays on the previous version.');
+}
+
 await import('./build.mjs');
 await writeFile('public/operations-build.json', JSON.stringify({
   mode: 'live-marketplace',

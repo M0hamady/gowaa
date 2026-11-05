@@ -53,3 +53,15 @@ test('test-only routes stay noindex if ever reachable',()=>{
   const rule=vercel.headers.find(r=>r.source.includes('work|operations'));
   assert.ok(rule&&rule.headers.some(h=>h.key==='X-Robots-Tag'));
 });
+
+test('migration data-loss guard flags any table that lost rows',async()=>{
+  const {lostRows}=await import('../scripts/migrate-guarded.mjs');
+  assert.deepEqual(lostRows({'a':5,'b':2,'c':null,'jowwa_private.migrations':3},{'a':6,'b':2,'c':0,'jowwa_private.migrations':9}),[]);
+  assert.deepEqual(lostRows({'a':5,'b':2},{'a':4,'b':null}),['a','b']);
+});
+
+test('only production builds run migrations; previews never touch the database schema',async()=>{
+  const src=await readFile(new URL('../scripts/build-live.mjs',import.meta.url),'utf8');
+  assert.match(src,/VERCEL_ENV === 'production' && process\.env\.JOWWA_SKIP_MIGRATIONS !== 'true'/);
+  assert.ok(src.indexOf('migrate-guarded')<src.indexOf("import('./build.mjs')"),'migrations run before the site is built');
+});
