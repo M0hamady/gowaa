@@ -1,0 +1,51 @@
+import {requireThat as ok,key,text,int,money,nextId,checkVersion,bump,hasShopPermission} from './core.mjs';
+
+const itemTypes=['raw','semi_prepared','finished','consumable','packaging'];
+const units=['kg','gram','liter','ml','piece','pack'];
+const moveKinds=['supply','issue','transfer','count','waste','vendor_return','emergency_adjust','theoretical_consume','production'];
+const stockKey=(storeId,itemId)=>storeId+':'+itemId;
+export const stockQty=(s,storeId,itemId)=>int(s.kitchenStock?.[stockKey(storeId,itemId)]??0,0,100000000);
+const setStock=(s,storeId,itemId,qty)=>{s.kitchenStock??={};s.kitchenStock[stockKey(storeId,itemId)]=int(qty,0,100000000);};
+const audit=(s,{shopId,actorId,kind,entityId,reason,at,before=null,after=null})=>s.auditLog.push({id:nextId(s,'audit'),shopId,actorId,kind,entityId,reason,at,before,after});
+function store(s,id,shopId){const row=s.kitchenStores?.[key(id)];ok(row&&row.shopId===shopId&&!row.archived,'STORE','المخزن غير متاح.');return row;}
+function item(s,id,shopId){const row=s.kitchenItems?.[key(id)];ok(row&&row.shopId===shopId&&!row.archived,'ITEM','صنف المخزن غير متاح.');return row;}
+function postMove(s,{shopId,actorId,kind,itemId,quantity,fromStoreId=null,toStoreId=null,reason,ref=null,at,before=null,after=null}){
+ const id=nextId(s,'inventory-move');s.inventoryMovements.push({id,shopId,actorId,kind,itemId,quantity,fromStoreId,toStoreId,reason,ref,at,before,after});return id;
+}
+export function inventoryCommand(c){
+ const{s,actorId:a,body:b,at}=c;s.kitchenStores??={};s.kitchenItems??={};s.kitchenStock??={};s.inventoryMovements??=[];s.inventoryPeriods??=[];s.recipes??={};s.preparedBatches??={};
+ switch(c.type){
+ case 'inventory.store.save':{
+  const shopId=key(b.shopId);ok(hasShopPermission(s,a,shopId,'adjust_inventory')||hasShopPermission(s,a,shopId,'manage_settings'),'FORBIDDEN','مش عندك صلاحية إدارة المخازن.',403);const old=b.id?s.kitchenStores[key(b.id)]:null;if(old){ok(old.shopId===shopId,'FORBIDDEN','المخزن مش تابع للنشاط.',403);checkVersion(old,b.version);}const id=old?.id||nextId(s,'kitchen-store');s.kitchenStores[id]={id,shopId,name:text(b.name,2,80),archived:b.archived===true,version:(old?.version||0)+1};audit(s,{shopId,actorId:a,kind:'kitchen_store_saved',entityId:id,reason:text(b.reason||'تحديث مخزن المطبخ',3,200),at});return{id,message:'المخزن اتحفظ.'};
+ }
+ case 'inventory.item.save':{
+  const shopId=key(b.shopId);ok(hasShopPermission(s,a,shopId,'adjust_inventory')||hasShopPermission(s,a,shopId,'manage_recipes'),'FORBIDDEN','مش عندك صلاحية إدارة خامات المطبخ.',403);const old=b.id?s.kitchenItems[key(b.id)]:null;if(old){ok(old.shopId===shopId,'FORBIDDEN','الخامة مش تابعة للنشاط.',403);checkVersion(old,b.version);}ok(itemTypes.includes(b.itemType),'ITEM_TYPE','نوع المخزون غير صحيح.');ok(units.includes(b.unit),'UNIT','وحدة القياس غير صحيحة.');const min=int(b.minimum??0,0,100000000),max=int(b.maximum??0,0,100000000);ok(!max||max>=min,'STOCK_LIMIT','الحد الأقصى أقل من الحد الأدنى.');const id=old?.id||nextId(s,'kitchen-item');s.kitchenItems[id]={id,shopId,name:text(b.name,2,100),type:b.itemType,unit:b.unit,minimum:min,maximum:max,supplier:text(b.supplier||'',0,100),expiryDate:b.expiryDate?new Date(b.expiryDate).toISOString():null,unitCost:money(b.unitCost??0),storageLocation:text(b.storageLocation||'',0,100),refrigerated:b.refrigerated===true,perishable:b.perishable===true,archived:b.archived===true,version:(old?.version||0)+1};audit(s,{shopId,actorId:a,kind:'kitchen_item_saved',entityId:id,reason:text(b.reason||'تحديث خامة مطبخ',3,200),at});return{id,message:'صنف مخزن المطبخ اتحفظ.'};
+ }
+ case 'inventory.move':{
+  const shopId=key(b.shopId),kind=b.kind;ok(moveKinds.includes(kind)&&kind!=='theoretical_consume','MOVE','نوع حركة المخزون غير صحيح.');const it=item(s,b.itemId,shopId);const qty=int(b.quantity,0,100000000);ok(qty>0||kind==='count'||kind==='emergency_adjust','MOVE','حدد كمية صحيحة.');
+  const waste=kind==='waste';if(waste)ok(hasShopPermission(s,a,shopId,'record_waste'),'FORBIDDEN','مش عندك صلاحية تسجيل الهالك.',403);else ok(hasShopPermission(s,a,shopId,'adjust_inventory'),'FORBIDDEN','مش عندك صلاحية تعديل المخزون.',403);
+  const reason=text(b.reason,3,300);let before=null,after=null,from=null,to=null;
+  if(kind==='supply'||kind==='production'){to=store(s,b.toStoreId,shopId);before=stockQty(s,to.id,it.id);after=before+qty;setStock(s,to.id,it.id,after);}
+  else if(kind==='issue'||kind==='waste'||kind==='vendor_return'){from=store(s,b.fromStoreId,shopId);before=stockQty(s,from.id,it.id);ok(before>=qty,'STOCK','الكمية غير كافية.');after=before-qty;setStock(s,from.id,it.id,after);}
+  else if(kind==='transfer'){from=store(s,b.fromStoreId,shopId);to=store(s,b.toStoreId,shopId);ok(from.id!==to.id,'STORE','اختار مخزنين مختلفين.');const aQty=stockQty(s,from.id,it.id),bQty=stockQty(s,to.id,it.id);ok(aQty>=qty,'STOCK','الكمية غير كافية للنقل.');setStock(s,from.id,it.id,aQty-qty);setStock(s,to.id,it.id,bQty+qty);before={from:aQty,to:bQty};after={from:aQty-qty,to:bQty+qty};}
+  else if(kind==='count'){from=store(s,b.fromStoreId,shopId);const counted=int(b.countedQuantity,0,100000000);before=stockQty(s,from.id,it.id);after=counted;setStock(s,from.id,it.id,counted);}
+  else if(kind==='emergency_adjust'){from=store(s,b.fromStoreId,shopId);const delta=int(Math.abs(b.delta),0,100000000)*(b.delta<0?-1:1);before=stockQty(s,from.id,it.id);after=before+delta;ok(after>=0,'STOCK','التعديل هيخلي المخزون سالب.');setStock(s,from.id,it.id,after);}
+  const id=postMove(s,{shopId,actorId:a,kind,itemId:it.id,quantity:qty,fromStoreId:from?.id||null,toStoreId:to?.id||null,reason,ref:b.ref||null,at,before,after});audit(s,{shopId,actorId:a,kind:'inventory_'+kind,entityId:id,reason,at,before,after});return{id,message:kind==='waste'?'الهالك اتسجل بدون تغيير المبيعات.':'حركة المخزون اتسجلت.'};
+ }
+ case 'inventory.period.close':{
+  const shopId=key(b.shopId);ok(hasShopPermission(s,a,shopId,'adjust_inventory')||hasShopPermission(s,a,shopId,'view_reports'),'FORBIDDEN','مش عندك صلاحية إغلاق الجرد.',403);const id=nextId(s,'inventory-period');s.inventoryPeriods.push({id,shopId,actorId:a,from:text(b.from,4,40),to:text(b.to,4,40),reason:text(b.reason,3,200),closedAt:at});audit(s,{shopId,actorId:a,kind:'inventory_period_closed',entityId:id,reason:b.reason,at});return{id,message:'فترة الجرد اتقفلت.'};
+ }
+ case 'recipe.save':{
+  const shopId=key(b.shopId);ok(hasShopPermission(s,a,shopId,'manage_recipes'),'FORBIDDEN','مش عندك صلاحية إدارة الوصفات.',403);const p=s.products[key(b.productId)];ok(p&&p.shopId===shopId,'PRODUCT','المنتج مش تابع للنشاط.');const st=store(s,b.storeId,shopId);ok(Array.isArray(b.ingredients)&&b.ingredients.length>0&&b.ingredients.length<=50,'RECIPE','الوصفة لازم تحتوي خامات.');const ingredients=b.ingredients.map(x=>{const it=item(s,x.itemId,shopId);return{itemId:it.id,quantity:int(x.quantity,1,100000000)}});const old=b.id?s.recipes[key(b.id)]:Object.values(s.recipes).find(r=>r.productId===p.id&&r.shopId===shopId);if(old&&b.version!==undefined)checkVersion(old,b.version);const id=old?.id||nextId(s,'recipe');s.recipes[id]={id,shopId,productId:p.id,name:text(b.name,2,100),storeId:st.id,ingredients,approved:b.approved===true,version:(old?.version||0)+1};audit(s,{shopId,actorId:a,kind:'recipe_saved',entityId:id,reason:text(b.reason||'تحديث وصفة',3,200),at});return{id,message:b.approved?'الوصفة اتحفظت واعتمدت.':'الوصفة اتحفظت كمسودة.'};
+ }
+ case 'inventory.batch.produce':{
+  const shopId=key(b.shopId);ok(hasShopPermission(s,a,shopId,'adjust_inventory'),'FORBIDDEN','مش عندك صلاحية تسجيل الإنتاج.',403);const it=item(s,b.itemId,shopId);ok(['semi_prepared','finished'].includes(it.type),'ITEM_TYPE','الإنتاج الجاهز لازم يكون نصف مجهز أو جاهز.');const st=store(s,b.storeId,shopId),qty=int(b.quantity,1,100000000),before=stockQty(s,st.id,it.id),after=before+qty;setStock(s,st.id,it.id,after);const id=nextId(s,'batch');s.preparedBatches[id]={id,shopId,itemId:it.id,storeId:st.id,quantity:qty,note:text(b.note||'',0,200),actorId:a,createdAt:at};postMove(s,{shopId,actorId:a,kind:'production',itemId:it.id,quantity:qty,toStoreId:st.id,reason:text(b.reason,3,200),ref:id,at,before,after});return{id,message:'الإنتاج المجهز اتسجل.'};
+ }
+ default:return null;
+ }
+}
+export function consumeOrderRecipes(s,o,{actorId,at,overrideInventory=false}={}){
+ o.recipeWarnings??=[];o.theoreticalConsumption??=[];for(const line of o.lines){const recipe=Object.values(s.recipes||{}).find(r=>r.shopId===o.shopId&&r.productId===line.productId&&r.approved);if(!recipe){o.recipeWarnings.push('مفيش وصفة معتمدة لـ '+line.title+'؛ لم يتم خصم خامات.');continue;}for(const ing of recipe.ingredients){const it=s.kitchenItems[ing.itemId];if(!it||it.archived){o.recipeWarnings.push('خامة غير متاحة في وصفة '+line.title);continue;}const qty=ing.quantity*line.quantity,before=stockQty(s,recipe.storeId,ing.itemId);if(before<qty){ok(overrideInventory===true&&hasShopPermission(s,actorId,o.shopId,'adjust_inventory'),'KITCHEN_STOCK','مخزون '+it.name+' أقل من الاستهلاك النظري ويحتاج صلاحية تجاوز.',409);}const after=Math.max(0,before-qty);setStock(s,recipe.storeId,ing.itemId,after);const moveId=postMove(s,{shopId:o.shopId,actorId,kind:'theoretical_consume',itemId:ing.itemId,quantity:qty,fromStoreId:recipe.storeId,reason:'استهلاك نظري للطلب #'+o.queue,ref:o.id,at,before,after});o.theoreticalConsumption.push({moveId,itemId:ing.itemId,quantity:qty,unitCost:it.unitCost,cost:qty*it.unitCost,recipeId:recipe.id,lineId:line.id});}}
+}
+export function inventoryProjection(s,a,shopIds){
+ const visible=shopIds.filter(id=>hasShopPermission(s,a,id,'view_inventory')||hasShopPermission(s,a,id,'adjust_inventory')||hasShopPermission(s,a,id,'manage_recipes'));return{stores:Object.values(s.kitchenStores||{}).filter(x=>visible.includes(x.shopId)),items:Object.values(s.kitchenItems||{}).filter(x=>visible.includes(x.shopId)),stock:Object.fromEntries(Object.entries(s.kitchenStock||{}).filter(([k])=>visible.some(id=>k.startsWith(id)||s.kitchenStores[k.split(':')[0]]?.shopId===id))),movements:Object.values(s.inventoryMovements||{}).filter(x=>visible.includes(x.shopId)).slice(-500),recipes:Object.values(s.recipes||{}).filter(x=>visible.includes(x.shopId)),periods:Object.values(s.inventoryPeriods||{}).filter(x=>visible.includes(x.shopId)),batches:Object.values(s.preparedBatches||{}).filter(x=>visible.includes(x.shopId))};}

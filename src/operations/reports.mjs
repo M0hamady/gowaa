@@ -1,0 +1,22 @@
+import {hasShopPermission,expectedCash} from './core.mjs';
+import {stockQty} from './inventory.mjs';
+
+const sum=(rows,fn)=>rows.reduce((n,x)=>n+fn(x),0);
+const group=(rows,keyFn,valFn)=>{const out={};for(const x of rows){const k=keyFn(x)||'غير محدد';out[k]=(out[k]||0)+valFn(x);}return out;};
+const dayKey=iso=>String(iso||'').slice(0,10);
+export function restaurantReports(s,a,{now=Date.now()}={}){
+ const shopIds=Object.values(s.shops||{}).filter(sh=>sh.ownerId===a||hasShopPermission(s,a,sh.id,'view_reports')).map(sh=>sh.id);
+ if(!shopIds.length)return null;const today=new Date(now).toISOString().slice(0,10),orders=Object.values(s.restaurantOrders||{}).filter(o=>shopIds.includes(o.shopId)),payments=Object.values(s.restaurantPayments||{}).filter(p=>shopIds.includes(p.shopId)&&p.verificationStatus!=='unverified_offline'),todayPayments=payments.filter(p=>dayKey(p.at)===today),paidOrders=orders.filter(o=>o.status==='paid');
+ const salesToday=sum(todayPayments,p=>p.kind==='refund'?-p.amount:p.amount),salesByEmployee=group(todayPayments,p=>s.users[p.actorId]?.name||p.actorId,p=>p.kind==='refund'?-p.amount:p.amount),salesByTable=group(paidOrders,o=>o.tableId?s.restaurantTables[o.tableId]?.name:'تيك أواي',o=>o.total);
+ const prepSamples=orders.flatMap(o=>{const ready=o.lines.map(l=>l.readyAt).filter(Boolean).sort().at(-1);return o.sentAt&&ready?[new Date(ready)-new Date(o.sentAt)]:[];}),avgPrepMinutes=prepSamples.length?Math.round(sum(prepSamples,x=>x)/prepSamples.length/60000):0;
+ const delayed=orders.filter(o=>o.sentAt&&!['ready','served','paid','cancelled','merged'].includes(o.status)&&now-new Date(o.sentAt).getTime()>(s.shops[o.shopId]?.prepMinutes||20)*60000).map(o=>({id:o.id,queue:o.queue,minutes:Math.round((now-new Date(o.sentAt).getTime())/60000)}));
+ const shifts=Object.values(s.shifts||{}).filter(x=>shopIds.includes(x.shopId)),cash=shifts.map(x=>({id:x.id,shopId:x.shopId,status:x.status,expected:expectedCash(s,x.id),actual:x.actual??null,variance:x.variance??null}));
+ const stockRows=[];for(const st of Object.values(s.kitchenStores||{}).filter(x=>shopIds.includes(x.shopId)&&!x.archived))for(const it of Object.values(s.kitchenItems||{}).filter(x=>x.shopId===st.shopId&&!x.archived)){const qty=stockQty(s,st.id,it.id);stockRows.push({storeId:st.id,storeName:st.name,itemId:it.id,itemName:it.name,unit:it.unit,quantity:qty,minimum:it.minimum,maximum:it.maximum,belowMinimum:qty<it.minimum,unitCost:it.unitCost});}
+ const movements=Object.values(s.inventoryMovements||{}).filter(x=>shopIds.includes(x.shopId)),waste=movements.filter(x=>x.kind==='waste'),wasteByItem=group(waste,x=>s.kitchenItems[x.itemId]?.name||x.itemId,x=>x.quantity);
+ const theoretical=group(movements.filter(x=>x.kind==='theoretical_consume'),x=>x.itemId,x=>x.quantity),actualAdjustments=group(movements.filter(x=>['waste','issue','emergency_adjust','count'].includes(x.kind)),x=>x.itemId,x=>x.kind==='emergency_adjust'&&typeof x.after==='number'&&typeof x.before==='number'?x.before-x.after:x.quantity||0);
+ const consumptionComparison=Object.keys({...theoretical,...actualAdjustments}).map(itemId=>({itemId,itemName:s.kitchenItems[itemId]?.name||itemId,theoretical:theoretical[itemId]||0,otherRecordedUse:actualAdjustments[itemId]||0,difference:(actualAdjustments[itemId]||0)-(theoretical[itemId]||0),note:'الفرق مؤشر تشغيلي فقط؛ لا يعتبر دليل سرقة.'}));
+ const dishCosts=Object.values(s.recipes||{}).filter(r=>shopIds.includes(r.shopId)&&r.approved).map(r=>{const cost=sum(r.ingredients,x=>x.quantity*(s.kitchenItems[x.itemId]?.unitCost||0)),p=s.products[r.productId];return{recipeId:r.id,productId:r.productId,productName:p?.name||r.name,cost,price:p?.price??null,estimatedMargin:p?.price===null||p?.price===undefined?null:p.price-cost};});
+ const sensitiveAudit=(s.auditLog||[]).filter(x=>shopIds.includes(x.shopId)&&['staff_permissions_changed','staff_status_changed','table_order_moved','checks_merged','check_split','discount_approved','restaurant_refund','inventory_emergency_adjust','inventory_waste','sync_conflict_resolved'].includes(x.kind));
+ const conflicts=Object.values(s.syncConflicts||{}).filter(x=>shopIds.includes(x.shopId));
+ return{shopIds,today,salesToday,salesByEmployee,salesByTable,openOrders:orders.filter(o=>!['paid','cancelled','merged'].includes(o.status)).map(o=>({id:o.id,queue:o.queue,status:o.status,tableId:o.tableId,total:o.total})),avgPrepMinutes,delayed,cash,stock:stockRows,lowStock:stockRows.filter(x=>x.belowMinimum),wasteByItem,consumptionComparison,dishCosts,audit:sensitiveAudit,offlineConflicts:conflicts};
+}

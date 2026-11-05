@@ -1,4 +1,4 @@
-import {requireThat as ok,fail,int,money,text,key,nextId,calendarMonthEnd,normalizePhone,roles,permissions,approved,isAdmin,requireShop,checkVersion,bump} from './core.mjs';
+import {requireThat as ok,fail,int,money,text,key,nextId,calendarMonthEnd,normalizePhone,roles,permissions,approved,isAdmin,requireShop,checkVersion,bump,staffRoles,staffPermissions,rolePermissionDefaults,hasShopPermission,testPinFingerprint} from './core.mjs';
 import {validateFeeRule} from './dynamic-fees.mjs';
 import {validatePlatformBenefit} from './platform-benefits.mjs';
 import {normalizeBusinessType} from './business-types.mjs';
@@ -86,12 +86,33 @@ export function businessCommand(c){
   const image=text(f.image||'',0,500);ok(!image||/^\/[^/\\]/.test(image)||/^https:\/\//.test(image),'IMAGE','الصورة لازم تكون رابط آمن.');
   const id=p?.id||nextId(s,'product');s.products[id]={...p,id,shopId,name:text(f.name,2,100),description:text(f.description||'',0,1000),sectionId:f.sectionId,price:f.price===null?null:money(f.price),unit:text(f.unit||'قطعة',1,20),stock:f.stock===null?null:int(f.stock,0,100000),available:f.available!==false,archived:f.archived===true,taxMode:f.taxMode,taxRate,variants,offer,image,kind:f.kind==='service'?'service':'product',visits:int(f.visits??1,1,100),version:(p?.version||0)+1};return {id,message:'المنتج اتحفظ في نشاطك.'};
  }
+ case 'staff.create':{
+  const shop=s.shops[key(b.shopId)];ok(shop,'NOT_FOUND','النشاط غير موجود.',404);const owner=shop.ownerId===a,canManage=owner||hasShopPermission(s,a,shop.id,'manage_staff');ok(canManage,'FORBIDDEN','مش عندك صلاحية إدارة فريق المحل.',403);
+  ok(staffRoles.includes(b.role),'ROLE','اختار دور موظف صحيح.');if(b.role==='shop_manager')ok(owner||hasShopPermission(s,a,shop.id,'manage_managers'),'FORBIDDEN','إضافة مدير محل تحتاج صاحب النشاط أو تفويض إدارة المديرين.',403);
+  const granted=[...new Set(Array.isArray(b.grantedPermissions)?b.grantedPermissions:[])],denied=[...new Set(Array.isArray(b.deniedPermissions)?b.deniedPermissions:[])];ok(granted.every(x=>staffPermissions.includes(x))&&denied.every(x=>staffPermissions.includes(x)),'PERMISSIONS','في صلاحيات غير معروفة.');
+  if(!owner){ok(!granted.some(x=>['manage_staff','manage_settings','manage_managers'].includes(x)),'FORBIDDEN','الصلاحيات الحساسة لصاحب النشاط فقط إلا بتفويض صريح.',403);}
+  const name=text(b.name,2,80),internalCode=text(b.internalCode,2,30);ok(!Object.values(s.team).some(m=>m.shopId===shop.id&&m.internalCode===internalCode&&m.status!=='suspended'),'DUPLICATE','الكود الداخلي مستخدم.');
+  const userId=nextId(s,'employee'),memberId=nextId(s,'team');s.users[userId]={id:userId,name,verified:true,admin:false,phone:'',internal:true};
+  const status=b.status==='invited'?'invited':'active';s.team[memberId]={id:memberId,userId,shopId:shop.id,role:b.role,permissions:[],grantedPermissions:granted,deniedPermissions:denied,status,internalCode,pinFingerprint:testPinFingerprint(b.pin,shop.id),createdAt:at,lastActiveAt:null,inviterId:a,version:1};
+  s.auditLog.push({id:nextId(s,'audit'),shopId:shop.id,actorId:a,kind:'staff_created',entityId:memberId,reason:text(b.reason||'إنشاء حساب موظف تجريبي',3,300),before:null,after:{role:b.role,grantedPermissions:granted,deniedPermissions:denied,status},at});
+  return {id:memberId,userId,message:'حساب الموظف التجريبي اتعمل.'};
+ }
+ case 'staff.update':{
+  const m=s.team[key(b.id)],shop=s.shops[m?.shopId];ok(m&&shop,'NOT_FOUND','حساب الموظف مش موجود.',404);checkVersion(m,b.version);const owner=shop.ownerId===a,canManage=owner||hasShopPermission(s,a,shop.id,'manage_staff');ok(canManage,'FORBIDDEN','مش عندك صلاحية إدارة الفريق.',403);
+  const role=b.role??m.role;ok(staffRoles.includes(role),'ROLE','الدور غير صحيح.');if(role==='shop_manager'||m.role==='shop_manager')ok(owner||hasShopPermission(s,a,shop.id,'manage_managers'),'FORBIDDEN','تعديل المديرين يحتاج تفويض صريح.',403);
+  const granted=[...new Set(Array.isArray(b.grantedPermissions)?b.grantedPermissions:m.grantedPermissions||[])],denied=[...new Set(Array.isArray(b.deniedPermissions)?b.deniedPermissions:m.deniedPermissions||[])];ok(granted.every(x=>staffPermissions.includes(x))&&denied.every(x=>staffPermissions.includes(x)),'PERMISSIONS','في صلاحيات غير معروفة.');if(!owner)ok(!granted.some(x=>['manage_staff','manage_settings','manage_managers'].includes(x)),'FORBIDDEN','ما ينفعش تمنح صلاحية حساسة من غير صاحب النشاط.',403);
+  const before={role:m.role,grantedPermissions:[...(m.grantedPermissions||[])],deniedPermissions:[...(m.deniedPermissions||[])],status:m.status};m.role=role;m.grantedPermissions=granted;m.deniedPermissions=denied;if(b.pin)m.pinFingerprint=testPinFingerprint(b.pin,shop.id);if(b.internalCode)m.internalCode=text(b.internalCode,2,30);bump(m);s.auditLog.push({id:nextId(s,'audit'),shopId:shop.id,actorId:a,kind:'staff_permissions_changed',entityId:m.id,reason:text(b.reason,3,300),before,after:{role:m.role,grantedPermissions:granted,deniedPermissions:denied,status:m.status},at});return {id:m.id,message:'صلاحيات الموظف اتحدثت.'};
+ }
+ case 'staff.status':{
+  const m=s.team[key(b.id)],shop=s.shops[m?.shopId];ok(m&&shop,'NOT_FOUND','حساب الموظف مش موجود.',404);checkVersion(m,b.version);const owner=shop.ownerId===a,canManage=owner||hasShopPermission(s,a,shop.id,'manage_staff');ok(canManage,'FORBIDDEN','مش عندك صلاحية إدارة الفريق.',403);if(m.role==='shop_manager')ok(owner||hasShopPermission(s,a,shop.id,'manage_managers'),'FORBIDDEN','إيقاف أو إعادة مدير يحتاج تفويض صريح.',403);
+  ok(['active','suspended','invited'].includes(b.status),'STATE','حالة الحساب غير صحيحة.');const before=m.status;m.status=b.status;bump(m);s.auditLog.push({id:nextId(s,'audit'),shopId:shop.id,actorId:a,kind:'staff_status_changed',entityId:m.id,reason:text(b.reason,3,300),before:{status:before},after:{status:m.status},at});return {id:m.id,message:b.status==='suspended'?'الحساب اتوقف بدون حذف سجله.':'حالة الحساب اتحدثت.'};
+ }
  case 'team.invite':{
   const shop=s.shops[key(b.shopId)];ok(shop&&(shop.ownerId===a||isAdmin(s,a)),'FORBIDDEN','صاحب النشاط فقط يضيف فريقه.',403);const userId=key(b.userId);ok(s.users[userId]&&userId!==shop.ownerId,'MEMBER','اختار حساب موجود غير صاحب النشاط.');
   ok(Array.isArray(b.permissions)&&b.permissions.length>0&&b.permissions.every(x=>permissions.includes(x)),'PERMISSIONS','صلاحيات الفريق غير صحيحة.');
   const prior=Object.values(s.team).find(t=>t.shopId===shop.id&&t.userId===userId);ok(!prior||prior.status==='revoked','INVITE','في دعوة أو عضوية موجودة.');const id=nextId(s,'team');s.team[id]={id,userId,shopId:shop.id,permissions:[...new Set(b.permissions)],status:'invited',inviterId:a,version:1};return {id,message:'دعوة الفريق اتبعت في بيئة الاختبار.'};
  }
- case 'team.answer':{const m=s.team[key(b.id)];checkVersion(m,b.version);ok(m.userId===a&&m.status==='invited','FORBIDDEN','الدعوة مش متاحة لحسابك.',403);m.status=b.accept?'accepted':'declined';bump(m);return {id:m.id,message:'ردك اتحفظ.'};}
+ case 'team.answer':{const m=s.team[key(b.id)];checkVersion(m,b.version);ok(m.userId===a&&m.status==='invited','FORBIDDEN','الدعوة مش متاحة لحسابك.',403);m.status=b.accept?'active':'declined';bump(m);return {id:m.id,message:'ردك اتحفظ.'};}
  case 'team.revoke':{const m=s.team[key(b.id)];checkVersion(m,b.version);ok(s.shops[m.shopId].ownerId===a||isAdmin(s,a),'FORBIDDEN','صاحب النشاط فقط يوقف العضوية.',403);m.status='revoked';bump(m);return {id:m.id,message:'صلاحية الموظف اتوقفت.'};}
  case 'courier.invite':{
   requireShop(s,a,key(b.shopId),'dispatch');const phone=normalizePhone(b.phone),name=text(b.name,2,80);const existing=Object.values(s.courierLinks).find(l=>l.shopId===b.shopId&&l.phone===phone&&l.status!=='revoked');ok(!existing,'DUPLICATE','المندوب موجود بالفعل في فريقك.');
