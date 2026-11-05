@@ -1,3 +1,4 @@
+import {validTestAck} from './local-sync-server.mjs';
 import {requireThat as ok,key,text,nextId,checkVersion,bump,hasShopPermission} from './core.mjs';
 
 export function offlineCommand(c){
@@ -8,7 +9,8 @@ export function offlineCommand(c){
   if(q.status==='synced')return{id:q.id,message:'العملية متزامنة بالفعل.',replayed:true};q.attempts++;q.updatedAt=at;
   if(b.outcome==='conflict'){const id=nextId(s,'sync-conflict'),reason=text(b.reason||'تعارض في نسخة الطلب على الخادم التجريبي',3,300);s.syncConflicts[id]={id,queueId:q.id,orderId:o.id,shopId:o.shopId,requestId:o.requestId,reason,status:'open',createdAt:at,version:1};q.status='conflict';q.lastError=reason;o.syncStatus='conflict';o.syncConflict=id;bump(o);return{id:q.id,conflictId:id,message:'ظهر تعارض ويحتاج مراجعة مدير.'};}
   if(b.outcome==='failed'){const reason=text(b.reason||'فشل اتصال تجريبي',3,300);q.status='failed';q.lastError=reason;o.syncStatus='failed';bump(o);return{id:q.id,message:'المزامنة فشلت وتحتاج إعادة محاولة.'};}
-  q.status='synced';q.lastError=null;q.syncedAt=at;o.syncStatus='synced';o.syncedAt=at;o.syncConflict=null;bump(o);return{id:q.id,message:'تم تأكيد المزامنة من الخادم التجريبي.'};
+  ok(b.outcome==='success'&&validTestAck(b.ack,q,o),'ACK_REQUIRED','ممنوع إعلان المزامنة من غير تأكيد حفظ من محاكي الخادم المحلي.',409);
+  q.status='synced';q.lastError=null;q.syncedAt=at;q.testAuthorityReceipt=b.ack.receiptId;o.syncStatus='synced';o.syncedAt=at;o.syncConflict=null;bump(o);return{id:q.id,message:'تم تأكيد الحفظ في محاكي الخادم المحلي فقط (Test).'};
  }
  case 'offline.retry':{
   const q=s.offlineQueue[key(b.id)];ok(q,'NOT_FOUND','عملية الأوفلاين مش موجودة.',404);ok(['failed','conflict'].includes(q.status),'STATE','العملية مش محتاجة إعادة محاولة.');ok(q.actorId===a||hasShopPermission(s,a,q.shopId,'view_orders'),'FORBIDDEN','مش عندك صلاحية إعادة المحاولة.',403);q.status='pending_sync';q.lastError=null;q.updatedAt=at;const o=s.restaurantOrders[q.orderId];if(o){o.syncStatus='pending_sync';o.syncConflict=null;bump(o);}return{id:q.id,message:'العملية رجعت في انتظار المزامنة.'};
