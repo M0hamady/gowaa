@@ -17,9 +17,32 @@ def photo_panel(im,photos):
   except Exception:pass
  mask=Image.new('L',(w,h),0);ImageDraw.Draw(mask).rounded_rectangle((0,0,w,h),radius=28,fill=255)
  im.paste(panel,(box[0],box[1]),mask)
-def card(key,title,subtitle,tag,photos=()):
+def logo_frame(im,logo,photos):
+ # The shop's own logo inside Jowwa's frame: a white plate, a lime ring and the Jowwa
+ # house badge, over the shop photos (dimmed) or the brand green.
+ box=(40,40,410,590);w,h=box[2]-box[0],box[3]-box[1]
+ if photos:
+  photo_panel(im,photos)
+  shade=Image.new('RGBA',(w,h),(18,62,50,178));mask=Image.new('L',(w,h),0);ImageDraw.Draw(mask).rounded_rectangle((0,0,w,h),radius=28,fill=255)
+  base=im.crop(box).convert('RGBA');base.alpha_composite(shade);im.paste(base.convert('RGB'),box[:2],mask)
+ else:
+  d=ImageDraw.Draw(im);d.rounded_rectangle(box,radius=28,fill='#174c3b',outline='#2d5a47',width=2)
+ S=4;cx,cy,r=box[0]+w//2,box[1]+h//2-18,150
+ big=Image.new('RGBA',((2*r+40)*S,(2*r+40)*S),(0,0,0,0));g=ImageDraw.Draw(big);o=20*S
+ g.ellipse((o-14*S,o-14*S,o+2*r*S+14*S,o+2*r*S+14*S),fill=(209,243,106,255))
+ g.ellipse((o-4*S,o-4*S,o+2*r*S+4*S,o+2*r*S+4*S),fill=(18,62,50,255))
+ g.ellipse((o,o,o+2*r*S,o+2*r*S),fill=(255,255,255,255))
+ big=big.resize((2*r+40,2*r+40),Image.LANCZOS)
+ lg=Image.open(logo).convert('RGBA');inner=int(r*2*0.9);lg=ImageOps.contain(lg,(inner,inner),Image.LANCZOS)
+ big.alpha_composite(lg,((2*r+40-lg.width)//2,(2*r+40-lg.height)//2))
+ im.paste(big,(cx-r-20,cy-r-20),big)
+ d=ImageDraw.Draw(im);bx,by=cx,cy+r+26
+ d.rounded_rectangle((bx-92,by-24,bx+92,by+24),radius=24,fill='#d1f36a')
+ d.text((bx,by+2),'على جوه',font=font(26),fill='#123e32',anchor='mm',direction='rtl')
+def card(key,title,subtitle,tag,photos=(),logo=None):
  im=Image.new('RGB',(1200,630),'#123e32');d=ImageDraw.Draw(im)
- if photos:photo_panel(im,photos)
+ if logo:logo_frame(im,logo,photos);photos=photos or ('logo',)
+ elif photos:photo_panel(im,photos)
  # A light route and neighborhood blocks reinforce the map identity.
  for x,y,w,h in ([] if photos else [(35,65,135,98),(220,25,130,150),(30,220,95,110),(175,240,150,125),(85,432,110,130),(280,460,110,105)]):
   d.rounded_rectangle((x,y,x+w,y+h),radius=20,fill='#1c4a3c',outline='#2d5a47',width=2)
@@ -58,6 +81,7 @@ def shop_photos(p):
   if value.startswith('/menus/') and f.exists():out.append(f)
  return out[:3]
 for p in json.loads((root/'public/data/places.json').read_text('utf-8')):
- photos=shop_photos(p)
- card(p['id'],p['name'],'المنيو والصور والتواصل' if photos else 'التفاصيل والتواصل ومصدر المعلومة',p['category']+' • دليل جوه',photos)
+ photos=shop_photos(p);lv=p.get('logo') or '';lf=root/'public'/lv.lstrip('/')
+ logo=lf if lv.startswith('/logos/') and lf.exists() else None
+ card(p['id'],p['name'],'المنيو والصور والتواصل' if photos or logo else 'التفاصيل والتواصل ومصدر المعلومة',p['category']+' • دليل جوه',photos,logo)
 print('Generated',len(list(out.glob('*.png'))),'Arabic social cards at 1200 x 630')

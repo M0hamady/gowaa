@@ -18,7 +18,7 @@ export function claimOperation(body){
  if(!uuid(body.claimId)||!version(body.version))throw Error('حدّث بيانات الخدمة قبل حفظ التغيير.');
  const base={claim_id:body.claimId,expected_version:body.version};
  if(body.action==='save'){
-  const draft=body.draft,keys=['name','description','address','phone','whatsapp','facebook','instagram','website','menuUrl','image'];
+  const draft=body.draft,keys=['name','description','address','phone','whatsapp','facebook','instagram','website','menuUrl','image','logo','logoCard'];
   if(!draft||typeof draft!=='object'||Array.isArray(draft)||Object.keys(draft).some(k=>!keys.includes(k))||Object.values(draft).some(v=>typeof v!=='string'))throw Error('راجع بيانات الخدمة.');
   return {name:'jowwa_service_claim_save',args:{...base,fields:draft}};
  }

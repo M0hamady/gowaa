@@ -3,7 +3,7 @@ import {readFile} from 'node:fs/promises';
 
 const clean = value => {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
-  const allowed = ['id','name','category','address','phone','description','url','image','menuUrl','mapCategory','schemaType','marketPriority','businessOwnerVerified','providerManaged','status'];
+  const allowed = ['id','name','category','address','phone','description','url','image','menuUrl','mapCategory','schemaType','marketPriority','businessOwnerVerified','providerManaged','status','logo'];
   return Object.fromEntries(allowed.filter(key => value[key] !== undefined).map(key => [key, value[key]]));
 };
 

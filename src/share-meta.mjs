@@ -2,6 +2,7 @@
 // Only what is already public in the directory (name, category, short description,
 // share card). Never phones, addresses beyond the area, or anything private.
 import {readFile} from 'node:fs/promises';
+import {LOGO_PATH} from '../public/place-logo.js';
 
 const ORIGIN='https://jowwa-kayan.vercel.app';
 const cache=new Map();
@@ -10,7 +11,14 @@ async function json(name){
  return cache.get(name);
 }
 const clip=(s,n)=>{s=String(s||'').replace(/\s+/g,' ').replace(/(?:\+?20|0)1[0-9][\s-]?[0-9]{3,4}[\s-]?[0-9]{4}/g,'').trim();return s.length>n?s.slice(0,n-1).trim()+'…':s;};
-const safeImage=v=>typeof v==='string'&&/^\/(social|menus)\/[a-zA-Z0-9_\/-]+\.(png|jpg|webp)$/.test(v)?v:null;
+const safeImage=v=>typeof v==='string'&&/^\/(social|menus|logos)\/[a-zA-Z0-9_\/-]+\.(png|jpg|webp)$/.test(v)?v:null;
+// Approved owner edits (site_content) override the shipped directory; read with the public key.
+async function liveOverride(id,env=process.env){
+ const url=env.NEXT_PUBLIC_SUPABASE_URL,key=env.NEXT_PUBLIC_SUPABASE_ANON_KEY;if(!url||!key)return null;
+ try{const r=await fetch(url+'/rest/v1/site_content?select=data,archived&kind=eq.places&id=eq.'+encodeURIComponent(id),{headers:{apikey:key,Authorization:'Bearer '+key},signal:AbortSignal.timeout(2500)});
+  if(!r.ok)return null;const row=(await r.json())[0];return row&&!row.archived&&row.data&&typeof row.data==='object'?row.data:null;}catch{return null;}
+}
+export const ownerCard=(id,data)=>typeof data?.logoCard==='string'&&LOGO_PATH.test(data.logoCard)?'/api/image?type=place&v=card&id='+encodeURIComponent(id)+'&c='+encodeURIComponent(data.logoCard.split('/').pop().replace(/\..+$/,'')):null;
 const placeCard=p=>safeImage(p?.image)?.startsWith('/social/')?p.image:'/social/'+p.id+'.png';
 
 export async function shareMeta(path){
@@ -18,9 +26,10 @@ export async function shareMeta(path){
  try{
   let m;
   if((m=path.match(/^\/place\/([a-zA-Z0-9_-]{1,120})$/))){
-   const p=((await json('places.json'))||[]).find(x=>x.id===decodeURIComponent(m[1]));
-   if(!p)return base;
-   return {...base,title:`${p.name} — ${p.category||'كيان سيتي'} | جوه`,description:clip(p.description||`تعرف على ${p.name} في كيان سيتي.`,180),image:placeCard(p)};
+   const id=decodeURIComponent(m[1]),live=await liveOverride(id);
+   const p={...((await json('places.json'))||[]).find(x=>x.id===id),...(live||{})};
+   if(!p.name)return base;
+   return {...base,title:`${p.name} — ${p.category||'كيان سيتي'} | جوه`,description:clip(p.description||`تعرف على ${p.name} في كيان سيتي.`,180),image:ownerCard(id,live)||placeCard({...p,id})};
   }
   if((m=path.match(/^\/menu\/([a-z0-9-]{1,140})$/))){
    const items=(await json('market-directory.json'))?.items||[];const v=items.find(x=>x.id===m[1]);
