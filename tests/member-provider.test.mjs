@@ -42,7 +42,7 @@ test('member cookie is HttpOnly, Secure, same-site and never exposes tokens in r
  const out=response();await handler({method:'DELETE',headers:{host:'jowwa.test',origin:'https://jowwa.test'}},out);assert.match(out.headers['Set-Cookie'],/Max-Age=0/);
 });
 test('detail page shell withholds private details before authentication and preserves destination',async()=>{
- const r=response();assert.equal(await requireMemberPage({headers:{}},r,'/place/directory-test',harness().options),false);assert.equal(r.statusCode,401);assert.match(r.body,/data-member-next="\/place\/directory-test"/);assert.doesNotMatch(r.body,/01000000001|منتج من المنيو/);assert.equal(r.headers['Cache-Control'],'private, no-store');
+ const r=response();assert.equal(await requireMemberPage({headers:{}},r,'/place/directory-test',harness().options),false);assert.equal(r.statusCode,200,'sign-in page is crawlable for link previews');assert.match(r.body,/data-member-next="\/place\/directory-test"/);assert.doesNotMatch(r.body,/01000000001|منتج من المنيو/);assert.equal(r.headers['Cache-Control'],'private, no-store');
  for(const factory of [createPlacePage,createMarketPage,createMenuPage]){let rendered=0;const req={query:{id:'directory-test',type:'item'},headers};await factory({check:async()=>false,render:()=>rendered++})(req,response());assert.equal(rendered,0);await factory({check:async()=>true,render:()=>rendered++})(req,response());assert.equal(rendered,1);}
 });
 test('product validation rejects empty/fake prices, broken offers and permission fields',()=>{

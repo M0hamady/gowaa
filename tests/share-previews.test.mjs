@@ -28,7 +28,7 @@ test('every menu item link previews with its product photo or its shop card',asy
 test('the sign-in page behind a shared link carries the share tags but stays noindex and private',async()=>{
  const res={headers:{},setHeader(k,v){this.headers[k]=v;},end(b){this.body=b;}};
  assert.equal(await requireMemberPage({headers:{}},res,'/place/directory-caramia'),false);
- assert.equal(res.statusCode,401);
+ assert.equal(res.statusCode,200);
  for(const tag of ['og:title','og:image','og:description','twitter:card'])assert.ok(res.body.includes(tag),tag);
  assert.match(res.body,/og:image" content="https:\/\/jowwa-kayan\.vercel\.app\/social\/directory-caramia\.png"/);
  assert.match(res.body,/noindex/);assert.doesNotMatch(res.body,/01043507917|wa\.me/);

@@ -24,7 +24,9 @@ export function memberPage(next='/',meta=null){
 }
 export async function requireMemberPage(req,res,next,options={}){
  noStore(res);const member=await authenticatedMember(req,options);if(member.ok){req.member=member;return true;}
- res.statusCode=member.status;res.setHeader('Content-Type','text/html; charset=utf-8');res.setHeader('X-Robots-Tag','noindex, nofollow');let meta=null;try{meta=await shareMeta(safeReturnPath(next));}catch{}res.end(memberPage(next,meta));return false;
+ // Signed-out visitors get the sign-in page with 200 so link-preview crawlers (Facebook, WhatsApp) read the share card;
+ // it carries only public directory data and stays noindex.
+ res.statusCode=member.status===401?200:member.status;res.setHeader('Content-Type','text/html; charset=utf-8');res.setHeader('X-Robots-Tag','noindex, nofollow');let meta=null;try{meta=await shareMeta(safeReturnPath(next));}catch{}res.end(memberPage(next,meta));return false;
 }
 function sameOrigin(req){const origin=req.headers?.origin;if(!origin)return true;try{return new URL(origin).host===req.headers.host;}catch{return false;}}
 export function createMemberHandler(options={}){return async(req,res)=>{
