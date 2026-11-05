@@ -37,7 +37,7 @@ export function shopPermissionSet(s,id,shopId){
  const shop=s.shops?.[shopId];if(!shop)return new Set();if(isAdmin(s,id)||shop.ownerId===id)return new Set(staffPermissions);
  const member=employeeMembership(s,id,shopId);if(!member)return new Set();
  const set=new Set(rolePermissionDefaults[member.role]||[]);
- for(const p of member.permissions||member.grantedPermissions||[])if(staffPermissions.includes(p))set.add(p);
+ for(const p of [...(member.permissions||[]),...(member.grantedPermissions||[])])if(staffPermissions.includes(p))set.add(p);
  for(const p of member.deniedPermissions||[])set.delete(p);
  return set;
 }
