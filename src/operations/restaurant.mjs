@@ -1,4 +1,5 @@
 import {requireThat as ok,key,text,int,money,nextId,checkVersion,bump,hasShopPermission,paidNet,openShift,addCash,employeeMembership} from './core.mjs';
+import {consumeOrderRecipes} from './inventory.mjs';
 
 const orderStates=['open','sent_to_kitchen','preparing','ready','served','account_open','paid','cancelled','merged'];
 const kitchenStates=['new','preparing','ready','served'];
@@ -55,7 +56,7 @@ export function restaurantCommand(c){
   const o=s.restaurantOrders[key(b.id)];checkVersion(o,b.version);ok(orderAccess(s,a,o,'edit_open_order'),'FORBIDDEN','مش عندك صلاحية تعديل الطلب.',403);ok(o.status==='open','STATE','التعديل متاح قبل الإرسال للمطبخ.');const l=o.lines.find(x=>x.id===b.lineId);ok(l,'NOT_FOUND','الصنف مش موجود.',404);l.quantity=int(b.quantity,1,99);l.notes=text(b.notes??l.notes,0,250);recalc(o);o.updatedAt=at;bump(o);return{id:o.id,message:'الصنف اتحدث.'};
  }
  case 'restaurant.order.send_kitchen':{
-  const o=s.restaurantOrders[key(b.id)];checkVersion(o,b.version);can(s,a,o.shopId,'send_to_kitchen');ok(o.status==='open'&&o.lines.length,'STATE','الطلب لازم يكون مفتوح وفيه أصناف.');for(const l of o.lines){l.kitchenStatus='new';l.sentAt=at;}o.status='sent_to_kitchen';o.sentBy=a;o.sentAt=at;o.updatedAt=at;bump(o);tableStateFromOrder(s,o);audit(s,{shopId:o.shopId,actorId:a,kind:'sent_to_kitchen',entityId:o.id,reason:text(b.reason||'إرسال الطلب للمطبخ',3,200),at});return{id:o.id,message:'الطلب وصل شاشة المطبخ.'};
+  const o=s.restaurantOrders[key(b.id)];checkVersion(o,b.version);can(s,a,o.shopId,'send_to_kitchen');ok(o.status==='open'&&o.lines.length,'STATE','الطلب لازم يكون مفتوح وفيه أصناف.');consumeOrderRecipes(s,o,{actorId:a,at,overrideInventory:b.overrideInventory===true});for(const l of o.lines){l.kitchenStatus='new';l.sentAt=at;}o.status='sent_to_kitchen';o.sentBy=a;o.sentAt=at;o.updatedAt=at;bump(o);tableStateFromOrder(s,o);audit(s,{shopId:o.shopId,actorId:a,kind:'sent_to_kitchen',entityId:o.id,reason:text(b.reason||'إرسال الطلب للمطبخ',3,200),at});return{id:o.id,message:'الطلب وصل شاشة المطبخ.'};
  }
  case 'kitchen.item.status':{
   const o=s.restaurantOrders[key(b.id)];checkVersion(o,b.version);can(s,a,o.shopId,'update_kitchen_status');const l=o.lines.find(x=>x.id===b.lineId);ok(l&&l.kitchenStatus,'NOT_FOUND','صنف المطبخ مش موجود.',404);const next=b.status;ok(kitchenStates.includes(next),'STATE','حالة المطبخ غير صحيحة.');ok(next===l.kitchenStatus||kitchenNext[l.kitchenStatus]===next,'STATE','انتقال حالة المطبخ غير مسموح.');l.kitchenStatus=next;if(next==='ready')l.readyAt=at;if(next==='served')l.servedAt=at;l.kitchenActorId=a;o.updatedAt=at;syncOrderKitchenStatus(s,o);bump(o);return{id:o.id,message:next==='ready'?'الصنف جاهز.':next==='served'?'الصنف اتسلّم للصالة/الكاشير.':'حالة التجهيز اتحدثت.'};
