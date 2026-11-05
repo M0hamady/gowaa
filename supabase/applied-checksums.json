@@ -1,0 +1,22 @@
+{
+ "001_market": "12382c055cfdb7b1344f53d2cdaa44eb963d6dc47aca75c25ae295062d52d97d",
+ "002_admin_identity": "a0f63c4466843ae46054ce2a9dd90ab9dfcdbe2dea8fc5807baedafea779c76b",
+ "003_media_visibility": "d33efcf32068a167c9c7a04fd3d44ce115d4c86acbf6f471730bc3711925325c",
+ "004_service_actions": "974ff4fc286d4398e4b14f122119e4e32c7aa1e2987ccf58bf4c6d9c023079e1",
+ "005_commerce": "de874a588130558db966a0497b7dd5c97e0845efd8fea0d2d8f4f9aef55fd43b",
+ "006_management_analytics": "e0156527ca695e9dc5c73afc1daefdcaa5b98b0d69068f601c3eb4a54943f1a4",
+ "007_phone_identity": "588254603e94a87cb4712f652f9a75d557ea3564888b7021a72cc398535d8022",
+ "008_round_coordination": "5a8ea55cb7b30e4bf7df2022d2ce613d95e84ad484e30f0872cbb4daa73b8f23",
+ "009_notifications": "e546f467c8c63b88716407dbeefda56a3bd7c6a83512dd0e7b79e8a5b4dbec55",
+ "010_round_sms": "6fc6ba8d33b6563801f04c2ed59bb09447007cd47e3037ddb13047888913523c",
+ "011_admin_phone_directory": "f7021839396dbb74340178069fb31ce2c9799975af5786742ab0c66fb57e8f6f",
+ "012_assistant_limits": "d06374165238487d43e92831d82feac7a6620c2caf4a7dde16cc762b65aff7fc",
+ "013_service_claims": "b68ea42e2722def115a7d007059e89f0c082a40d3dcc5b0c0f717101a7e5cbf6",
+ "014_pause_admin_event_sms": "3e33b714e989725a36da6a4eb5de69fcc6fe65a5c0130f70cfb00cca63c82857",
+ "015_notification_digest": "07aaecbf310eac439c20f238947691b9ace4683af2c634ae156ab5034098007a",
+ "016_service_claim_registry_expand": "1b72412ecf107cdf1a482a426e916e943d96082d1ba311e42eedbf543a6b53cf",
+ "017_curated_business_claims": "0a944cb2044f0ceade15f7cb009c6a137c400911cf2cc7e2f2fc0c9e1c7b0912",
+ "018_shop_operations": "ec9d839d74f574f0e6bb53504eb4dd1a6222293408c118911e46ab6e1dfd4d7a",
+ "019_operations_live_workspace": "5734d73dbfae53f9eb244e85f1f8651b2e422aa81eea406ad56206549b079677",
+ "020_admin_account_insights": "94042de2aba99ebd20a6f1f463c564ac84e5e30bde4c008aab7802b02bbb06d1"
+}

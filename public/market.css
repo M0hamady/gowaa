@@ -51,3 +51,5 @@
 .concierge-order.is-new{border-color:#e6b84f;box-shadow:0 0 0 2px #fff4d6}
 .concierge-order ul{margin:8px 0;padding-inline-start:18px}.concierge-order li small{color:#6b756f;margin-inline-start:6px}
 .concierge-form{border-top:1px solid #eee;margin-top:14px;padding-top:12px}.concierge-fulfillment{display:flex;gap:16px;border:0;padding:0}.concierge-fulfillment legend{font-weight:600}
+.cart-qty{display:flex;align-items:center;gap:4px}.cart-qty input{width:56px;text-align:center;min-height:40px}
+.qty-step{min-width:40px;min-height:40px;border-radius:10px;border:1px solid #cfd8d2;background:#fff;font-size:1.2rem;line-height:1}

@@ -25,13 +25,51 @@ export function mountProviderCatalog(){
  }
  function showMessage(message){let p=host.querySelector('[data-catalog-message]');if(!p){p=document.createElement('p');p.dataset.catalogMessage='';p.setAttribute('role','status');host.prepend(p);}p.textContent=message;}
  let dialog;
+ const lineText=r=>r.lineTotal===null?'السعر غير محدد':r.lineTotal===undefined?'الصنف اتشال':money(r.unitPrice)+' × '+r.quantity+' = '+money(r.lineTotal)+' جنيه';
+ const summary=quote=>'<div class="cart-total"><span>إجمالي الأسعار المعروفة</span><strong>'+money(quote.knownTotal)+' جنيه</strong></div>'+(quote.tax?'<p>شامل '+money(quote.tax)+' جنيه ضريبة معلنة.</p>':'')+(quote.unpriced?'<p class="notice">'+quote.unpriced+' صنف سعره محتاج استفسار؛ مش داخل الإجمالي.</p>':'')+(quote.unknownTax?'<p class="data-note">الضريبة لبعض الأصناف غير مؤكدة.</p>':'');
+ const canConcierge=quote=>concierge&&quote.items.length&&!quote.items.some(r=>r.missing||r.unavailable);
+ let quoteSeq=0,qtyTimer=null;
+ async function fetchQuote(){return (await memberFetch('/api/provider-catalog',{method:'POST',body:JSON.stringify({action:'quote',providerId:id,lines})})).quote;}
  async function showBasket(){
   if(!await ensureMember({kind:'basket'}))return;
   if(!dialog){dialog=document.createElement('dialog');dialog.className='market-dialog provider-basket-dialog';document.body.append(dialog);}dialog.innerHTML='<h2>بنراجع أسعار سلتك…</h2>';if(!dialog.open)dialog.showModal();
-  try{const {quote}=await memberFetch('/api/provider-catalog',{method:'POST',body:JSON.stringify({action:'quote',providerId:id,lines})});
-   dialog.innerHTML='<button type="button" class="member-close" data-cart-close aria-label="إغلاق">'+icon('close')+'</button><h2>سلة '+esc(provider.name)+'</h2>'+(quote.items.map(r=>'<div class="cart-row"><div><strong>'+esc(r.title||'صنف لم يعد متاحًا')+'</strong><p>'+(r.lineTotal===null?'السعر غير محدد':r.lineTotal===undefined?'الصنف اتشال':money(r.unitPrice)+' × '+r.quantity+' = '+money(r.lineTotal)+' جنيه')+'</p>'+(r.unavailable?'<small>الكمية أو الصنف غير متاحين.</small>':'')+'</div><label>الكمية<input data-cart-qty="'+esc(r.id)+'" type="number" min="1" max="99" value="'+r.quantity+'" inputmode="numeric"></label><button type="button" data-cart-remove="'+esc(r.id)+'">حذف</button></div>').join('')||'<p>سلتك لسه فاضية.</p>')+'<div class="cart-total"><span>إجمالي الأسعار المعروفة</span><strong>'+money(quote.knownTotal)+' جنيه</strong></div>'+(quote.tax?'<p>شامل '+money(quote.tax)+' جنيه ضريبة معلنة.</p>':'')+(quote.unpriced?'<p class="notice">'+quote.unpriced+' صنف سعره محتاج استفسار؛ مش داخل الإجمالي.</p>':'')+(quote.unknownTax?'<p class="data-note">الضريبة لبعض الأصناف غير مؤكدة.</p>':'')+'<p class="data-note">رسوم التوصيل غير محددة. دي سلة تقديرية، مش طلب متأكد ولا خصم من المخزون.</p><button type="button" class="primary" data-cart-update>تحديث الكميات</button>'+(provider.phone?'<a class="secondary" href="tel:'+esc(provider.phone)+'">'+icon('phone')+' اتصل لتأكيد السعر والطلب</a>':'')+'<button type="button" class="text-button" data-cart-close>كمّل اختيار المنتجات</button>';
-   if(concierge&&quote.items.length&&!quote.items.some(r=>r.missing||r.unavailable))conciergeForm(quote);dialog.querySelectorAll('[data-cart-close]').forEach(b=>b.onclick=()=>dialog.close());dialog.querySelectorAll('[data-cart-remove]').forEach(b=>b.onclick=()=>{lines=lines.filter(r=>r.id!==b.dataset.cartRemove);persist();render();showBasket();});dialog.querySelector('[data-cart-update]').onclick=()=>{const inputs=[...dialog.querySelectorAll('[data-cart-qty]')];if(inputs.some(i=>!i.reportValidity()))return;lines=inputs.map(i=>({id:i.dataset.cartQty,quantity:Number(i.value)}));persist();render();showBasket();};
-  }catch(e){dialog.innerHTML='<h2>تعذر مراجعة السلة</h2><p>'+esc(e.message)+'</p><button type="button">رجوع</button>';dialog.querySelector('button').onclick=()=>dialog.close();}
+  try{drawQuote(await fetchQuote());}
+  catch(e){dialog.innerHTML='<h2>تعذر مراجعة السلة</h2><p>'+esc(e.message)+'</p><button type="button">رجوع</button>';dialog.querySelector('button').onclick=()=>dialog.close();}
+ }
+ function drawQuote(quote){
+  dialog.innerHTML='<button type="button" class="member-close" data-cart-close aria-label="إغلاق">'+icon('close')+'</button><h2>سلة '+esc(provider.name)+'</h2>'
+   +(quote.items.map(r=>'<div class="cart-row" data-cart-line="'+esc(r.id)+'"><div><strong>'+esc(r.title||'صنف لم يعد متاحًا')+'</strong><p data-cart-line-text>'+lineText(r)+'</p><small data-cart-line-warn>'+(r.unavailable?'الكمية أو الصنف غير متاحين.':'')+'</small></div>'
+    +'<div class="cart-qty"><button type="button" class="qty-step" data-qty-step="-1" aria-label="قلّل الكمية">−</button><input data-cart-qty="'+esc(r.id)+'" type="number" min="1" max="99" value="'+r.quantity+'" inputmode="numeric" aria-label="كمية '+esc(r.title||'')+'"><button type="button" class="qty-step" data-qty-step="1" aria-label="زوّد الكمية">+</button></div>'
+    +'<button type="button" class="text-button" data-cart-remove="'+esc(r.id)+'">حذف</button></div>').join('')||'<p>سلتك لسه فاضية.</p>')
+   +'<div data-cart-summary>'+summary(quote)+'</div><p class="data-note" data-cart-sync role="status" aria-live="polite">الكميات بتتحدث تلقائي.</p><p class="data-note">رسوم التوصيل غير محددة. دي سلة تقديرية، مش طلب متأكد ولا خصم من المخزون.</p>'
+   +(provider.phone?'<a class="secondary" href="tel:'+esc(provider.phone)+'">'+icon('phone')+' اتصل لتأكيد السعر والطلب</a>':'')+'<button type="button" class="text-button" data-cart-close>كمّل اختيار المنتجات</button>';
+  if(canConcierge(quote))conciergeForm(quote);
+  dialog.querySelectorAll('[data-cart-close]').forEach(b=>b.onclick=()=>dialog.close());
+  dialog.querySelectorAll('[data-cart-remove]').forEach(b=>b.onclick=async()=>{lines=lines.filter(r=>r.id!==b.dataset.cartRemove);persist();render();b.closest('.cart-row').remove();if(!lines.length)return drawQuote({items:[],knownTotal:0});await requote();});
+  dialog.querySelectorAll('.cart-qty').forEach(box=>{const input=box.querySelector('input');
+   box.querySelectorAll('[data-qty-step]').forEach(b=>b.onclick=()=>{const n=Math.min(99,Math.max(1,(Number(input.value)||1)+Number(b.dataset.qtyStep)));input.value=n;queueQty();});
+   input.addEventListener('input',queueQty);input.addEventListener('change',()=>{clearTimeout(qtyTimer);applyQty();});});
+ }
+ function queueQty(){clearTimeout(qtyTimer);const status=dialog.querySelector('[data-cart-sync]');if(status)status.textContent='بنحدّث…';qtyTimer=setTimeout(applyQty,450);}
+ async function applyQty(){
+  const inputs=[...dialog.querySelectorAll('[data-cart-qty]')];
+  const bad=inputs.find(i=>!Number.isInteger(Number(i.value))||Number(i.value)<1||Number(i.value)>99);
+  if(bad){const s=dialog.querySelector('[data-cart-sync]');if(s)s.textContent='الكمية من 1 لـ 99.';return;}
+  const next=inputs.map(i=>({id:i.dataset.cartQty,quantity:Number(i.value)}));
+  if(JSON.stringify(next)===JSON.stringify(lines)){const s=dialog.querySelector('[data-cart-sync]');if(s)s.textContent='الكميات بتتحدث تلقائي.';return;}
+  lines=next;persist();render();await requote();
+ }
+ // Re-price in place: keeps focus, cursor and any half-filled order form.
+ async function requote(){
+  const seq=++quoteSeq,status=dialog.querySelector('[data-cart-sync]');
+  try{const quote=await fetchQuote();if(seq!==quoteSeq||!dialog.open)return;
+   const hadForm=!!dialog.querySelector('#concierge-form');
+   if(hadForm!==!!canConcierge(quote)&&!dialog.querySelector('#concierge-form :focus'))return drawQuote(quote);
+   for(const r of quote.items){const row=dialog.querySelector('[data-cart-line="'+CSS.escape(r.id)+'"]');if(!row)continue;row.querySelector('[data-cart-line-text]').textContent=lineText(r);row.querySelector('[data-cart-line-warn]').textContent=r.unavailable?'الكمية أو الصنف غير متاحين.':'';}
+   dialog.querySelector('[data-cart-summary]').innerHTML=summary(quote);
+   const submit=dialog.querySelector('#concierge-form button[type=submit]');if(submit&&!submit.disabled)submit.textContent='ابعت الطلب ('+(quote.unpriced?'السعر يتأكد':money(quote.knownTotal)+' جنيه تقديري')+')';
+   if(status)status.textContent='اتحدّث ✓';
+  }catch(e){if(seq===quoteSeq&&status)status.textContent='تعذر التحديث: '+(e.message||'');}
  }
  function conciergeForm(quote){
   const user=memberState().user,phone=(user?.phone||'').replace(/^20/,'0');
