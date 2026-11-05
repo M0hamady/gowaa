@@ -75,7 +75,7 @@ function restaurantPosView(app){
 }
 function inventoryView(app){
  const inv=app.model.inventory,shopId=app.shopId,stores=inv.stores.filter(x=>x.shopId===shopId),items=inv.items.filter(x=>x.shopId===shopId),stock=(storeId,itemId)=>inv.stock[storeId+':'+itemId]??0;
- return heading('مخزن المطبخ','الخامات منفصلة عن مخزون المنتجات المعروضة. كل حركة لها سبب.',hasShopPermission(app.raw,app.actor,shopId,'adjust_inventory')?btn('inventory-supply','توريد','','primary')+btn('inventory-waste','تسجيل هالك'):'')+
+ return heading('مخزن المطبخ','الخامات منفصلة عن مخزون المنتجات المعروضة. كل حركة لها سبب.',(hasShopPermission(app.raw,app.actor,shopId,'adjust_inventory')?btn('inventory-supply','توريد','','primary'):'')+(hasShopPermission(app.raw,app.actor,shopId,'record_waste')?btn('inventory-waste','تسجيل هالك'):'')+(hasShopPermission(app.raw,app.actor,shopId,'manage_recipes')?btn('recipe-new','وصفة جديدة'):'') )+
  '<div class="op-grid">'+items.map(it=>{const qty=stores.reduce((n,st)=>n+stock(st.id,it.id),0);return `<article class="op-card"><header><h3>${esc(it.name)}</h3><span class="op-badge">${esc(it.unit)}</span></header><b class="op-money">${qty}</b><p>الحد الأدنى: ${it.minimum} · الأقصى: ${it.maximum||'—'}</p><p class="op-note">${esc(it.storageLocation||'')} ${it.refrigerated?'· تبريد':''} ${it.perishable?'· سريع التلف':''}</p></article>`;}).join('')+'</div><h2>الوصفات المعتمدة</h2><div class="op-grid">'+inv.recipes.filter(r=>r.shopId===shopId).map(r=>`<article class="op-card"><h3>${esc(r.name)}</h3><p>${r.ingredients.map(x=>esc(app.raw.kitchenItems[x.itemId]?.name||x.itemId)+' '+x.quantity).join(' · ')}</p><span class="op-badge">${r.approved?'معتمدة':'مسودة'}</span></article>`).join('')+'</div>';
 }
 function reportsView(app){
