@@ -9,4 +9,5 @@ test('admin business controls keep SMS explicit and auditable',async()=>{
 assert.match(ui,/إيقاف النشاط/);assert.match(ui,/تشغيل النشاط/);assert.match(ui,/الحالة: متوقف/);assert.match(ui,/إبقاء الحساب والبيانات/);assert.match(ui,/دعوة SMS/);assert.match(ui,/api\/admin-sms/);
  const provider=await readFile(new URL('../src/provider-admin.js',import.meta.url),'utf8');
  assert.match(provider,/providerAdminWired/);assert.match(provider,/classList\.remove\('active'\)/);assert.match(provider,/b\.classList\.add\('active'\)/);
+ assert.match(provider,/data-provider-priority/);assert.match(provider,/provider-priority-form/);assert.match(provider,/حفظ أولوية الظهور/);
 });
