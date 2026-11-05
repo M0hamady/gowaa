@@ -63,7 +63,7 @@ function floorView(app){
 }
 function kitchenView(app){
  const m=app.model,orders=m.restaurantOrders.filter(o=>o.shopId===app.shopId&&o.lines.some(l=>l.kitchenStatus&&!['served'].includes(l.kitchenStatus))).sort((a,b)=>new Date(a.sentAt||a.createdAt)-new Date(b.sentAt||b.createdAt));
- return heading('شاشة المطبخ KDS','الأقدم أولًا. كل صنف يتحرك لوحده: جديد ← تجهيز ← جاهز ← تسليم.',btn('kds-dark','وضع داكن'))+
+ return heading('شاشة المطبخ KDS','الأقدم أولًا. كل صنف يتحرك لوحده: جديد ← تجهيز ← جاهز ← تسليم.',btn('kds-dark','وضع داكن')+btn('kds-sound',app.kdsSound?'إيقاف التنبيه':'تشغيل تنبيه الطلبات'))+
  '<div class="kds-board">'+(orders.map(o=>`<article class="kds-ticket"><header><div><strong>#${o.queue}</strong><span>${o.mode==='dine_in'?'طاولة '+esc(app.raw.restaurantTables[o.tableId]?.name||''):'تيك أواي'}</span></div><time>${time(o.sentAt||o.createdAt)}</time></header><p class="op-note">أرسل الطلب: ${esc(app.raw.users[o.assignedStaffId]?.name||'')}</p>${o.lines.filter(l=>l.kitchenStatus).map(l=>`<div class="kds-line kds-${esc(l.kitchenStatus)}"><div><b>${l.quantity} × ${esc(l.title)}</b>${l.notes?'<small>'+esc(l.notes)+'</small>':''}</div><span>${esc(({new:'جديد',preparing:'جاري التجهيز',ready:'جاهز',served:'تم التسليم'})[l.kitchenStatus])}</span>${l.kitchenStatus!=='served'?btn('kds-next',l.kitchenStatus==='new'?'ابدأ':l.kitchenStatus==='preparing'?'جاهز':'سلّمت',o.id+'__'+l.id,'primary'):''}</div>`).join('')}</article>`).join('')||empty('مفيش طلبات للمطبخ الآن'))+'</div>';
 }
 function restaurantPosView(app){
