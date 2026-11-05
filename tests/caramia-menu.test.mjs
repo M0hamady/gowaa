@@ -29,3 +29,10 @@ test('Caramia images exist locally and the unreadable eclair row was not invente
  for(const r of rows){assert.match(r.imageUrl,/^\/menus\/caramia\/(page|photo)-\d+\.jpg$/);await access(new URL('../public'+r.imageUrl,import.meta.url));}
  assert.equal(rows.filter(r=>r.section==='الإكلير').length,7,'8 printed rows, one illegible and omitted until confirmed');
 });
+
+test('add-ons rank after the main items in the default order',async()=>{
+ const {discover}=await import('../public/market-discovery.js');
+ const ranked=discover(normalizeDirectoryCatalog({items:rows}),{sort:'recommended'});
+ const firstAddOn=ranked.findIndex(r=>r.isAddOn);
+ assert.ok(firstAddOn>=ranked.length-2,'add-ons at the end, got index '+firstAddOn);
+});

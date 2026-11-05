@@ -45,7 +45,7 @@ export function discover(items,filters={}){
    else if(af.price!==bf.price)return (af.price-bf.price)*(filters.sort==='price-desc'?-1:1);
   }else if(filters.sort==='name')return collator.compare(a.title,b.title);
   else if(filters.sort==='newest')return (Date.parse(b.created_at||b.sourcePublishedAt)||0)-(Date.parse(a.created_at||a.sourcePublishedAt)||0)||collator.compare(a.title,b.title);
-  else {const score=x=>{const priority=Math.max(0,Math.min(999,Number(x.market_priority??x.sellers?.market_priority)||0)),orders=Math.max(0,Number(x.orderCount)||0),sellerOrders=Math.max(0,Number(x.sellerOrderCount??x.sellers?.orderCount)||0);const clicks=Math.max(0,Number(x.clickCount)||0);return priority*100000+(orders>0?20000:0)+Math.min(orders,999)*20+Math.min(clicks,5000)*3+(sellerOrders>0?5000:0)+Math.min(sellerOrders,999)*5+(listingFacts(x).available===true?4:0)+(listingFacts(x).offer?2:0)+(x.image_path||x.imageUrl?1:0);};if(score(a)!==score(b))return score(b)-score(a);}
+  else {const score=x=>{const priority=Math.max(0,Math.min(999,Number(x.market_priority??x.sellers?.market_priority)||0)),orders=Math.max(0,Number(x.orderCount)||0),sellerOrders=Math.max(0,Number(x.sellerOrderCount??x.sellers?.orderCount)||0);const clicks=Math.max(0,Number(x.clickCount)||0);return priority*100000+(orders>0?20000:0)+Math.min(orders,999)*20+Math.min(clicks,5000)*3+(sellerOrders>0?5000:0)+Math.min(sellerOrders,999)*5+(listingFacts(x).available===true?4:0)+(listingFacts(x).offer?2:0)+(x.image_path||x.imageUrl?1:0)-(x.isAddOn?50:0);};if(score(a)!==score(b))return score(b)-score(a);}
   return collator.compare(a.title,b.title)||collator.compare(a.id,b.id);
  });
 }
