@@ -7,8 +7,9 @@ import {readFile,writeFile} from 'node:fs/promises';
 if (process.env.JOWWA_TEST_BUILD === 'true') {
   throw new Error('Live build رفض: JOWWA_TEST_BUILD=true');
 }
-if (process.env.VERCEL_ENV === 'production' && process.env.JOWWA_PRODUCTION !== 'true') {
-  throw new Error('Live build يحتاج JOWWA_PRODUCTION=true في إعدادات Vercel.');
+// Production may only be built from main (or with an explicit override flag).
+if (process.env.VERCEL_ENV === 'production' && process.env.JOWWA_PRODUCTION !== 'true' && process.env.VERCEL_GIT_COMMIT_REF !== 'main') {
+  throw new Error('Live build على Production مسموح من main فقط (أو JOWWA_PRODUCTION=true).');
 }
 
 const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
