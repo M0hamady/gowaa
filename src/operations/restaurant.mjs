@@ -93,6 +93,17 @@ export function restaurantCommand(c){
  case 'restaurant.payment.refund':{
   const o=s.restaurantOrders[key(b.id)];ok(o,'NOT_FOUND','الطلب مش موجود.',404);checkVersion(o,b.version);can(s,a,o.shopId,'refund_payment');const amount=money(b.amount);ok(amount>0&&amount<=restaurantPaid(s,o.id),'REFUND','مبلغ الرد أكبر من المحصل المؤكد.');const method=b.method;ok(['cash','card_external','transfer_external'].includes(method),'PAYMENT','وسيلة الرد غير صحيحة.');if(method==='cash'){const sh=openShift(s,a,o.shopId);ok(sh,'SHIFT','افتح وردية الكاشير الأول.');ok(expectedCash(s,sh.id)>=amount,'CASH','النقد الموجود في الدرج لا يكفي للرد.');addCash(s,a,o.shopId,-amount,'restaurant_refund',o.id,at);}const id=nextId(s,'restaurant-payment');s.restaurantPayments[id]={id,orderId:o.id,shopId:o.shopId,actorId:a,kind:'refund',amount,method,verificationStatus:'verified_external',at,note:text(b.reason,3,200)};o.status='account_open';o.receiptSnapshot=receiptSnapshot(s,o,at);bump(o);audit(s,{shopId:o.shopId,actorId:a,kind:'restaurant_refund',entityId:o.id,reason:b.reason,at,after:{amount,method}});return{id,message:'المرتجع اتسجل.'};
  }
+ case 'restaurant.order.mark_served':{
+  const o=s.restaurantOrders[key(b.id)];ok(o,'NOT_FOUND','الطلب مش موجود.',404);checkVersion(o,b.version);
+  const assigned=o.assignedStaffId===a&&hasShopPermission(s,a,o.shopId,'edit_open_order');
+  ok(assigned||hasShopPermission(s,a,o.shopId,'manage_tables'),'FORBIDDEN','التقديم للعامل المسؤول أو مدير الصالة فقط.',403);
+  ok(o.status==='ready'||o.status==='served','STATE','لا يمكن تقديم طلب قبل جاهزية كل أصنافه.');
+  ok(o.lines.length>0&&o.lines.every(l=>['ready','served'].includes(l.kitchenStatus)),'STATE','في أصناف لم تجهز بعد.');
+  for(const l of o.lines)if(l.kitchenStatus==='ready'){l.kitchenStatus='served';l.servedAt=at;}
+  o.status='served';o.servedAt=at;o.servedBy=a;o.updatedAt=at;bump(o);tableStateFromOrder(s,o);
+  audit(s,{shopId:o.shopId,actorId:a,kind:'restaurant_order_served',entityId:o.id,reason:text(b.reason||'تم تقديم الطلب للضيوف',3,200),at});
+  return{id:o.id,message:'تم تسجيل تقديم الطلب للصالة.'};
+ }
  case 'restaurant.order.account_open':{
   const o=s.restaurantOrders[key(b.id)];checkVersion(o,b.version);ok(orderAccess(s,a,o,'view_orders'),'FORBIDDEN','مش عندك صلاحية على الطلب.',403);ok(['served','ready'].includes(o.status),'STATE','الحساب يفتح بعد تجهيز/تقديم الطلب.');o.status='account_open';bump(o);tableStateFromOrder(s,o);return{id:o.id,message:'الحساب مفتوح للتحصيل.'};
  }
