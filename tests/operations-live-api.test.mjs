@@ -41,11 +41,11 @@ test.after(()=>db?.close());
 
 test('every API action maps to an RPC that exists in migration 019 with matching parameter names',async()=>{
  const {readdir}=await import('node:fs/promises');const dir=new URL('../supabase/',import.meta.url);let sql='';for(const f of (await readdir(dir)).filter(f=>/^\d{3}_.*\.sql$/.test(f)))sql+=await readFile(new URL(f,dir),'utf8');
- const sigs=new Map([...sql.matchAll(/create function public\.(jowwa_ops_\w+)\(([^)]*)\)/g)].map(m=>[m[1],m[2].split(',').map(p=>p.trim().split(/\s+/)[0]).filter(Boolean)]));
+ const sigs=new Map([...sql.matchAll(/create (?:or replace )?function public\.(jowwa_\w+)\(([^)]*)\)/g)].map(m=>[m[1],m[2].split(',').map(p=>p.trim().split(/\s+/)[0]).filter(Boolean)]));
  const samples={};
  for(const [action,[keys,build]] of Object.entries({...ACTIONS,...PUBLIC_ACTIONS})){
   let built;try{built=build(Object.fromEntries(keys.map(k=>[k,undefined])));}catch{built=null;}
-  const src=build.toString();const rpc=src.match(/'(jowwa_ops_\w+)'/)[1];
+  const src=build.toString();const rpc=src.match(/'(jowwa_\w+)'/)[1];
   assert.ok(sigs.has(rpc),action+' -> missing '+rpc);
   const argNames=[...src.matchAll(/\b(p_\w+|expected_version)\s*:/g)].map(m=>m[1]);
   assert.deepEqual([...new Set(argNames)].sort(),[...sigs.get(rpc)].sort(),action+' args differ from '+rpc);
