@@ -1,4 +1,4 @@
-import {requireThat as ok,int,money,text,key,nextId,quote,requireShop,canShop,isAdmin,checkVersion,bump,paidNet,postDebt,ownsParty,debtBalance,openShift,addCash,expectedCash} from './core.mjs';
+import {requireThat as ok,int,money,text,key,nextId,quote,requireShop,canShop,isAdmin,checkVersion,bump,paidNet,postDebt,ownsParty,debtBalance,openShift,addCash,expectedCash,deliverySetupQuote} from './core.mjs';
 import {applyFeeRules} from './dynamic-fees.mjs';
 export function reserve(s,o){
  const quantities=new Map();for(const l of o.lines)if(!l.custom)quantities.set(l.productId,(quantities.get(l.productId)||0)+l.quantity);
@@ -65,11 +65,12 @@ function create(c,b,{pos=false}={}){
  const fulfillment=pos?(b.fulfillment||'counter'):b.fulfillment;ok(['counter','pickup','delivery'].includes(fulfillment),'FULFILLMENT','اختار طريقة الاستلام.');
  if(pos)requireShop(s,a,shop.id,'cash');else ok(fulfillment!=='counter','FORBIDDEN','بيع الكاشير من حساب موظف المحل فقط.',403);
  const customerId=pos?(b.customerId||null):a;ok(!customerId||s.users[customerId],'CUSTOMER','العميل غير موجود.');
- const q=quote(s,shop.id,b.lines,{promoId:b.promoId||null,benefitCode:pos?'':b.benefitCode||'',customerId:pos?null:customerId,deliveryFee:fulfillment==='delivery'&&shop.deliveryPolicy==='customer'?shop.suggestedFee:0,fulfillment,now});
+ const delivery=fulfillment==='delivery'?deliverySetupQuote(s,shop.id,b.destinationId):null;
+ const q=quote(s,shop.id,b.lines,{promoId:b.promoId||null,benefitCode:pos?'':b.benefitCode||'',customerId:pos?null:customerId,deliveryFee:fulfillment==='delivery'&&shop.deliveryPolicy==='customer'?delivery.amount:0,fulfillment,now});
  ok(b.expectedTotal===q.total,'PRICE_CHANGED','الإجمالي اتغير؛ راجع السلة قبل التأكيد.',409);
  if(fulfillment==='delivery')ok(s.locations[b.destinationId],'ADDRESS','حدد عنوان التسليم.');
  const id=nextId(s,'order');
- const o={id,queue:++s.nextQueue,shopId:shop.id,customerId,customerName:customerId?s.users[customerId].name:text(b.customerName||'عميل الكاشير',2,80),fulfillment,status:'pending',...q,destinationId:fulfillment==='delivery'?b.destinationId:null,note:text(b.note||'',0,500),createdAt:at,version:1,inventoryReserved:false,taskId:null,promoReleased:false,deliveryPayer:shop.deliveryPolicy,prepMinutes:shop.prepMinutes};
+ const o={id,queue:++s.nextQueue,shopId:shop.id,customerId,customerName:customerId?s.users[customerId].name:text(b.customerName||'عميل الكاشير',2,80),fulfillment,status:'pending',...q,destinationId:fulfillment==='delivery'?b.destinationId:null,deliveryArea:delivery?.area||null,deliveryQuotedFare:delivery?.amount||0,deliverySourceMode:delivery?.mode||null,deliveryDefaultVisibility:delivery?.defaultVisibility||null,note:text(b.note||'',0,500),createdAt:at,version:1,inventoryReserved:false,taskId:null,promoReleased:false,deliveryPayer:shop.deliveryPolicy,prepMinutes:shop.prepMinutes};
  if(q.promo){const p=s.promotions[q.promo.id];p.used++;p.spent+=q.promo.reduction;bump(p);}s.orders[id]=o;reservePlatformBenefits(s,o,at);return o;
 }
 export function orderCommand(c){const{s,actorId:a,body:b,at}=c;
