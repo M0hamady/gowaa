@@ -67,9 +67,10 @@ export const ACTIONS={
 // Customer-facing, token-only, no login.
 export const PUBLIC_ACTIONS={
  track:[['token'],b=>{if(typeof b.token!=='string'||!/^[a-f0-9]{64}$/.test(b.token))bad();return ['jowwa_ops_track',{p_token:b.token}];}],
+ conciergeTrack:[['token'],b=>{if(typeof b.token!=='string'||!/^[a-f0-9]{64}$/.test(b.token))bad();return ['jowwa_concierge_track',{p_token:b.token}];}],
  rate:[['token','stars','comment'],b=>{if(typeof b.token!=='string'||!/^[a-f0-9]{64}$/.test(b.token))bad();return ['jowwa_ops_rate_delivery',{p_token:b.token,p_stars:int(b.stars,1,5),p_comment:str(b.comment,300,{optional:true})}];}],
 };
-const READS=new Set(['workspaces','dashboard','report','audit','track']);
+const READS=new Set(['workspaces','dashboard','report','audit','track','conciergeTrack']);
 
 export function operationFor(body){
  if(!body||typeof body!=='object'||Array.isArray(body))bad();

@@ -1,4 +1,5 @@
 import {readFile} from 'node:fs/promises';
+import {createClient} from '@supabase/supabase-js';
 import {createHash,randomUUID} from 'node:crypto';
 import {authenticatedMember,noStore} from './server-member.mjs';
 import {validKey,validateProviderFields,validateProduct,catalogForProvider,basketTotal} from '../public/provider-catalog-core.js';
@@ -50,11 +51,13 @@ export function createProviderHandler({admin=false,...options}={}){return async(
      }
     } catch {}
    }
-   return reply(200,{provider,products,orderGate,orderSettings,readiness,admin,analytics:metricsFor(provider,products),versions:admin?Object.fromEntries(state.overrides.filter(x=>x.data?.providerId===id).map(x=>[x.data.productId,x.updated_at])):undefined});
+   let concierge=false;if(!admin&&!orderGate?.canOrder){try{const c=await member.db.rpc('jowwa_concierge_availability',{p_ids:[provider.id]});concierge=c.data?.[provider.id]===true;}catch{}}
+   return reply(200,{provider,products,orderGate,orderSettings,readiness,admin,concierge,analytics:metricsFor(provider,products),versions:admin?Object.fromEntries(state.overrides.filter(x=>x.data?.providerId===id).map(x=>[x.data.productId,x.updated_at])):undefined});
   }
   let body;try{body=typeof req.body==='string'?JSON.parse(req.body):req.body;}catch{fail('بيانات غير صحيحة.');}
   if(!body||typeof body!=='object'||Array.isArray(body)||JSON.stringify(body).length>24000)fail('حجم البيانات أكبر من المسموح.');
   if(!admin){
+   if(body.action==='concierge_order')return reply(200,await conciergeOrder(body,state,member,options));
    if(body.action!=='quote'||!validKey(body.providerId))fail('طلب غير صحيح.');const provider=state.providers.find(p=>p.id===body.providerId&&!p._archived);if(!provider)fail('المكان لم يعد متاحًا.',404);
    const linked=await linkedProviderCatalog(member.db,provider.id),products=[...catalogForProvider(provider,state.menus,state.overrides),...linked.products];
    return reply(200,{quote:basketTotal(products,body.lines,provider.id),confirmedOrder:false});
@@ -89,3 +92,25 @@ export function createProviderHandler({admin=false,...options}={}){return async(
 };}
 export const providerCatalog=createProviderHandler();
 export const providerAdmin=createProviderHandler({admin:true});
+
+// "الطلب عن طريق جوه": price the basket on the server from the published catalog, then
+// create the order with the service role (the DB function refuses any other caller).
+const UUID=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
+export async function conciergeOrder(body,state,member,{env=process.env,serviceFactory=createClient,catalogOverride=null}={}){
+ const keys=['action','providerId','requestId','lines','customer','fulfillment'];
+ if(Object.keys(body).some(k=>!keys.includes(k))||!validKey(body.providerId)||!UUID.test(String(body.requestId))||!['delivery','pickup'].includes(body.fulfillment)||!Array.isArray(body.lines)||!body.lines.length||body.lines.length>60)fail('راجع بيانات الطلب.');
+ const c=body.customer;if(!c||typeof c!=='object'||Array.isArray(c)||Object.keys(c).some(k=>!['name','phone','address','note'].includes(k)))fail('راجع بيانات التواصل.');
+ const name=String(c.name||'').trim(),phone=String(c.phone||'').replace(/[^0-9+]/g,''),address=String(c.address||'').trim(),note=String(c.note||'').trim();
+ if(name.length<2||name.length>60)fail('اكتب اسمك.');if(!/^\+?[0-9]{8,15}$/.test(phone))fail('رقم الموبايل غير صحيح.');
+ if(body.fulfillment==='delivery'&&address.length<5)fail('اكتب عنوان التوصيل بالتفصيل.');if(address.length>300||note.length>500)fail('النص أطول من المسموح.');
+ const provider=state.providers.find(p=>p.id===body.providerId&&!p._archived);if(!provider)fail('المكان لم يعد متاحًا.',404);
+ const products=catalogOverride?catalogOverride(provider):[...catalogForProvider(provider,state.menus,state.overrides),...(await linkedProviderCatalog(member.db,provider.id)).products];
+ const quote=basketTotal(products,body.lines,provider.id);
+ if(!quote.items.length||quote.items.some(x=>x.missing||x.unavailable))fail('في أصناف في السلة مش متاحة. راجع السلة.',409);
+ const url=env.NEXT_PUBLIC_SUPABASE_URL||env.SUPABASE_URL,key=env.SUPABASE_SERVICE_ROLE_KEY;if(!url||!key)fail('الطلب عن طريق جوه مش متاح دلوقتي.',503);
+ const svc=serviceFactory(url,key,{auth:{persistSession:false,autoRefreshToken:false}});
+ const items=quote.items.map(x=>({id:x.id,title:x.title,quantity:x.quantity,unitPrice:x.unitPrice,lineTotal:x.lineTotal}));
+ const r=await svc.rpc('jowwa_concierge_checkout',{p_buyer:member.user.id,p_request_id:body.requestId,p_directory_id:provider.id,p_provider_name:provider.name||'',p_items:items,p_total:quote.knownTotal,p_has_unpriced:quote.unpriced>0,p_customer:{name,phone,address,note},p_fulfillment:body.fulfillment});
+ if(r.error){const m=String(r.error.message||'');fail(/not available/i.test(m)?'الطلب عن طريق جوه مش متاح للمكان ده دلوقتي.':/Too many/i.test(m)?'طلبات كتير في وقت قصير. استنى شوية.':'تعذر إرسال الطلب. حاول تاني.',/not available|Too many/i.test(m)?409:503);}
+ return {order:r.data,quote};
+}

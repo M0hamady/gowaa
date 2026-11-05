@@ -2,7 +2,15 @@
 const $=s=>document.querySelector(s);
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const STATE={assigned:'الطيار هيستلم طلبك قريب',picked_up:'طلبك في الطريق',delivered:'طلبك اتسلّم',failed:'التوصيل متعملش — المحل هيتواصل معاك'};
-const token=(location.hash.match(/[a-f0-9]{64}/)||[])[0];
+const token=(location.hash.match(/[a-f0-9]{64}/)||[])[0],isConcierge=/^#c-/.test(location.hash);
+const C_STATE={new:'طلبك وصل لفريق جوه وبنأكده مع المكان',confirmed:'المكان أكد طلبك',preparing:'طلبك بيتجهز',on_the_way:'طلبك في الطريق',ready_for_pickup:'طلبك جاهز للاستلام',delivered:'طلبك اتسلّم ✓',cancelled:'الطلب اتلغى',rejected:'المكان مقدرش ينفذ الطلب'};
+async function loadConcierge(){
+ const r=await fetch('/api/operations?'+new URLSearchParams({action:'conciergeTrack',token}),{cache:'no-store'});const b=await r.json().catch(()=>({}));
+ if(!r.ok){$('#track').innerHTML=`<p>${esc(b.error||'مش لاقيين الطلب.')}</p>`;return;}
+ const d=b.data,steps=d.fulfillment==='pickup'?['new','confirmed','preparing','ready_for_pickup','delivered']:['new','confirmed','preparing','on_the_way','delivered'],at=steps.indexOf(d.state);
+ $('#track').innerHTML=`<h1>${esc(d.provider)}</h1><p class="track-num">طلب #${d.number} · ${d.itemCount||''} صنف · عن طريق جوه</p><p class="track-state">${C_STATE[d.state]||d.state}</p>${d.statusNote?`<p>${esc(d.statusNote)}</p>`:''}
+ ${at>=0?`<ol class="track-steps">${steps.map((s,i)=>`<li class="${i<=at?'done':''}">${C_STATE[s]}</li>`).join('')}</ol>`:''}<p class="data-note">آخر تحديث ${new Date(d.updatedAt).toLocaleString('ar-EG')}</p>`;
+}
 async function load(){
  if(!token){$('#track').innerHTML='<p>رابط التتبع مش كامل.</p>';return;}
  const r=await fetch('/api/operations?'+new URLSearchParams({action:'track',token}),{cache:'no-store'});const b=await r.json().catch(()=>({}));
@@ -16,4 +24,4 @@ async function load(){
   const r=await fetch('/api/operations',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'rate',token,stars:Number(f.get('stars')),comment:f.get('comment')||''})});
   e.target.outerHTML=r.ok?'<p>شكرًا على تقييمك!</p>':'<p>تعذر إرسال التقييم.</p>';});
 }
-load();setInterval(()=>{if(!document.hidden&&!$('#rate'))load();},30000);
+const run=()=>isConcierge&&token?loadConcierge():load();run();setInterval(()=>{if(!document.hidden&&!$('#rate'))run();},30000);

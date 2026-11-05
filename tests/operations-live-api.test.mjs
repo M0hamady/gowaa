@@ -40,7 +40,7 @@ test.before(async()=>{
 test.after(()=>db?.close());
 
 test('every API action maps to an RPC that exists in migration 019 with matching parameter names',async()=>{
- const sql=await readFile(new URL('../supabase/019_operations_live_workspace.sql',import.meta.url),'utf8');
+ const {readdir}=await import('node:fs/promises');const dir=new URL('../supabase/',import.meta.url);let sql='';for(const f of (await readdir(dir)).filter(f=>/^\d{3}_.*\.sql$/.test(f)))sql+=await readFile(new URL(f,dir),'utf8');
  const sigs=new Map([...sql.matchAll(/create function public\.(jowwa_ops_\w+)\(([^)]*)\)/g)].map(m=>[m[1],m[2].split(',').map(p=>p.trim().split(/\s+/)[0]).filter(Boolean)]));
  const samples={};
  for(const [action,[keys,build]] of Object.entries({...ACTIONS,...PUBLIC_ACTIONS})){

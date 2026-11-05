@@ -49,3 +49,4 @@ button.ghost,a.ghost{background:transparent;border:1px solid #ccc;color:inherit}
 .ops-live main label.ops-menu-item{display:flex;margin:0}
 .ops-live main .ops-menu-item input{width:76px;flex:none;text-align:center}
 .ops-live main .ops-inline label{display:flex;gap:6px;align-items:center;margin:0}
+.track-steps{text-align:start;list-style:none;padding:0;margin:16px auto;max-width:360px}.track-steps li{padding:6px 28px 6px 0;position:relative;color:#888}.track-steps li::before{content:'';position:absolute;right:6px;top:12px;width:10px;height:10px;border-radius:50%;background:#ddd}.track-steps li.done{color:#1d3b2a;font-weight:600}.track-steps li.done::before{background:#2e8b57}
