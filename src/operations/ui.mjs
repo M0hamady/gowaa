@@ -1,4 +1,5 @@
 import {esc} from '../../public/market-core.js';import {icon} from '../../public/ui-icons.js';import {formSteps} from '../../public/form-steps.js';
+import {syncWithLocalAuthority,resetLocalAuthority} from './local-sync-server.mjs';
 import {makeGraph,findRoute} from '../../public/routing.js';
 import {openTestStore,testActor} from './browser-store.mjs';import {personas} from './fixtures.mjs';import {render,navItems,roleLabels,btn,badge,time,taskCard} from './views.mjs';
 import {quote,egpInput,moneyLabel as money,debtBalance,canShop,trackingView,suggestedFare,activeTaskStates,paidNet,approved,deliverySetupQuote,staffRoles,staffPermissions,hasShopPermission} from './core.mjs';import {createTripMode} from './trip-mode.mjs';
@@ -167,7 +168,16 @@ function recipeForm(){
  return form('وصفة منتج',html,async(v,f,cid)=>{const ingredients=[];for(let i=0;i<5;i++)if(v['item'+i]&&Number(v['qty'+i])>0)ingredients.push({itemId:v['item'+i],quantity:Number(v['qty'+i])});await send('recipe.save',{shopId:app.shopId,productId:v.productId,name:v.name,storeId:v.storeId,ingredients,approved:v.approved,reason:v.reason},cid);},{label:'احفظ الوصفة'});
 }
 async function syncPendingOffline(){
- if(!navigator.onLine||app.busy)return;const rows=(app.model?.offline?.queue||[]).filter(x=>x.status==='pending_sync');for(const q of rows){try{await send('offline.sync',{id:q.id,outcome:'success'});}catch{}}
+ if(!navigator.onLine||app.busy)return;
+ const rows=(app.model?.offline?.queue||[]).filter(x=>x.status==='pending_sync').sort((a,b)=>new Date(a.createdAt)-new Date(b.createdAt));
+ for(const q of rows){
+  if(!navigator.onLine)break;
+  try{
+   const order=app.raw.restaurantOrders[q.orderId];
+   const reply=await syncWithLocalAuthority(q,order,{online:navigator.onLine});
+   await send('offline.sync',{id:q.id,...reply});
+  }catch(error){notify('الطلب محفوظ محليًا؛ محاكي المزامنة لم يؤكد العملية: '+error.message,true);break;}
+ }
 }
 async function action(op,id,button){const s=app.raw,t=s.tasks[id],o=s.orders[id];
  switch(op){
@@ -175,7 +185,7 @@ async function action(op,id,button){const s=app.raw,t=s.tasks[id],o=s.orders[id]
  case 'message-go':app.tab=id||'account';app.search='';app.section='';return draw();
  case 'compound-new':return compoundForm();case 'compound-edit':return compoundForm(id);case 'compound-archive':{const c=s.settings.compounds[id];return confirm('إيقاف '+c.name,'هيختفي من الطلبات الجديدة، لكن الطلبات القديمة تفضل محفوظة.',()=>send('compound.archive',{id,version:c.version}));}
  case 'building-new':return buildingForm(null,id);case 'building-edit':return buildingForm(id);case 'building-archive':{const b=s.compoundBuildings[id];return confirm('إيقاف '+b.name,'مش هتظهر كعنوان جديد، لكن الطلبات والعناوين القديمة محفوظة.',()=>send('building.archive',{id,version:b.version}));}
- case 'reset':return form('نبدأ تجربة جديدة؟','<p>هتمسح بيانات الاختبار الموجودة في متصفحك فقط. مفيش تأثير على اللايف.</p>'+check('confirm','امسح بيانات التجربة المحلية وابدأ من جديد',true),async()=>{await trip?.destroy();trip=null;trackingTask=null;await app.store.reset();app.tab='';app.cart=[];for(let i=sessionStorage.length-1;i>=0;i--){const k=sessionStorage.key(i);if(k.startsWith('jowwa-test-cart:'))sessionStorage.removeItem(k);}await load();notify('التجربة اتصفرت، اللايف لم يتغير.');},{label:'ابدأ من جديد',steps:false});
+ case 'reset':return form('نبدأ تجربة جديدة؟','<p>هتمسح بيانات الاختبار الموجودة في متصفحك فقط. مفيش تأثير على اللايف.</p>'+check('confirm','امسح بيانات التجربة المحلية وابدأ من جديد',true),async()=>{await trip?.destroy();trip=null;trackingTask=null;await app.store.reset();await resetLocalAuthority();app.tab='';app.cart=[];for(let i=sessionStorage.length-1;i>=0;i--){const k=sessionStorage.key(i);if(k.startsWith('jowwa-test-cart:'))sessionStorage.removeItem(k);}await load();notify('التجربة اتصفرت، اللايف لم يتغير.');},{label:'ابدأ من جديد',steps:false});
  case 'staff-new':return staffForm();case 'staff-edit':return staffForm(id);
  case 'staff-suspend':{const m=s.team[id];return form('إيقاف الموظف',input('reason','سبب الإيقاف','','text','required minlength="3"')+check('confirmed','أؤكد إيقاف الدخول بدون حذف السجل',true),async(v,f,cid)=>send('staff.status',{id,version:m.version,status:'suspended',reason:v.reason},cid),{label:'إيقاف الحساب',steps:false});}
  case 'staff-activate':{const m=s.team[id];return form('تفعيل الموظف',input('reason','سبب إعادة التفعيل','إعادة تفعيل للعمل','text','required minlength="3"'),async(v,f,cid)=>send('staff.status',{id,version:m.version,status:'active',reason:v.reason},cid),{label:'تفعيل الحساب',steps:false});}
