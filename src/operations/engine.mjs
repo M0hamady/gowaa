@@ -4,6 +4,7 @@ import {orderCommand} from './orders.mjs';
 import {deliveryCommand} from './delivery.mjs';
 import {restaurantCommand,restaurantOrderVisible,restaurantOrderProjection} from './restaurant.mjs';
 import {inventoryCommand,inventoryProjection} from './inventory.mjs';
+import {offlineCommand,offlineProjection} from './offline.mjs';
 import {beforeOperation,afterOperation,targetVisible} from './guards.mjs';
 import {emitOperationMessages} from './messages.mjs';
 export {OpsError};
@@ -20,7 +21,7 @@ export function execute(state,actorId,command,{now=Date.now()}={}){
  int(command.expectedRevision,0,Number.MAX_SAFE_INTEGER);ok(command.expectedRevision===state.revision,'STALE','في تحديث جديد؛ راجع الشاشة قبل إعادة المحاولة.',409);
  const s=structuredClone(state),at=new Date(now).toISOString(),ctx={s,actorId,type,body,at,now};
  beforeOperation(ctx);
- const result=businessCommand(ctx)||inventoryCommand(ctx)||restaurantCommand(ctx)||orderCommand(ctx)||deliveryCommand(ctx);
+ const result=businessCommand(ctx)||offlineCommand(ctx)||inventoryCommand(ctx)||restaurantCommand(ctx)||orderCommand(ctx)||deliveryCommand(ctx);
  ok(result,'COMMAND','الإجراء غير معروف.');afterOperation(ctx,result);emitOperationMessages(ctx,result);for(const m of Object.values(s.team||{}))if(m.userId===actorId&&m.status==='active')m.lastActiveAt=at;assertInvariants(s);s.revision++;s.updatedAt=at;
  s.events.push({id:'event-'+s.revision,revision:s.revision,actorId,type,entityId:result.id||null,at});
  const reply={...result,revision:s.revision};s.processed[dedupeKey]={signature,result:reply};return {state:s,result:reply,replayed:false};
@@ -48,6 +49,7 @@ export function project(state,actorId,{now=Date.now()}={}){
  const employeeRoles=Object.values(s.team||{}).filter(x=>x.userId===actorId&&x.status==='active').map(x=>({shopId:x.shopId,role:x.role,permissions:[...shopPermissionSet(s,actorId,x.shopId)]}));
  const restaurantOrders=Object.values(s.restaurantOrders||{}).filter(o=>admin||restaurantOrderVisible(s,actorId,o)).map(o=>restaurantOrderProjection(s,actorId,o));
  const inventory=inventoryProjection(s,actorId,Object.values(s.shops).map(x=>x.id));
+ const offline=offlineProjection(s,actorId);
  const floorShopIds=Object.values(s.shops).filter(sh=>hasShopPermission(s,actorId,sh.id,'manage_tables')||hasShopPermission(s,actorId,sh.id,'edit_open_order')||hasShopPermission(s,actorId,sh.id,'view_kitchen')||hasShopPermission(s,actorId,sh.id,'take_payment')).map(sh=>sh.id);
  return {schema:s.schema,revision:s.revision,mode:'test',user:{id:user.id,name:user.name,admin},roles:rolesFor(s,actorId),employeeRoles,settings:{categories:s.settings.categories,compounds:Object.values(s.settings.compounds||{}).filter(x=>admin||x.active),policyVersion:s.settings.policyVersion,identityUploadsEnabled:false,passengerLaunchEnabled:false,customerAlwaysFree:true,noPaidPlans:true,rates:s.settings.rates,support:s.settings.support,supportWhatsApp:s.settings.supportWhatsApp,supportWhatsAppE164:s.settings.supportWhatsAppE164,feeRules:admin?Object.values(s.settings.feeRules||{}):[],platformBenefits:admin?Object.values(s.platformBenefits||{}):[]},trial:s.trials[actorId]||null,messages:(s.messages||[]).filter(x=>x.recipientId===actorId).slice(-100),buildings:Object.values(s.compoundBuildings||{}).filter(x=>admin||x.active),residences:Object.values(s.userResidences||{}).filter(x=>x.userId===actorId),buildingResidentCounts,
   shops:Object.values(s.shops).filter(sh=>!sh.archived||shopIds.includes(sh.id)||admin).map(sh=>({...sh,canCatalog:canShop(s,actorId,sh.id,'catalog'),canOrders:canShop(s,actorId,sh.id,'orders'),canCash:canShop(s,actorId,sh.id,'cash'),canDispatch:canShop(s,actorId,sh.id,'dispatch')})),
@@ -55,7 +57,7 @@ export function project(state,actorId,{now=Date.now()}={}){
   availability:s.availability[actorId]||{available:false,public:false},orders:ownOrders.map(o=>({...o,paid:paidNet(s,o.id)})),tasks,bids,payments,onlinePayments:Object.values(s.onlinePayments||{}).filter(x=>admin||x.customerId===actorId||cashShops.includes(x.shopId)),platformTransactions:admin?s.platformTransactions||[]:[],
   taskPayments:Object.values(s.taskPayments).filter(p=>admin||p.actorId===actorId||s.tasks[p.taskId]?.customerId===actorId),ledger,
   settlements:Object.values(s.settlements).filter(x=>admin||parties.has(x.from)||parties.has(x.to)),shifts:Object.values(s.shifts).filter(x=>admin||x.actorId===actorId||s.shops[x.shopId]?.ownerId===actorId).map(x=>({...x,expected:expectedCash(s,x.id)})),
-  auditLog:(s.auditLog||[]).filter(e=>admin||s.shops[e.shopId]?.ownerId===actorId||hasShopPermission(s,actorId,e.shopId,'view_reports')||hasShopPermission(s,actorId,e.shopId,'manage_staff')).slice(-200),restaurantZones:Object.values(s.restaurantZones||{}).filter(z=>admin||floorShopIds.includes(z.shopId)),restaurantTables:Object.values(s.restaurantTables||{}).filter(t=>admin||floorShopIds.includes(t.shopId)),restaurantOrders,inventory,events:s.events.filter(e=>admin||e.actorId===actorId).slice(-100),customerCredit:s.customerCredits?.[actorId]||0,locations:s.locations,
+  auditLog:(s.auditLog||[]).filter(e=>admin||s.shops[e.shopId]?.ownerId===actorId||hasShopPermission(s,actorId,e.shopId,'view_reports')||hasShopPermission(s,actorId,e.shopId,'manage_staff')).slice(-200),restaurantZones:Object.values(s.restaurantZones||{}).filter(z=>admin||floorShopIds.includes(z.shopId)),restaurantTables:Object.values(s.restaurantTables||{}).filter(t=>admin||floorShopIds.includes(t.shopId)),restaurantOrders,restaurantPayments:Object.values(s.restaurantPayments||{}).filter(p=>admin||p.actorId===actorId||hasShopPermission(s,actorId,p.shopId,'take_payment')||hasShopPermission(s,actorId,p.shopId,'view_reports')),inventory,offline,events:s.events.filter(e=>admin||e.actorId===actorId).slice(-100),customerCredit:s.customerCredits?.[actorId]||0,locations:s.locations,
   people:Object.values(s.users).filter(u=>admin||relatedUsers.has(u.id)).map(u=>({id:u.id,name:u.name})),updatedAt:s.updatedAt};
 }
 export function rolesFor(s,id){return ['customer',...['merchant','service_provider','courier','driver'].filter(r=>approved(s,id,r)),...Object.values(s.team||{}).filter(x=>x.userId===id&&x.status==='active').map(x=>x.role),...(isAdmin(s,id)?['admin']:[])];}
