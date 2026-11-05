@@ -1444,5 +1444,39 @@
     "checkedAt": "2026-11-05",
     "businessOwnerVerified": false,
     "providerManaged": false
+  },
+  {
+    "id": "directory-caramia",
+    "name": "Caramia — كاراميا",
+    "category": "حلويات",
+    "address": "كيان سيتي — العنوان التفصيلي يحدده صاحب النشاط",
+    "phone": "01043507917",
+    "description": "كاراميا للحلويات: قشطوطة، كيكات كافيهات، تشيز كيك، إكلير، سينابون، إنجلش كيك، كيكات السعادة، وميني تارت. المنيو والصور مقدمين من صاحب المحل.",
+    "source": "https://wa.me/201043507917",
+    "status": "المنيو والصور سلّمهم صاحب المحل لجوه في ٥ نوفمبر ٢٠٢٦. العنوان التفصيلي ومواعيد العمل يحددهم صاحب النشاط بعد ما يأكد ملكيته.",
+    "checkedAt": "2026-11-05",
+    "sourceDate": null,
+    "menuStatus": "owner_provided",
+    "menuCheckedAt": "2026-11-05",
+    "menuNote": "منيو مقدم من صاحب المحل بتاريخ ٥ نوفمبر ٢٠٢٦. الأسعار بالجنيه كما في المنيو؛ أكد التوفر والإجمالي قبل الطلب.",
+    "aliases": [
+      "Caramia",
+      "كاراميا",
+      "كراميا",
+      "كارميا"
+    ],
+    "keywords": [
+      "حلويات",
+      "قشطوطة",
+      "تشيز كيك",
+      "إكلير",
+      "سينابون",
+      "ميني تارت",
+      "كيك",
+      "ديزرت"
+    ],
+    "schemaType": "Bakery",
+    "menuUrl": "https://jowwa-kayan.vercel.app/menus/caramia/page-1.jpg",
+    "image": "/menus/caramia/photo-1.jpg"
   }
 ]

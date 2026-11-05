@@ -1,7 +1,7 @@
 // These paths contain reviewed pages extracted from the supplied business menus.
 // Keep local assets narrow: no protocol-relative URLs, query strings or traversal.
 export function localMenuImage(value){
- return typeof value==='string'&&/^\/menus\/[a-z0-9-]+\/page-[1-9][0-9]*\.(?:png|webp|jpg)$/.test(value)?value:null;
+ return typeof value==='string'&&/^\/menus\/[a-z0-9-]+\/(?:page|photo)-[1-9][0-9]*\.(?:png|webp|jpg)$/.test(value)?value:null;
 }
 export function menuPublishedDate(item){
  const value=item.pricePublishedAt||item.sourcePublishedAt||item.sourceDate;
