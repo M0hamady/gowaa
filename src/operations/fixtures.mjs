@@ -1,6 +1,6 @@
 import {calendarMonthEnd} from './core.mjs';
 export const personas=[
- ['customer','عميل التجربة','customer'],['owner','صاحب المحل','merchant'],['courier','مندوب المنتجات','courier'],['driver','سائق أفراد','driver'],['cashier','موظف الكاشير','staff'],['admin','إدارة جوه','admin'],['applicant','حساب جديد','customer'],['courier2','مندوب آخر','courier'],['otherOwner','صاحب نشاط آخر','merchant']
+ ['customer','عميل التجربة','customer'],['owner','صاحب المحل','merchant'],['manager','مدير المحل','shop_manager'],['floorManager','مدير الصالة','floor_manager'],['waiter','عامل الصالة','waiter'],['cashier','موظف الكاشير','cashier'],['kitchen','عامل المطبخ','kitchen'],['courier','مندوب المنتجات','courier'],['driver','سائق أفراد','driver'],['admin','إدارة جوه','admin'],['applicant','حساب جديد','customer'],['courier2','مندوب آخر','courier'],['otherOwner','صاحب نشاط آخر','merchant']
 ];
 /** All records are synthetic. No fixture phone is ever used for messaging or dialing. */
 export function seedState(now=Date.now()){
@@ -11,7 +11,7 @@ export function seedState(now=Date.now()){
   'home-a':{id:'home-a',name:'عنوان تجربة أ — الياسمين',area:'الياسمين',coordinate:[31.626,29.931]},
   'home-b':{id:'home-b',name:'عنوان تجربة ب — النرجس',area:'النرجس',coordinate:[31.612,29.924]},
   'gate':{id:'gate',name:'نقطة ركوب تجريبية',area:'محيط كيان',coordinate:[31.631,29.937]}
- },compoundBuildings:{'building-yasmin-test':{id:'building-yasmin-test',compoundId:'compound-yasmin',name:'عمارة تجريبية — الياسمين',locationId:'home-a',active:true,version:1},'building-narges-test':{id:'building-narges-test',compoundId:'compound-narges',name:'عمارة تجريبية — النرجس',locationId:'home-b',active:true,version:1}},userResidences:{},applications:{},trials:{},shops:{},sections:{},products:{},team:{},courierLinks:{},availability:{},messages:[],orders:{},tasks:{},bids:{},payments:{},onlinePayments:{},platformTransactions:[],taskPayments:{},ledger:[],settlements:{},shifts:{},cashEvents:[],stockEvents:[],promotions:{},platformBenefits:{
+ },compoundBuildings:{'building-yasmin-test':{id:'building-yasmin-test',compoundId:'compound-yasmin',name:'عمارة تجريبية — الياسمين',locationId:'home-a',active:true,version:1},'building-narges-test':{id:'building-narges-test',compoundId:'compound-narges',name:'عمارة تجريبية — النرجس',locationId:'home-b',active:true,version:1}},userResidences:{},auditLog:[],applications:{},trials:{},shops:{},sections:{},products:{},team:{},courierLinks:{},availability:{},messages:[],orders:{},tasks:{},bids:{},payments:{},onlinePayments:{},platformTransactions:[],taskPayments:{},ledger:[],settlements:{},shifts:{},cashEvents:[],stockEvents:[],promotions:{},platformBenefits:{
   'benefit-jowwa10':{id:'benefit-jowwa10',name:'كوبون جوه 10 جنيه',kind:'discount',type:'fixed',value:1000,scope:'global',scopeId:null,target:'goods',code:'JOWWA10',automatic:false,minimumPiastres:5000,capPiastres:1000,budgetPiastres:100000,maxUses:100,perCustomerMax:1,funder:'platform',enabled:true,startsAt:null,endsAt:null,used:0,spentPiastres:0,version:1},
   'benefit-cashback-test':{id:'benefit-cashback-test',name:'كاش باك جوه التجريبي',kind:'cashback',type:'percent',value:5,scope:'global',scopeId:null,target:'goods',code:null,automatic:true,minimumPiastres:5000,capPiastres:1000,budgetPiastres:100000,maxUses:100,perCustomerMax:3,funder:'platform',enabled:true,startsAt:null,endsAt:null,used:0,spentPiastres:0,version:1}
  },benefitUses:{},customerCredits:{},positions:{},consents:[],events:[],processed:{}};
@@ -26,7 +26,11 @@ export function seedState(now=Date.now()){
  s.products.juice=product('juice','عصير تجريبي','drinks',3000,30);
  s.products.cake=product('cake','قطعة حلوى تجريبية','sweets',4500,10);
  s.products.wash={...product('wash','باقة غسيل — تجربة','home-service',25000,null,'shop-b'),kind:'service',visits:3};
- s.team['cashier-member']={id:'cashier-member',userId:'cashier',shopId:'shop-a',permissions:['cash','orders'],status:'accepted',version:1,inviterId:'owner'};
+ s.team['manager-member']={id:'manager-member',userId:'manager',shopId:'shop-a',role:'shop_manager',permissions:[],grantedPermissions:['manage_staff'],deniedPermissions:['manage_managers','manage_settings'],status:'active',internalCode:'MGR-01',pinFingerprint:'testpin-fixture',createdAt:at,lastActiveAt:at,version:1,inviterId:'owner'};
+ s.team['floor-manager-member']={id:'floor-manager-member',userId:'floorManager',shopId:'shop-a',role:'floor_manager',permissions:[],grantedPermissions:[],deniedPermissions:[],status:'active',internalCode:'FLOOR-01',pinFingerprint:'testpin-fixture',createdAt:at,lastActiveAt:at,version:1,inviterId:'owner'};
+ s.team['waiter-member']={id:'waiter-member',userId:'waiter',shopId:'shop-a',role:'waiter',permissions:[],grantedPermissions:[],deniedPermissions:[],status:'active',internalCode:'WAIT-01',pinFingerprint:'testpin-fixture',createdAt:at,lastActiveAt:at,version:1,inviterId:'owner'};
+ s.team['cashier-member']={id:'cashier-member',userId:'cashier',shopId:'shop-a',role:'cashier',permissions:[],grantedPermissions:[],deniedPermissions:[],status:'active',internalCode:'CASH-01',pinFingerprint:'testpin-fixture',createdAt:at,lastActiveAt:at,version:1,inviterId:'owner'};
+ s.team['kitchen-member']={id:'kitchen-member',userId:'kitchen',shopId:'shop-a',role:'kitchen',permissions:[],grantedPermissions:[],deniedPermissions:[],status:'active',internalCode:'KIT-01',pinFingerprint:'testpin-fixture',createdAt:at,lastActiveAt:at,version:1,inviterId:'owner'};
  s.courierLinks['private-courier']={id:'private-courier',shopId:'shop-a',name:users.courier.name,phone:users.courier.phone,courierId:'courier',visibility:'private',status:'accepted',version:1,inviterId:'owner'};
  for(const id of ['courier','courier2','driver'])s.availability[id]={available:true,public:id!=='courier2',updatedAt:at};
  return s;
