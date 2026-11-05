@@ -55,3 +55,18 @@ test('waiter only sees assigned restaurant order while floor manager sees all sh
 test('requestId makes opening the same local order idempotent',()=>{
  const w=world(),body={shopId:'shop-a',mode:'takeaway',requestId:'offline-request-123',offline:true};const a=w.run('cashier','restaurant.order.open',body).id,b=w.run('cashier','restaurant.order.open',body).id;assert.equal(a,b);assert.equal(Object.values(w.s.restaurantOrders).filter(x=>x.requestId==='offline-request-123').length,1);assert.equal(w.s.restaurantOrders[a].syncStatus,'pending_sync');
 });
+
+test('assigned floor worker confirms serving only after every kitchen item is ready',()=>{
+ const w=world(),id=openTable4(w);addTwo(w,id);send(w,id);
+ w.reject('waiter','restaurant.order.mark_served',{id,version:w.s.restaurantOrders[id].version,reason:'لسه مش جاهز'},'STATE');
+ for(const lineId of w.s.restaurantOrders[id].lines.map(x=>x.id)){
+  w.run('kitchen','kitchen.item.status',{id,version:w.s.restaurantOrders[id].version,lineId,status:'preparing'});
+  w.run('kitchen','kitchen.item.status',{id,version:w.s.restaurantOrders[id].version,lineId,status:'ready'});
+ }
+ assert.equal(w.s.restaurantOrders[id].status,'ready');
+ w.reject('kitchen','restaurant.order.mark_served',{id,version:w.s.restaurantOrders[id].version,reason:'محاولة مطبخ'},'FORBIDDEN');
+ w.run('waiter','restaurant.order.mark_served',{id,version:w.s.restaurantOrders[id].version,reason:'تم تقديم الطلب للطاولة'});
+ assert.equal(w.s.restaurantOrders[id].status,'served');
+ assert.equal(w.s.restaurantTables['table-4'].status,'account_open');
+ assert.equal(w.s.auditLog.at(-1).kind,'restaurant_order_served');
+});
