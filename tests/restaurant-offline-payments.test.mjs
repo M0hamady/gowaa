@@ -44,3 +44,17 @@ test('failed sync is explicit and retry returns it to pending without inventing 
 test('cashier shift close still calculates expected versus actual variance after restaurant cash sale',()=>{
  const w=world(),shift=w.run('cashier','shift.open',{shopId:'shop-a',opening:5000}).id,id=take(w),total=w.s.restaurantOrders[id].total;w.run('cashier','restaurant.payment.collect',{id,version:w.s.restaurantOrders[id].version,amount:total,method:'cash'});const expected=expectedCash(w.s,shift);w.run('cashier','shift.close',{id:shift,version:w.s.shifts[shift].version,actual:expected-500,reason:'فرق عد تجريبي'});assert.equal(w.s.shifts[shift].variance,-500);
 });
+
+test('online-only local work is never falsely marked synced or placed in an offline queue',()=>{
+ const w=world(),id=take(w,{offline:false,requestId:'req-online-local-only'});
+ assert.equal(w.s.restaurantOrders[id].syncStatus,'local_only');
+ assert.equal(Object.values(w.s.offlineQueue).filter(q=>q.orderId===id).length,0);
+});
+test('when connection drops after an online order was opened, an offline edit enters pending sync',()=>{
+ const w=world(),id=take(w,{offline:false,requestId:'req-late-offline'});
+ assert.equal(Object.values(w.s.offlineQueue).length,0);
+ w.run('cashier','restaurant.order.add_item',{id,version:w.s.restaurantOrders[id].version,productId:'juice',quantity:1,offline:true});
+ assert.equal(w.s.restaurantOrders[id].syncStatus,'pending_sync');
+ const queue=Object.values(w.s.offlineQueue).find(x=>x.orderId===id);
+ assert.ok(queue);assert.ok(queue.payloadVersion>=1);
+});
