@@ -20,3 +20,9 @@ test('confirmed food provider is promoted with ownership and offerings', () => {
   assert.match(ui, /تم تأكيد الخدمة/);
   assert.match(ui, /تفاصيل النشاط/);
 });
+
+test('businesses view reads live place overrides so admin priority reaches the public market', () => {
+  assert.match(ui, /fetch\('\/api\/public-places'\)/);
+  assert.match(ui, /Number\(b\.marketPriority\)/);
+  assert.match(fs.readFileSync(new URL('../src/server-public-places.mjs', import.meta.url), 'utf8'), /site_content/);
+});
