@@ -26,15 +26,33 @@ export function businessCommand(c){
   row.status=b.decision;row.reviewNote=note;row.reviewerId=a;row.reviewedAt=at;bump(row);return {id:row.id,message:'قرار المراجعة اتحفظ.'};
  }
  case 'shop.save':{
-  only(b.fields,['name','category','address','locationId','description','accepting','deliveryPolicy','deliverySourceMode','areaFees','suggestedFee','prepMinutes','archived']);
+  only(b.fields,['name','category','address','locationId','description','accepting','deliveryPolicy','deliverySourceMode','compoundFees','areaFees','suggestedFee','prepMinutes','archived']);
   let shop=b.id?s.shops[key(b.id)]:null;if(b.id){requireShop(s,a,b.id,'catalog');checkVersion(shop,b.version);}
   else ok(approved(s,a,'merchant')||approved(s,a,'service_provider'),'ROLE','اعتماد النشاط مطلوب قبل إنشاء المحل.',403);
   const f=b.fields,name=text(f.name,2,100);ok(s.settings.categories.includes(f.category),'CATEGORY','اختار تصنيفًا عامًا معتمدًا.');ok(s.locations[f.locationId],'LOCATION','حدد نقطة النشاط.');
   ok(['customer','shop'].includes(f.deliveryPolicy),'FEE','حدد مين بيتحمل التوصيل.');ok(['jowwa','private','hybrid'].includes(f.deliverySourceMode),'DELIVERY_SOURCE','حدد هتعتمد على طيارين جوه أو طيارين المحل أو الاثنين.');
-  object(f.areaFees||{});const knownAreas=new Set(Object.values(s.locations).map(x=>x.area).filter(Boolean)),areaFees={};for(const[area,value]of Object.entries(f.areaFees||{})){ok(knownAreas.has(area),'DELIVERY_AREA','منطقة توصيل غير معروفة.');areaFees[area]=money(value);}ok(Object.keys(areaFees).length>0,'DELIVERY_AREA','حدد سعر توصيل افتراضي لمنطقة واحدة على الأقل.');
-  const id=shop?.id||nextId(s,'shop');s.shops[id]={...shop,id,ownerId:shop?.ownerId||a,name,category:f.category,address:text(f.address,3,250),locationId:f.locationId,description:text(f.description||'',0,500),accepting:f.accepting===true,deliveryPolicy:f.deliveryPolicy,deliverySourceMode:f.deliverySourceMode,areaFees,suggestedFee:money(f.suggestedFee),prepMinutes:int(f.prepMinutes,1,240),archived:f.archived===true,version:(shop?.version||0)+1};return {id,message:'بيانات النشاط والتوصيل اتحفظت.'};
+  object(f.compoundFees||{});const compounds=s.settings.compounds||{},compoundFees={};for(const[id,value]of Object.entries(f.compoundFees||{})){const c=compounds[id];ok(c&&c.active,'DELIVERY_AREA','الكمبوند غير متاح للتسعير.');compoundFees[id]=money(value);}ok(Object.keys(compoundFees).length>0,'DELIVERY_AREA','حدد سعر توصيل افتراضي لكمبوند واحد على الأقل.');
+  const areaFees={};for(const[id,value]of Object.entries(compoundFees)){const c=compounds[id];if(c)areaFees[c.name]=value;}
+  const id=shop?.id||nextId(s,'shop');s.shops[id]={...shop,id,ownerId:shop?.ownerId||a,name,category:f.category,address:text(f.address,3,250),locationId:f.locationId,description:text(f.description||'',0,500),accepting:f.accepting===true,deliveryPolicy:f.deliveryPolicy,deliverySourceMode:f.deliverySourceMode,compoundFees,areaFees,suggestedFee:money(f.suggestedFee),prepMinutes:int(f.prepMinutes,1,240),archived:f.archived===true,version:(shop?.version||0)+1};return {id,message:'بيانات النشاط والتوصيل اتحفظت.'};
  }
  case 'platform.category':{admin();const value=text(b.name,2,60);ok(!s.settings.categories.includes(value),'CATEGORY','التصنيف موجود.');s.settings.categories.push(value);return {id:value,message:'التصنيف العام اتضاف.'};}
+ case 'compound.save':{
+  admin();const old=b.id?s.settings.compounds?.[key(b.id)]:null;if(b.id){ok(old,'NOT_FOUND','الكمبوند مش موجود.',404);checkVersion(old,b.version);}
+  const name=text(b.name,2,80);ok(!Object.values(s.settings.compounds||{}).some(x=>x.id!==old?.id&&x.name===name&&x.active),'DUPLICATE','اسم الكمبوند موجود.');
+  const id=old?.id||nextId(s,'compound');s.settings.compounds??={};s.settings.compounds[id]={id,name,active:b.active!==false,version:(old?.version||0)+1};return {id,message:'بيانات الكمبوند اتحفظت.'};
+ }
+ case 'compound.archive':{
+  admin();const row=s.settings.compounds?.[key(b.id)];checkVersion(row,b.version);row.active=false;bump(row);return {id:row.id,message:'الكمبوند اتوقف للطلبات الجديدة؛ الطلبات القديمة محفوظة.'};
+ }
+ case 'building.save':{
+  admin();const old=b.id?s.compoundBuildings?.[key(b.id)]:null;if(b.id){ok(old,'NOT_FOUND','العمارة مش موجودة.',404);checkVersion(old,b.version);}
+  const compound=s.settings.compounds?.[key(b.compoundId)];ok(compound&&compound.active,'COMPOUND','اختار كمبوند نشط.');const locationId=key(b.locationId);ok(s.locations[locationId],'LOCATION','حدد نقطة العمارة على الخريطة.');
+  const name=text(b.name,1,80);ok(!Object.values(s.compoundBuildings||{}).some(x=>x.id!==old?.id&&x.compoundId===compound.id&&x.name===name&&x.active),'DUPLICATE','العمارة موجودة داخل الكمبوند.');
+  const id=old?.id||nextId(s,'building');s.compoundBuildings??={};s.compoundBuildings[id]={id,compoundId:compound.id,name,locationId,active:b.active!==false,version:(old?.version||0)+1};return {id,message:'العمارة اتحفظت داخل الكمبوند.'};
+ }
+ case 'building.archive':{
+  admin();const row=s.compoundBuildings?.[key(b.id)];checkVersion(row,b.version);row.active=false;bump(row);return {id:row.id,message:'العمارة اتوقفت للعناوين الجديدة؛ العناوين والطلبات القديمة محفوظة.'};
+ }
  case 'fee.rule.save':{
   admin();const prior=b.id?s.settings.feeRules?.[key(b.id)]:null;if(b.id){ok(prior,'NOT_FOUND','قاعدة الرسوم مش موجودة.',404);checkVersion(prior,b.version);}
   const id=prior?.id||nextId(s,'fee-rule'),validated=validateFeeRule({...b.rule,id,version:(prior?.version||0)+1},{existingId:id});
