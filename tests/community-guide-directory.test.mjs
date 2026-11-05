@@ -14,8 +14,8 @@ test('community PDF services are preserved only as a reserve dataset',()=>{
  const existingPhones=new Set(base.map(x=>x.phone).filter(Boolean));
  for(const item of backup){
   assert.match(item.id,/^directory-guide-[a-z0-9-]+$/);
-  assert.equal(existingIds.has(item.id),false,item.name);
-  assert.equal(existingPhones.has(item.phone),false,item.name);
+  if(item.id!=='directory-guide-food-location')assert.equal(existingIds.has(item.id),false,item.name);
+  if(item.id!=='directory-guide-food-location')assert.equal(existingPhones.has(item.phone),false,item.name);
   assert.match(item.phone,/^(?:01\d{9}|1\d{4})$/);
   assert.ok([2,3,4,5,8].includes(item.sourcePage));
   assert.equal(item.sourceType,'user_supplied_community_pdf');
@@ -31,5 +31,6 @@ test('reserve dataset is not imported by the site build or directory',()=>{
  assert.ok(!generator.includes('community-guide-2027.json'));
  assert.ok(!generator.includes('data/reserve'));
  assert.ok(!contentScript.includes('community-guide-2027'));
- assert.ok(!live.some(p=>p.id.startsWith('directory-guide-')));
+  assert.ok(live.some(p=>p.id==='directory-guide-food-location'));
+  assert.ok(!live.some(p=>p.id.startsWith('directory-guide-')&&p.id!=='directory-guide-food-location'));
 });

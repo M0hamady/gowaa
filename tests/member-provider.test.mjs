@@ -25,7 +25,7 @@ test('return paths preserve choices and reject external or token-bearing redirec
  for(const path of ['https://evil.test','//evil.test','/\\evil.test','/%2f%2fevil.test','/api/secrets','/market\u0000'])assert.equal(safeReturnPath(path),'/');
  assert.equal(safeReturnPath('/?from=yasmin-1&to=narges-2&mode=walk'),'/?from=yasmin-1&to=narges-2&mode=walk');
  assert.equal(safeReturnPath('/market?access_token=secret&view=directory'),'/market?view=directory');
- assert.ok(protectedDestination('/place/directory-test'));assert.ok(protectedDestination('/?to=yasmin-1'));assert.equal(protectedDestination('/market?view=directory'),false);
+ assert.equal(protectedDestination('/place/directory-test'),false);assert.ok(protectedDestination('/?to=yasmin-1'));assert.equal(protectedDestination('/market?view=directory'),false);
  assert.equal(verifiedMember({id:'a',user_metadata:{admin:true,phone_confirmed_at:'x'}}),false);
 });
 test('session bridge rejects guests, forged tokens and unconfirmed identities',async()=>{

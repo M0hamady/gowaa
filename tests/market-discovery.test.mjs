@@ -32,6 +32,15 @@ test('price filters and sorting keep inquiry prices unknown and active offers ef
  assert.deepEqual(discover(rows,{sort:'price-asc'}).map(v=>v.id),['b','c','a']);assert.deepEqual(discover(rows,{sort:'price-desc'}).map(v=>v.id),['c','b','a']);
  assert.deepEqual(discover(rows,{min:0,max:50}).map(v=>v.id),['b']);
 });
+test('recommended market order puts admin priority first, then ordered items and shops',()=>{
+ const rows=[
+  {id:'normal',title:'عادي',price:10,available:true,sellers:{market_priority:0}},
+  {id:'ordered-shop',title:'عليه طلبات',price:10,available:true,sellerOrderCount:2,sellers:{market_priority:0}},
+  {id:'ordered-item',title:'صنف مطلوب',price:10,available:true,orderCount:1,sellers:{market_priority:0}},
+  {id:'admin-first',title:'أولوية الأدمن',price:10,available:true,sellers:{market_priority:9}}
+ ];
+ assert.deepEqual(discover(rows,{sort:'recommended'}).map(v=>v.id),['admin-first','ordered-item','ordered-shop','normal']);
+});
 test('directory products without an owning place never enter the public market',()=>{
  const orphan={id:'directory-menu-orphan',title:'صنف بلا محل',sellerName:'غير معروف',sourceUrl:'https://example.com/menu',category:'food'};
  assert.deepEqual(normalizeDirectoryCatalog({items:[orphan]}),[]);
