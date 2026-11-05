@@ -11,6 +11,8 @@ export async function buildTest(){
  for(const k of ['SUPABASE_URL','NEXT_PUBLIC_SUPABASE_URL','SUPABASE_ANON_KEY','NEXT_PUBLIC_SUPABASE_ANON_KEY','NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY','SUPABASE_SERVICE_ROLE_KEY','JOWWA_PHONE_AUTH'])delete process.env[k];
  const originalHome=await readFile('public/index.html','utf8');
  await import('./build.mjs');
+ // Fully offline rendering: no font CDN requests from this isolated test artifact.
+ for(const cssPath of ['public/market.css','public/style.css']){const css=await readFile(cssPath,'utf8');await writeFile(cssPath,css.split('\n').filter(line=>!line.includes('fonts.googleapis.com')).join('\n'));}
  await build({entryPoints:['src/operations/ui.mjs'],outfile:'public/operations-ui.js',bundle:true,format:'esm',minify:true,target:'es2022',legalComments:'eof'});
  const page=await readFile('public/operations.html','utf8');
  await writeFile('public/explore.html',originalHome.replace('<body','<body data-operations-preview="true"').replace('</body>','<aside style="position:fixed;bottom:8px;left:8px;right:8px;z-index:99999;background:#fff2d9;padding:10px;text-align:center">واجهة مرجعية في نسخة اختبار؛ حسابات اللايف والطلبات الحقيقية مقفولة. <a href="/work">افتح مساحة اختبار التشغيل</a></aside></body>'));
