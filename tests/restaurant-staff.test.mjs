@@ -51,3 +51,7 @@ test('staff projection does not leak all employee accounts to ordinary workers',
 test('last activity updates only when an active employee performs a command',()=>{
  const w=world(),before=w.s.team['cashier-member'].lastActiveAt;w.run('cashier','shift.open',{shopId:'shop-a',opening:0});assert.notEqual(w.s.team['cashier-member'].lastActiveAt,before);
 });
+
+test('suspended employee loses old assigned order visibility while the historical order remains for management',()=>{
+ const w=world(),id=w.run('waiter','restaurant.order.open',{shopId:'shop-a',mode:'dine_in',tableId:'table-4',requestId:'suspend-history'}).id;w.run('waiter','restaurant.order.add_item',{id,version:w.s.restaurantOrders[id].version,productId:'meal',quantity:1});const m=w.s.team['waiter-member'];w.run('owner','staff.status',{id:m.id,version:m.version,status:'suspended',reason:'إيقاف بعد فتح طلب'});assert.equal(project(w.s,'waiter').restaurantOrders.length,0);assert.ok(project(w.s,'manager').restaurantOrders.some(x=>x.id===id));assert.ok(w.s.restaurantOrders[id]);
+});
