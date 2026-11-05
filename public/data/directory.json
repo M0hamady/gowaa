@@ -1118,5 +1118,21 @@
     "sourceGroupId": "directory-atms-sunmall",
     "precision": "mall_location_only",
     "schemaType": "AutomatedTeller"
+  },
+  {
+    "id": "directory-guide-food-location",
+    "name": "Food Location",
+    "category": "مطاعم",
+    "address": "كيان سيتي — العنوان التفصيلي يحدده صاحب النشاط",
+    "description": "مطعم مؤكد على جوه يقدم مشويات وكريبات وشاورما سوري. افتح صفحة النشاط لمراجعة المنيو والأصناف المرتبطة به.",
+    "status": "تم تأكيد مقدم الخدمة مع جوه؛ الأسعار والتوفر النهائي يراجعهما صاحب النشاط.",
+    "businessOwnerVerified": true,
+    "mapCategory": "restaurant",
+    "schemaType": "Restaurant",
+    "image": "/assets/market/food-location/logo.png",
+    "source": "https://jowwa-kayan.vercel.app/market?business=directory-guide-food-location",
+    "sourceType": "provider_menu_image",
+    "sourceTitle": "منيو Food Location المرفوع",
+    "checkedAt": "2026-11-05"
   }
 ]

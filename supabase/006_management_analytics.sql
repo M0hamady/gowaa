@@ -25,8 +25,8 @@ begin
   select to_jsonb(t) into after_row from public.site_content t where t.kind=target_type and t.id=target_id;
  else
   allowed=case target_type
-   when 'sellers' then array['id','name','description','district','building','phone','publish_phone','facebook','instagram','website','image_path','archived','status','review_note']
-   when 'listings' then array['seller_id','kind','category','title','description','price','offer_price','offer_until','track_stock','quantity','available','image_path','archived','status','review_note','service_type','price_mode','action_url','catalog_id','sku','brand','unit','min_quantity','max_quantity','specifications','delivery_note','warranty','gallery_paths','variants']
+   when 'sellers' then array['id','name','description','district','building','phone','publish_phone','facebook','instagram','website','image_path','archived','status','review_note','market_enabled','market_priority']
+   when 'listings' then array['seller_id','kind','category','title','description','price','offer_price','offer_until','track_stock','quantity','available','image_path','archived','status','review_note','market_enabled','market_priority','service_type','price_mode','action_url','catalog_id','sku','brand','unit','min_quantity','max_quantity','specifications','delivery_note','warranty','gallery_paths','variants']
    when 'catalogs' then array['seller_id','name','description','image_path','sort_order','archived','status','review_note']
    when 'reviews' then array['comment','display_name','status','review_note']
    when 'reports' then array['resolved'] else null end;
