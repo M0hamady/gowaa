@@ -46,9 +46,9 @@ test('renderers behind member access honor archived overrides and fail closed on
  globalThis.fetch=async input=>{const url=new URL(typeof input==='string'?input:input.url);if(url.pathname.endsWith('/site_content'))return failed?new Response('{"message":"unavailable"}',{status:503,headers:{'Content-Type':'application/json'}}):new Response(JSON.stringify(archived?[{kind:'places',id:item.placeId,archived:true}]:[]),{headers:{'Content-Type':'application/json'}});return new Response('[]',{headers:{'Content-Type':'application/json'}});};
  try{
   const ok=response();await menu({method:'GET',query:{id:item.id}},ok);assert.equal(ok.statusCode,200);assert.ok(ok.body.includes(item.title));
-  const map=response();await sitemap({},map);assert.equal(map.statusCode,200);assert.ok(map.body.includes('/menu/'+item.id));
+  const map=response();await sitemap({},map);assert.equal(map.statusCode,200);assert.ok(!map.body.includes('/menu/'),'gated menu pages are not in the sitemap');assert.ok(!map.body.includes('/place/'));assert.ok(map.body.includes('/market'));
   archived=true;const hidden=response();await menu({method:'GET',query:{id:item.id}},hidden);assert.equal(hidden.statusCode,404);assert.equal(hidden.headers['X-Robots-Tag'],'noindex');
-  const hiddenMap=response();await sitemap({},hiddenMap);assert.equal(hiddenMap.statusCode,200);assert.ok(!hiddenMap.body.includes('/menu/'+item.id));for(const other of data.items.filter(v=>v.placeId!==item.placeId))assert.ok(hiddenMap.body.includes('/menu/'+other.id));
+  
   failed=true;const error=response();await menu({method:'GET',query:{id:item.id}},error);assert.equal(error.statusCode,503);assert.equal(error.headers['Cache-Control'],'no-store');
   const invalid=response();await menu({query:{id:'../../secret'}},invalid);assert.equal(invalid.statusCode,404);
  }finally{globalThis.fetch=previousFetch;if(previousUrl===undefined)delete process.env.NEXT_PUBLIC_SUPABASE_URL;else process.env.NEXT_PUBLIC_SUPABASE_URL=previousUrl;if(previousKey===undefined)delete process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;else process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY=previousKey;}
