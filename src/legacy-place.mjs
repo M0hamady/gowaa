@@ -18,7 +18,7 @@ export default async function handler(req,res){
   const defaultGate=result.error?{canOrder:false,reason:'unavailable'}:{canOrder:false,reason:'unclaimed'};
   const options={availability,referenceHours:hours,defaultGate};
   if(id){const p=merged.get(id);if(!p){res.statusCode=404;res.setHeader('X-Robots-Tag','noindex');return res.end('<h1>المكان غير متاح</h1><a href="/places">الدليل</a>');}
-   res.end(renderPlace(p,places,{gate:availability.get(id)||defaultGate,referenceHours:hours.get(id)}));
+   res.end(renderPlace(p,places,{gate:availability.get(id)||defaultGate,referenceHours:hours.get(id)}).replace('</head>','<script type="module" src="/place-basket.js"></script></head>'));
   }else res.end(renderDirectory(places,category,options));
  }catch{res.statusCode=503;res.setHeader('Retry-After','60');res.end('الدليل غير متاح مؤقتًا. حاول مرة أخرى.');}
 }

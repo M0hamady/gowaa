@@ -25,7 +25,7 @@ if(process.env.VERCEL==='1'||process.argv.includes('--production')){
  const referenceHours=new Map((hours.records||[]).map(row=>[row.placeId,row]));
  for(const place of places){
   if(!/^[a-zA-Z0-9_-]+$/.test(place.id))throw Error('Invalid directory id');
-  await writeFile(resolve(output,place.id+'.html'),renderPlace(place,places,{referenceHours:referenceHours.get(place.id)}));
+  await writeFile(resolve(output,place.id+'.html'),renderPlace(place,places,{referenceHours:referenceHours.get(place.id)}).replace('</head>','<script type="module" src="/place-basket.js"></script></head>'));
  }
  await writeFile('public/places.html',renderDirectory(places,'',{referenceHours}));
  console.log('Directory: '+places.length+' local preview pages; production uses live routes');
