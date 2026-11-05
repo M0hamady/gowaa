@@ -1,4 +1,4 @@
-import {requireThat as ok,key,text,int,money,nextId,checkVersion,bump,hasShopPermission,paidNet,openShift,addCash,employeeMembership} from './core.mjs';
+import {requireThat as ok,key,text,int,money,nextId,checkVersion,bump,hasShopPermission,paidNet,openShift,addCash,expectedCash,employeeMembership} from './core.mjs';
 import {consumeOrderRecipes} from './inventory.mjs';
 
 const orderStates=['open','sent_to_kitchen','preparing','ready','served','account_open','paid','cancelled','merged'];
@@ -7,6 +7,14 @@ const tableStates=['empty','open_order','preparing','ready_to_serve','account_op
 const kitchenNext={new:'preparing',preparing:'ready',ready:'served'};
 const can=(s,a,shopId,p)=>ok(hasShopPermission(s,a,shopId,p),'FORBIDDEN','مش عندك صلاحية للإجراء ده.',403);
 const audit=(s,{shopId,actorId,kind,entityId,reason,at,before=null,after=null})=>s.auditLog.push({id:nextId(s,'audit'),shopId,actorId,kind,entityId,reason,at,before,after});
+const restaurantPaid=(s,id)=>Object.values(s.restaurantPayments||{}).filter(p=>p.orderId===id&&p.verificationStatus!=='unverified_offline').reduce((n,p)=>n+(p.kind==='refund'?-p.amount:p.amount),0);
+function touchOffline(s,o,actorId,at){
+ if(!o?.requestId)return;s.offlineQueue??={};const id='offline-'+o.requestId,old=s.offlineQueue[id];s.offlineQueue[id]={id,requestId:o.requestId,orderId:o.id,shopId:o.shopId,actorId:old?.actorId||actorId,status:'pending_sync',attempts:old?.attempts||0,payloadVersion:(old?.payloadVersion||0)+1,createdAt:old?.createdAt||at,updatedAt:at,lastError:null};o.syncStatus='pending_sync';o.localSavedAt??=at;
+}
+function receiptSnapshot(s,o,at){
+ const payments=Object.values(s.restaurantPayments||{}).filter(p=>p.orderId===o.id).map(p=>({kind:p.kind,amount:p.amount,method:p.method,verificationStatus:p.verificationStatus,at:p.at}));
+ return Object.freeze({orderId:o.id,queue:o.queue,shopId:o.shopId,mode:o.mode,tableId:o.tableId,lines:o.lines.map(l=>({title:l.title,quantity:l.quantity,unitPrice:l.unitPrice,notes:l.notes,total:l.unitPrice*l.quantity})),subtotal:o.subtotal,discount:o.discount,total:o.total,paid:restaurantPaid(s,o.id),payments,createdAt:o.createdAt,issuedAt:at});
+}
 const activeTableOrder=(s,tableId)=>Object.values(s.restaurantOrders||{}).find(o=>o.tableId===tableId&&!['paid','cancelled','merged'].includes(o.status));
 const recalc=(o)=>{o.subtotal=o.lines.reduce((n,l)=>n+l.unitPrice*l.quantity,0);o.total=Math.max(0,o.subtotal-(o.discount||0));money(o.total);};
 function tableStateFromOrder(s,o){
@@ -31,7 +39,7 @@ function syncOrderKitchenStatus(s,o){
  tableStateFromOrder(s,o);
 }
 export function restaurantCommand(c){
- const{s,actorId:a,body:b,at}=c;s.restaurantZones??={};s.restaurantTables??={};s.restaurantOrders??={};s.restaurantPayments??={};
+ const{s,actorId:a,body:b,at}=c;s.restaurantZones??={};s.restaurantTables??={};s.restaurantOrders??={};s.restaurantPayments??={};s.offlineQueue??={};s.syncConflicts??={};
  switch(c.type){
  case 'floor.zone.save':{
   const shopId=key(b.shopId);can(s,a,shopId,'manage_tables');const old=b.id?s.restaurantZones[key(b.id)]:null;if(old){ok(old.shopId===shopId,'FORBIDDEN','المنطقة مش تابعة للنشاط.',403);checkVersion(old,b.version);}
@@ -45,21 +53,21 @@ export function restaurantCommand(c){
   const shopId=key(b.shopId),mode=b.mode==='takeaway'?'takeaway':'dine_in';ok(hasShopPermission(s,a,shopId,'edit_open_order')||hasShopPermission(s,a,shopId,'create_pos_order'),'FORBIDDEN','مش عندك صلاحية فتح طلب.',403);
   let tableId=null;if(mode==='dine_in'){tableId=key(b.tableId);const t=s.restaurantTables[tableId];ok(t&&t.shopId===shopId&&!t.archived&&t.status!=='out_of_service','TABLE','الطاولة غير متاحة.');ok(!activeTableOrder(s,tableId),'TABLE_BUSY','الطاولة عليها طلب مفتوح.',409);}
   if(b.requestId){const prior=Object.values(s.restaurantOrders).find(o=>o.requestId===b.requestId);if(prior)return{id:prior.id,message:'الطلب المحلي موجود بالفعل.',replayed:true};}
-  const id=nextId(s,'restaurant-order');s.restaurantOrders[id]={id,queue:++s.nextQueue,shopId,mode,tableId,assignedStaffId:a,requestId:b.requestId?text(b.requestId,4,100):null,status:'open',lines:[],subtotal:0,discount:0,total:0,note:text(b.note||'',0,300),createdAt:at,updatedAt:at,syncStatus:b.offline===true?'pending_sync':'synced',syncConflict:null,version:1};tableStateFromOrder(s,s.restaurantOrders[id]);audit(s,{shopId,actorId:a,kind:'restaurant_order_opened',entityId:id,reason:'فتح طلب '+(mode==='dine_in'?'صالة':'تيك أواي'),at});return{id,message:b.offline?'الطلب محفوظ محليًا وفي انتظار المزامنة.':'الطلب اتفتح.'};
+  const id=nextId(s,'restaurant-order');s.restaurantOrders[id]={id,queue:++s.nextQueue,shopId,mode,tableId,assignedStaffId:a,requestId:b.requestId?text(b.requestId,4,100):null,status:'open',lines:[],subtotal:0,discount:0,total:0,note:text(b.note||'',0,300),createdAt:at,updatedAt:at,syncStatus:b.offline===true?'local_saved':'synced',syncConflict:null,version:1};if(b.offline===true)touchOffline(s,s.restaurantOrders[id],a,at);tableStateFromOrder(s,s.restaurantOrders[id]);audit(s,{shopId,actorId:a,kind:'restaurant_order_opened',entityId:id,reason:'فتح طلب '+(mode==='dine_in'?'صالة':'تيك أواي'),at});return{id,message:b.offline?'الطلب محفوظ محليًا وفي انتظار المزامنة.':'الطلب اتفتح.'};
  }
  case 'restaurant.order.add_item':{
   const o=s.restaurantOrders[key(b.id)];ok(o,'NOT_FOUND','الطلب مش موجود.',404);checkVersion(o,b.version);ok(orderAccess(s,a,o,'edit_open_order'),'FORBIDDEN','مش عندك صلاحية تعديل الطلب.',403);ok(o.status==='open','STATE','التعديل على الأصناف متاح قبل الإرسال للمطبخ.');
   const line=lineSnapshot(s,o.shopId,b.productId,b.quantity,b.notes);const p=s.products[line.productId];if(p.stock!==null&&p.stock<line.quantity){ok(b.overrideStock===true&&hasShopPermission(s,a,o.shopId,'adjust_inventory'),'STOCK_WARNING','الكمية أكبر من المخزون المحلي المعروف وتحتاج صلاحية تجاوز.',409);o.stockWarning='تم تجاوز المخزون المحلي المعروف بواسطة '+s.users[a].name;}
-  o.lines.push(line);recalc(o);o.updatedAt=at;bump(o);return{id:o.id,lineId:line.id,message:'الصنف اتضاف للطلب.'};
+  o.lines.push(line);recalc(o);o.updatedAt=at;if(o.requestId)touchOffline(s,o,a,at);bump(o);return{id:o.id,lineId:line.id,message:'الصنف اتضاف للطلب.'};
  }
  case 'restaurant.order.update_item':{
-  const o=s.restaurantOrders[key(b.id)];checkVersion(o,b.version);ok(orderAccess(s,a,o,'edit_open_order'),'FORBIDDEN','مش عندك صلاحية تعديل الطلب.',403);ok(o.status==='open','STATE','التعديل متاح قبل الإرسال للمطبخ.');const l=o.lines.find(x=>x.id===b.lineId);ok(l,'NOT_FOUND','الصنف مش موجود.',404);l.quantity=int(b.quantity,1,99);l.notes=text(b.notes??l.notes,0,250);recalc(o);o.updatedAt=at;bump(o);return{id:o.id,message:'الصنف اتحدث.'};
+  const o=s.restaurantOrders[key(b.id)];checkVersion(o,b.version);ok(orderAccess(s,a,o,'edit_open_order'),'FORBIDDEN','مش عندك صلاحية تعديل الطلب.',403);ok(o.status==='open','STATE','التعديل متاح قبل الإرسال للمطبخ.');const l=o.lines.find(x=>x.id===b.lineId);ok(l,'NOT_FOUND','الصنف مش موجود.',404);l.quantity=int(b.quantity,1,99);l.notes=text(b.notes??l.notes,0,250);recalc(o);o.updatedAt=at;if(o.requestId)touchOffline(s,o,a,at);bump(o);return{id:o.id,message:'الصنف اتحدث.'};
  }
  case 'restaurant.order.send_kitchen':{
-  const o=s.restaurantOrders[key(b.id)];checkVersion(o,b.version);can(s,a,o.shopId,'send_to_kitchen');ok(o.status==='open'&&o.lines.length,'STATE','الطلب لازم يكون مفتوح وفيه أصناف.');consumeOrderRecipes(s,o,{actorId:a,at,overrideInventory:b.overrideInventory===true});for(const l of o.lines){l.kitchenStatus='new';l.sentAt=at;}o.status='sent_to_kitchen';o.sentBy=a;o.sentAt=at;o.updatedAt=at;bump(o);tableStateFromOrder(s,o);audit(s,{shopId:o.shopId,actorId:a,kind:'sent_to_kitchen',entityId:o.id,reason:text(b.reason||'إرسال الطلب للمطبخ',3,200),at});return{id:o.id,message:'الطلب وصل شاشة المطبخ.'};
+  const o=s.restaurantOrders[key(b.id)];checkVersion(o,b.version);can(s,a,o.shopId,'send_to_kitchen');ok(o.status==='open'&&o.lines.length,'STATE','الطلب لازم يكون مفتوح وفيه أصناف.');consumeOrderRecipes(s,o,{actorId:a,at,overrideInventory:b.overrideInventory===true});for(const l of o.lines){l.kitchenStatus='new';l.sentAt=at;}o.status='sent_to_kitchen';o.sentBy=a;o.sentAt=at;o.updatedAt=at;if(o.requestId)touchOffline(s,o,a,at);bump(o);tableStateFromOrder(s,o);audit(s,{shopId:o.shopId,actorId:a,kind:'sent_to_kitchen',entityId:o.id,reason:text(b.reason||'إرسال الطلب للمطبخ',3,200),at});return{id:o.id,message:'الطلب وصل شاشة المطبخ.'};
  }
  case 'kitchen.item.status':{
-  const o=s.restaurantOrders[key(b.id)];checkVersion(o,b.version);can(s,a,o.shopId,'update_kitchen_status');const l=o.lines.find(x=>x.id===b.lineId);ok(l&&l.kitchenStatus,'NOT_FOUND','صنف المطبخ مش موجود.',404);const next=b.status;ok(kitchenStates.includes(next),'STATE','حالة المطبخ غير صحيحة.');ok(next===l.kitchenStatus||kitchenNext[l.kitchenStatus]===next,'STATE','انتقال حالة المطبخ غير مسموح.');l.kitchenStatus=next;if(next==='ready')l.readyAt=at;if(next==='served')l.servedAt=at;l.kitchenActorId=a;o.updatedAt=at;syncOrderKitchenStatus(s,o);bump(o);return{id:o.id,message:next==='ready'?'الصنف جاهز.':next==='served'?'الصنف اتسلّم للصالة/الكاشير.':'حالة التجهيز اتحدثت.'};
+  const o=s.restaurantOrders[key(b.id)];checkVersion(o,b.version);can(s,a,o.shopId,'update_kitchen_status');const l=o.lines.find(x=>x.id===b.lineId);ok(l&&l.kitchenStatus,'NOT_FOUND','صنف المطبخ مش موجود.',404);const next=b.status;ok(kitchenStates.includes(next),'STATE','حالة المطبخ غير صحيحة.');ok(next===l.kitchenStatus||kitchenNext[l.kitchenStatus]===next,'STATE','انتقال حالة المطبخ غير مسموح.');l.kitchenStatus=next;if(next==='ready')l.readyAt=at;if(next==='served')l.servedAt=at;l.kitchenActorId=a;o.updatedAt=at;if(o.requestId)touchOffline(s,o,a,at);syncOrderKitchenStatus(s,o);bump(o);return{id:o.id,message:next==='ready'?'الصنف جاهز.':next==='served'?'الصنف اتسلّم للصالة/الكاشير.':'حالة التجهيز اتحدثت.'};
  }
  case 'restaurant.order.move_table':{
   const o=s.restaurantOrders[key(b.id)];checkVersion(o,b.version);can(s,a,o.shopId,'move_table_order');ok(o.mode==='dine_in'&&!['paid','cancelled','merged'].includes(o.status),'STATE','الطلب مش قابل للنقل.');const to=s.restaurantTables[key(b.toTableId)];ok(to&&to.shopId===o.shopId&&!to.archived&&to.status!=='out_of_service','TABLE','الطاولة الجديدة غير متاحة.');ok(!activeTableOrder(s,to.id),'TABLE_BUSY','الطاولة الجديدة عليها طلب.');const from=s.restaurantTables[o.tableId],before=o.tableId;o.tableId=to.id;o.updatedAt=at;bump(o);if(from){from.status='empty';bump(from);}tableStateFromOrder(s,o);audit(s,{shopId:o.shopId,actorId:a,kind:'table_order_moved',entityId:o.id,reason:text(b.reason,3,200),before:{tableId:before},after:{tableId:to.id},at});return{id:o.id,message:'الطلب اتنقل للطاولة الجديدة.'};
@@ -73,6 +81,14 @@ export function restaurantCommand(c){
  }
  case 'restaurant.order.discount':{
   const o=s.restaurantOrders[key(b.id)];checkVersion(o,b.version);can(s,a,o.shopId,'approve_discount');ok(!['paid','cancelled','merged'].includes(o.status),'STATE','الطلب مقفول.');const discount=money(b.discount);ok(discount<=o.subtotal,'DISCOUNT','الخصم أكبر من قيمة الطلب.');const before=o.discount;o.discount=discount;recalc(o);bump(o);audit(s,{shopId:o.shopId,actorId:a,kind:'discount_approved',entityId:o.id,reason:text(b.reason,3,200),before:{discount:before},after:{discount},at});return{id:o.id,message:'الخصم اتسجل بصلاحية معتمدة.'};
+ }
+ case 'restaurant.payment.collect':{
+  const o=s.restaurantOrders[key(b.id)];ok(o,'NOT_FOUND','الطلب مش موجود.',404);checkVersion(o,b.version);can(s,a,o.shopId,'take_payment');ok(!['cancelled','merged'].includes(o.status),'STATE','الطلب غير قابل للتحصيل.');const amount=money(b.amount);ok(amount>0,'PAYMENT','حدد مبلغ التحصيل.');const method=b.method;ok(['cash','card_external','transfer_external'].includes(method),'PAYMENT','وسيلة الدفع غير صحيحة.');const offline=b.offline===true,verificationStatus=offline&&method!=='cash'?'unverified_offline':method==='cash'?'recorded_cash':'verified_external';const confirmed=restaurantPaid(s,o.id);if(verificationStatus!=='unverified_offline')ok(confirmed+amount<=o.total,'OVERPAYMENT','المبلغ أكبر من الباقي على الحساب.');
+  const id=nextId(s,'restaurant-payment');s.restaurantPayments[id]={id,orderId:o.id,shopId:o.shopId,actorId:a,kind:'payment',amount,method,verificationStatus,at,note:text(b.note||'',0,200)};if(method==='cash')addCash(s,a,o.shopId,amount,'restaurant_sale',o.id,at);if(o.requestId)touchOffline(s,o,a,at);
+  if(restaurantPaid(s,o.id)===o.total){o.status='paid';o.paidAt=at;o.receiptSnapshot=receiptSnapshot(s,o,at);tableStateFromOrder(s,o);}else if(verificationStatus==='unverified_offline')o.paymentWarning='الدفع الخارجي مسجل محليًا وغير متحقق منه.';bump(o);return{id,message:verificationStatus==='unverified_offline'?'الدفع الخارجي اتسجل كغير متحقق منه لحد المزامنة.':'التحصيل اتسجل.',receipt:o.receiptSnapshot||null};
+ }
+ case 'restaurant.payment.refund':{
+  const o=s.restaurantOrders[key(b.id)];ok(o,'NOT_FOUND','الطلب مش موجود.',404);checkVersion(o,b.version);can(s,a,o.shopId,'refund_payment');const amount=money(b.amount);ok(amount>0&&amount<=restaurantPaid(s,o.id),'REFUND','مبلغ الرد أكبر من المحصل المؤكد.');const method=b.method;ok(['cash','card_external','transfer_external'].includes(method),'PAYMENT','وسيلة الرد غير صحيحة.');if(method==='cash'){const sh=openShift(s,a,o.shopId);ok(sh,'SHIFT','افتح وردية الكاشير الأول.');ok(expectedCash(s,sh.id)>=amount,'CASH','النقد الموجود في الدرج لا يكفي للرد.');addCash(s,a,o.shopId,-amount,'restaurant_refund',o.id,at);}const id=nextId(s,'restaurant-payment');s.restaurantPayments[id]={id,orderId:o.id,shopId:o.shopId,actorId:a,kind:'refund',amount,method,verificationStatus:'verified_external',at,note:text(b.reason,3,200)};o.status='account_open';o.receiptSnapshot=receiptSnapshot(s,o,at);bump(o);audit(s,{shopId:o.shopId,actorId:a,kind:'restaurant_refund',entityId:o.id,reason:b.reason,at,after:{amount,method}});return{id,message:'المرتجع اتسجل.'};
  }
  case 'restaurant.order.account_open':{
   const o=s.restaurantOrders[key(b.id)];checkVersion(o,b.version);ok(orderAccess(s,a,o,'view_orders'),'FORBIDDEN','مش عندك صلاحية على الطلب.',403);ok(['served','ready'].includes(o.status),'STATE','الحساب يفتح بعد تجهيز/تقديم الطلب.');o.status='account_open';bump(o);tableStateFromOrder(s,o);return{id:o.id,message:'الحساب مفتوح للتحصيل.'};
