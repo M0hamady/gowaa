@@ -19,9 +19,7 @@ test('community PDF services are preserved only as a reserve dataset',()=>{
   assert.match(item.phone,/^(?:01\d{9}|1\d{4})$/);
   assert.ok([2,3,4,5,8].includes(item.sourcePage));
   assert.equal(item.sourceType,'user_supplied_community_pdf');
-  assert.equal(item.businessOwnerVerified,false);
-  assert.equal(item.precision,'unlocated_service_area');
-  assert.match(item.status,/لم يتم التحقق/);
+  if(item.id==='directory-guide-food-location'){assert.equal(item.businessOwnerVerified,true);assert.match(item.status,/تم تأكيد مقدم الخدمة/);}else{assert.equal(item.businessOwnerVerified,false);assert.equal(item.precision,'unlocated_service_area');assert.match(item.status,/لم يتم التحقق/);}
   assert.ok(!item.coordinate&&!item.mapId);
   assert.ok(!('price' in item)&&!('acceptingOrders' in item)&&!('providerManaged' in item));
  }

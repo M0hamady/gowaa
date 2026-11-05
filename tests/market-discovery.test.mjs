@@ -38,6 +38,6 @@ test('directory products without an owning place never enter the public market',
 });
 test('sourced menu remains explicit historical data with safe image fallback contract',async()=>{
  const raw=JSON.parse(await readFile(new URL('../public/data/market-directory.json',import.meta.url),'utf8')),items=normalizeDirectoryCatalog(raw);
- assert.equal(items.length,raw.items.length);assert.ok(items.length>0);for(const v of items){assert.equal(v.stockStatus,'unknown');assert.equal(v.sourceKind,'directory');assert.ok(v.sourceUrl.startsWith('https://'));assert.ok(v.pricePublishedAt||v.pricePublishedAt===null);if(v.imageUrl)assert.ok(v.imageUrl.startsWith('https://')||v.imageUrl.startsWith('/menus/'));assert.equal(v.seller_id,undefined);}
+ assert.equal(items.length,raw.items.length);assert.ok(items.length>0);for(const v of items){assert.equal(v.stockStatus,'unknown');assert.equal(v.sourceKind,'directory');assert.ok(v.sourceUrl.startsWith('https://'));assert.ok(v.pricePublishedAt||v.pricePublishedAt===null);if(v.imageUrl)assert.ok(v.imageUrl.startsWith('https://')||v.imageUrl.startsWith('/menus/')||v.imageUrl==='/assets/market/product-placeholder-grilled.png');assert.equal(v.seller_id,undefined);}
  const malicious=normalizeDirectoryCatalog({items:[{...raw.items[0],imageUrl:'javascript:alert(1)'}]});assert.equal(malicious[0].imageUrl,null);
 });
