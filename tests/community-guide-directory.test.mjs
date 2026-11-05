@@ -15,7 +15,9 @@ test('community PDF services are preserved only as a reserve dataset',()=>{
  for(const item of backup){
   assert.match(item.id,/^directory-guide-[a-z0-9-]+$/);
   if(item.id!=='directory-guide-food-location')assert.equal(existingIds.has(item.id),false,item.name);
-  if(item.id!=='directory-guide-food-location')assert.equal(existingPhones.has(item.phone),false,item.name);
+  // Entries the admin re-sent in the 2026 community list (05 Nov 2026) are published under community-* ids.
+  const republished=base.some(x=>x.id.startsWith('community-')&&String(x.phone||'').split(' / ').includes(item.phone));
+  if(item.id!=='directory-guide-food-location'&&!republished)assert.equal(existingPhones.has(item.phone),false,item.name);
   assert.match(item.phone,/^(?:01\d{9}|1\d{4})$/);
   assert.ok([2,3,4,5,8].includes(item.sourcePage));
   assert.equal(item.sourceType,'user_supplied_community_pdf');

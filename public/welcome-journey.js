@@ -47,7 +47,7 @@ export function matchesNeed(record,branch,filter='',search=''){
  if(!record||typeof record.id!=='string'||!record.name)return false;
  const category=normalizeEgyptian(record.category),name=normalizeEgyptian(record.name),title=name+' '+category;
  const full=normalizeEgyptian([record.name,record.category,record.address,record.description,...(record.aliases||[]),...(record.keywords||[])].join(' '));
- const food=/(?:مطعم|مطاعم|كافيه|قهوه|مشروب|حلويات|مخبز|وجبات|بقاله|سوبرماركت|اكل بيتي|مطبخ منزلي|عصاير)/.test(category);
+ const food=/(?:مطعم|مطاعم|كافيه|قهوه|مشروب|حلويات|مخبز|مخابز|وجبات|بقاله|سوبرماركت|اكل بيتي|مطبخ منزلي|عصاير|بن)/.test(category);
  if(branch==='food'&&!food)return false;
  const group=normalizeEgyptian(filter);
  const rules={
@@ -55,20 +55,26 @@ export function matchesNeed(record,branch,filter='',search=''){
   'بنوك':/(?:بنك|بنوك|صراف|atm)/,
   'حدائق':/(?:حدائق|مساحات خضراء|حديقه|منتزه)/,
   'مواصلات':/(?:مواصلات|نقل|توصل|باصات|موقف)/,
-  'صنايعيه':/(?:صيانه|صنايعي|سباكه|كهرباء|نجاره|تشطيبات وخدمات)/,
+  'صنايعيه':/(?:صيانه|صنايعي|سباكه|كهرباء|نجاره|تشطيبات وخدمات|ستاير|تنجيد|اجهزه منزليه|دش|كاميرات|تنظيف منزلي|اعطال|ابواب)/,
   'خدمات منزليه':/(?:خدمات منزليه|اكل بيتي|من المنزل|من البيت|غسيل سيارات متنقل|خياطه|مكوي)/,
   'غسيل سيارات':/(?:غسيل سيارات|غسيل عربيات|تنظيف سيارات)/,
   'اكل بيتي':/(?:اكل بيتي|اكل منزلي|مطبخ منزلي)/,
   'حلويات':/(?:حلويات|كيك|تورت)/,
   'ترزي':/(?:ترزي|تفصيل|خياطه)/,
-  'مكوي':/(?:مكوي|كي|دراي كلين|مغسله)/,
+  'مكوي':/(?:مكوي|مكوجي|(?:^|\s)كي(?:\s|$)|دراي كلين|مغسله ملابس|مغاسل)/,
   'سينما':/(?:سينما|دار عرض افلام)/,
   'كارفور':/(?:كارفور|carrefour)/,
   'بيع من المنزل':/(?:بيع من المنزل|بيع من البيت|منتجات منزليه|اكل بيتي|مطبخ منزلي)/,
   'مولات':/(?:مول|تسوق|بلازا|مجمع تجاري)/,
   'محطات غاز':/(?:غاز طبيعي|مرافق وغاز|محطات غاز)/,
-  'مكاتب وشركات':/(?:مكاتب|شركات)/
+  'مكاتب وشركات':/(?:مكاتب|شركات)/,
+  'مخابز':/(?:مخبز|مخابز|فرن|عيش)/,
+  'تجميل':/(?:تجميل|صالون|حلاق|كوافير|باربر)/,
+  'مكتبات':/(?:مكتبه|مكتبات)/,
+  'رياضه وترفيه':/(?:رياضه|نوادي|ترفيه|العاب اطفال|كره قدم)/
  };
+ // Emergency hotlines have their own section; never list them as a provider.
+ if(group&&/ارقام الطوار/.test(category))return false;
  if(group&&group!=='الكل'&&group!=='كل الخدمات'){
   const matched=Object.hasOwn(rules,group)?rules[group].test(title):category.includes(group)||title.includes(group);
   if(!matched)return false;
@@ -80,8 +86,8 @@ export function matchesNeed(record,branch,filter='',search=''){
  return terms.every(t=>full.includes(t));
 }
 const groups={
- food:[['','كل الأكل والشرب','store'],['مطاعم','مطاعم','store'],['كافيه','قهوة ومشروبات','heart'],['اكل بيتي','أكل بيتي','heart'],['حلويات','حلويات من البيت','bag'],['بقاله','بقالة وسوبرماركت','bag']],
- services:[['','كل الخدمات','grid'],['غسيل سيارات','غسيل سيارات للبيت','car'],['صنايعيه','صنايعية وصيانة','building'],['خدمات منزليه','خدمات من البيت','heart'],['ترزي','ترزي وتفصيل','bag'],['مكوي','مكوى ودراي كلين','layers'],['بنزين وغاز','بنزينات وغاز طبيعي','car'],['بنوك','بنوك وصرافات','building'],['مواصلات','تنقل ومواصلات','bus'],['صيدليات','صيدليات وصحة','heart'],['مدارس','مدارس وتعليم','school'],['اتصالات','اتصالات وإنترنت','phone'],['بيع من المنزل','بيع من المنزل','store'],['حلويات','حلويات','heart']]
+ food:[['','كل الأكل والشرب','store'],['مطاعم','مطاعم','store'],['كافيه','قهوة ومشروبات','heart'],['اكل بيتي','أكل بيتي','heart'],['حلويات','حلويات','bag'],['بقاله','بقالة وسوبرماركت','bag'],['مخابز','مخابز وعيش','bag']],
+ services:[['','كل الخدمات','grid'],['غسيل سيارات','غسيل سيارات للبيت','car'],['صنايعيه','صنايعية وصيانة','building'],['خدمات منزليه','خدمات من البيت','heart'],['ترزي','ترزي وتفصيل','bag'],['مكوي','مكوى ودراي كلين','layers'],['بنزين وغاز','بنزينات وغاز طبيعي','car'],['بنوك','بنوك وصرافات','building'],['مواصلات','تنقل ومواصلات','bus'],['صيدليات','صيدليات وصحة','heart'],['مدارس','مدارس وتعليم','school'],['اتصالات','اتصالات وإنترنت','phone'],['بيع من المنزل','بيع من المنزل','store'],['تجميل','صالونات وحلاقة','heart'],['مكتبات','مكتبات','bag'],['رياضه وترفيه','رياضة وترفيه أطفال','heart'],['حلويات','حلويات','heart']]
 };
 function groupingOptions(places){
  const values=[...new Set(places.map(p=>p.category).filter(Boolean))];
@@ -205,7 +211,7 @@ export function mountWelcomeJourney({root,stage,places=[],directory=[],busRoutes
  };
  function drawProviders(){
   const list=q('#journey-providers');if(!list)return;
-  const found=publicRows.filter(p=>matchesNeed(p,state.branch,state.filter,state.query)).slice(0,14);
+  const found=publicRows.filter(p=>matchesNeed(p,state.branch,state.filter,state.query)).slice(0,60);
   list.innerHTML=found.length?found.map(p=>'<button type="button" class="journey-provider-row" data-provider="'+esc(p.id)+'"><span>'+icon('store')+'</span><span><strong>'+esc(p.name)+'</strong><small>'+esc(p.category||'خدمة')+(p.address?' • '+esc(p.address):'')+'</small></span>'+icon('back')+'</button>').join(''):
    '<div class="journey-empty"><strong>لسه مش عندنا بيانات مؤكدة بالاختيار ده</strong><p>جرّب كلمة تانية أو افتح دليل الخدمات. مش هنضيف مكان أو رقم من عندنا.</p></div>';
   list.querySelectorAll('[data-provider]').forEach(button=>button.onclick=()=>{state.selected=publicRows.find(p=>p.id===button.dataset.provider);advance('detail');});
