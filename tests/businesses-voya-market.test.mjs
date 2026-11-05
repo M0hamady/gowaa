@@ -36,3 +36,10 @@ test('shops tab includes sweets shops and any place with a menu (Caramia)', () =
   assert.ok(shown.includes('directory-caramia'));
   for (const id of Object.keys(counts)) if (places.some(p => p.id === id)) assert.ok(shown.includes(id), id + ' has a menu but is missing from the shops tab');
 });
+
+test('shops & restaurants guide page lists sweets and every food category (Caramia)', async () => {
+  const {guides} = await import('../src/place-render.mjs');
+  const food = places.filter(p => /حلويات|مطعم|مطاعم|كافيه|بقالة/.test(p.category || ''));
+  for (const p of food) assert.ok(guides.shopping.categories.includes(p.category), p.id + ' (' + p.category + ') missing from /guide/shopping');
+  assert.ok(guides.shopping.categories.includes('حلويات'));
+});
