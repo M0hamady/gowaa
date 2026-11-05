@@ -1,6 +1,6 @@
 import {publicLink} from './market-core.js';
 export const productFields=['title','description','category','section','kind','price','priceMode','offerPrice','offerUntil','imageUrl','stockStatus','quantity','unit','sortOrder','taxIncluded','taxRate'];
-export const providerFields=['name','category','description','address','phone','whatsapp','website','facebook','instagram','image','serviceArea','visitorNote','mapId','coordinate'];
+export const providerFields=['name','category','description','address','phone','whatsapp','website','facebook','instagram','image','serviceArea','visitorNote','mapId','coordinate','marketPriority'];
 const text=(v,max)=>typeof v==='string'?v.trim().slice(0,max):'';
 export const validKey=v=>typeof v==='string'&&/^[a-zA-Z0-9_-]{1,100}$/.test(v);
 function assert(ok,message){if(!ok)throw Object.assign(Error(message),{status:400});}
@@ -12,6 +12,7 @@ export function validateProviderFields(raw){
  assert(raw&&typeof raw==='object'&&!Array.isArray(raw),'راجع بيانات مقدم الخدمة.');assert(Object.keys(raw).every(k=>providerFields.includes(k)),'حقل غير مسموح بتعديله.');const out={};
  for(const [key,value] of Object.entries(raw)){
   if(key==='coordinate'){assert(value===null||Array.isArray(value)&&value.length===2&&value.every(Number.isFinite)&&value[0]>=30&&value[0]<=33&&value[1]>=29&&value[1]<=31,'راجع إحداثيات المكان.');out[key]=value;continue;}
+  if(key==='marketPriority'){const n=number(value);assert(Number.isInteger(n)&&n>=0&&n<=99999,'راجع أولوية الظهور.');out[key]=n;continue;}
   assert(typeof value==='string','راجع نوع البيانات.');out[key]=text(value,key==='description'?2500:key==='visitorNote'?600:key==='name'?100:600);
   if(['website','facebook','instagram'].includes(key))assert(!value||publicLink(value,key==='website'?'website':key),'استخدم رابط https صحيح.');
   if(key==='image')assert(!value||safeProductImage(value),'راجع رابط الصورة.');

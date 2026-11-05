@@ -19,15 +19,18 @@ export function createProviderHandler({admin=false,...options}={}){return async(
  const member=await authenticatedMember(req,{...options,admin});if(!member.ok)return reply(member.status,{error:member.status===403?'لوحة التحكم للأدمن فقط.':member.status===503?'تعذر التحقق من الحساب.':'سجّل دخولك عشان تكمل.'});
  try{
   const state=await readProviderState(member.db,options);
+  let analyticsByTarget=new Map();
+  if(admin){try{const report=await member.db.rpc('jowwa_admin_item_analytics',{p_days:30,p_event:null,p_query:null});for(const row of report.data?.items||[])analyticsByTarget.set(row.target,row);}catch{}}
+  const metricsFor=(provider,products)=>{const targets=new Set(['/place/'+provider.id,...products.map(x=>'/item/'+x.id),...state.menus.filter(x=>x.placeId===provider.id).map(x=>'/menu/'+x.id)]),sum=key=>[...targets].reduce((n,target)=>n+Number(analyticsByTarget.get(target)?.[key]||0),0),items=Object.fromEntries(products.map(x=>[x.id,analyticsByTarget.get('/item/'+x.id)||analyticsByTarget.get('/menu/'+x.id)||{}]));return {views:sum('views'),details:sum('details'),basket_adds:sum('basket_adds'),checkouts:sum('checkouts'),visitors:sum('visitors'),items};};
   if(req.method==='GET'){
    const id=req.query?.provider;
-   if(!id){if(!admin)return reply(400,{error:'اختار مقدم الخدمة.'});return reply(200,{providers:state.providers.filter(p=>!p.directoryGroup).map(p=>({id:p.id,name:p.name,category:p.category,archived:p._archived,updatedAt:p._updatedAt,productCount:catalogForProvider(p,state.menus,state.overrides).length}))});}
+   if(!id){if(!admin)return reply(400,{error:'اختار مقدم الخدمة.'});return reply(200,{providers:state.providers.filter(p=>!p.directoryGroup).map(p=>{const products=catalogForProvider(p,state.menus,state.overrides);return {id:p.id,name:p.name,category:p.category,archived:p._archived,updatedAt:p._updatedAt,productCount:products.length,analytics:metricsFor(p,products)};})});}
    if(!validKey(id))return reply(400,{error:'مقدم الخدمة غير صحيح.'});const provider=state.providers.find(p=>p.id===id);
    if(!provider||provider._archived&&!admin)return reply(404,{error:'مقدم الخدمة غير متاح.'});
    let orderGate={canOrder:false,reason:'unclaimed'},products=catalogForProvider(provider,state.menus,state.overrides);
    if(!admin){const linked=await linkedProviderCatalog(member.db,id);orderGate=linked.gate;products=[...products,...linked.products];}
    else for(const row of state.overrides.filter(r=>r.archived&&r.data?.providerId===id)){try{products.push({...validateProduct(row.data.fields),id:row.data.productId,providerId:id,sourceKind:'admin-catalog',archived:true});}catch{}}
-   return reply(200,{provider,products,orderGate,admin,versions:admin?Object.fromEntries(state.overrides.filter(x=>x.data?.providerId===id).map(x=>[x.data.productId,x.updated_at])):undefined});
+   return reply(200,{provider,products,orderGate,admin,analytics:metricsFor(provider,products),versions:admin?Object.fromEntries(state.overrides.filter(x=>x.data?.providerId===id).map(x=>[x.data.productId,x.updated_at])):undefined});
   }
   let body;try{body=typeof req.body==='string'?JSON.parse(req.body):req.body;}catch{fail('بيانات غير صحيحة.');}
   if(!body||typeof body!=='object'||Array.isArray(body)||JSON.stringify(body).length>24000)fail('حجم البيانات أكبر من المسموح.');
