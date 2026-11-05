@@ -27,7 +27,7 @@ export function createProviderHandler({admin=false,...options}={}){return async(
    if(!id){if(!admin)return reply(400,{error:'اختار مقدم الخدمة.'});return reply(200,{providers:state.providers.filter(p=>!p.directoryGroup).map(p=>{const products=catalogForProvider(p,state.menus,state.overrides);return {id:p.id,name:p.name,category:p.category,archived:p._archived,updatedAt:p._updatedAt,productCount:products.length,analytics:metricsFor(p,products)};})});}
    if(!validKey(id))return reply(400,{error:'مقدم الخدمة غير صحيح.'});const provider=state.providers.find(p=>p.id===id);
    if(!provider||provider._archived&&!admin)return reply(404,{error:'مقدم الخدمة غير متاح.'});
-   let orderGate={canOrder:false,reason:'unclaimed'},products=catalogForProvider(provider,state.menus,state.overrides),readiness={claimStatus:'missing',ownerLinked:false,managedProducts:0,approvedProducts:0,orderGate,updatedAt:provider._updatedAt||null,nextAction:'أضف سجل المطالبة للمالك ثم اطلب منه تأكيد الرقم.'};
+   let orderGate={canOrder:false,reason:'unclaimed'},orderSettings=null,products=catalogForProvider(provider,state.menus,state.overrides),readiness={claimStatus:'missing',ownerLinked:false,managedProducts:0,approvedProducts:0,orderGate,updatedAt:provider._updatedAt||null,nextAction:'أضف سجل المطالبة للمالك ثم اطلب منه تأكيد الرقم.'};
    if(!admin){const linked=await linkedProviderCatalog(member.db,id);orderGate=linked.gate;products=[...products,...linked.products];}
    else {
     for(const row of state.overrides.filter(r=>r.archived&&r.data?.providerId===id)){try{products.push({...validateProduct(row.data.fields),id:row.data.productId,providerId:id,sourceKind:'admin-catalog',archived:true});}catch{}}
@@ -40,6 +40,8 @@ export function createProviderHandler({admin=false,...options}={}){return async(
       if(claim.sellerId&&claim.id){
        const gateResult=await member.db.rpc('jowwa_order_gate',{p_seller_id:claim.sellerId,p_service_claim_id:claim.id});
        gate=gateResult.error?gate:gateResult.data||gate;
+       const settingsResult=await member.db.rpc('jowwa_order_settings',{p_seller_id:claim.sellerId});
+       orderSettings=(settingsResult.data?.businesses||[]).find(x=>(x.serviceClaimId||null)===(claim.id||null))?.settings||null;
        const rows=await member.db.from('listings').select('id,title,status,archived,available').eq('seller_id',claim.sellerId).eq('service_claim_id',claim.id).limit(500);
        managed=rows.error?[]:rows.data||[];
       }
@@ -48,7 +50,7 @@ export function createProviderHandler({admin=false,...options}={}){return async(
      }
     } catch {}
    }
-   return reply(200,{provider,products,orderGate,readiness,admin,analytics:metricsFor(provider,products),versions:admin?Object.fromEntries(state.overrides.filter(x=>x.data?.providerId===id).map(x=>[x.data.productId,x.updated_at])):undefined});
+   return reply(200,{provider,products,orderGate,orderSettings,readiness,admin,analytics:metricsFor(provider,products),versions:admin?Object.fromEntries(state.overrides.filter(x=>x.data?.providerId===id).map(x=>[x.data.productId,x.updated_at])):undefined});
   }
   let body;try{body=typeof req.body==='string'?JSON.parse(req.body):req.body;}catch{fail('بيانات غير صحيحة.');}
   if(!body||typeof body!=='object'||Array.isArray(body)||JSON.stringify(body).length>24000)fail('حجم البيانات أكبر من المسموح.');
@@ -73,6 +75,14 @@ export function createProviderHandler({admin=false,...options}={}){return async(
    const fields=validateProduct(body.fields),data={providerId:provider.id,productId:id,fields,editor:'admin',catalogVersion:1};
    const saved=await member.db.rpc('jowwa_admin_save',{target_type:'settings',target_id:catalogOverrideKey(provider.id,id),fields:{data,archived:body.archived===true}});if(saved.error)throw saved.error;
    return reply(200,{providerId:provider.id,productId:id,saved:true,savedAt:new Date().toISOString()});
+  }
+  if(body.action==='save-order-settings'){
+   if(!validKey(body.providerId)||!Number.isSafeInteger(body.expectedVersion)||body.expectedVersion<0||typeof body.acceptingOrders!=='boolean'||typeof body.paused!=='boolean'||!body.hours||typeof body.hours!=='object'||Array.isArray(body.hours))fail('راجع حالة الاستقبال والمواعيد.');
+   const claims=(await member.db.rpc('jowwa_admin_service_claims')).data?.claims||[],claim=claims.find(x=>x.directoryId===body.providerId);
+   if(!claim?.sellerId||!claim.id||claim.status!=='approved')fail('لا يمكن تفعيل الطلبات قبل اعتماد ملكية النشاط.',403);
+   const saved=await member.db.rpc('jowwa_admin_save_order_settings',{p_seller_id:claim.sellerId,p_service_claim_id:claim.id,expected_version:body.expectedVersion,p_hours:body.hours,p_accepting:body.acceptingOrders,p_paused:body.paused});
+   if(saved.error)throw saved.error;
+   return reply(200,{providerId:body.providerId,saved:true,savedAt:new Date().toISOString(),settings:(saved.data?.businesses||[]).find(x=>(x.serviceClaimId||null)===(claim.id||null))?.settings||null});
   }
   fail('الإجراء غير مدعوم.');
  }catch(error){if(error?.code==='42501')return reply(403,{error:'مش عندك صلاحية للتعديل.'});return reply(error.status||503,{error:error.status?error.message:'تعذر الحفظ أو التحميل. حاول مرة تانية.'});}

@@ -10,4 +10,11 @@ assert.match(ui,/إيقاف النشاط/);assert.match(ui,/تشغيل النش�
  const provider=await readFile(new URL('../src/provider-admin.js',import.meta.url),'utf8');
  assert.match(provider,/providerAdminWired/);assert.match(provider,/classList\.remove\('active'\)/);assert.match(provider,/b\.classList\.add\('active'\)/);
  assert.match(provider,/data-provider-priority/);assert.match(provider,/provider-priority-form/);assert.match(provider,/حفظ أولوية الظهور/);
+ assert.match(provider,/data-provider-orders/);assert.match(provider,/save-order-settings/);assert.match(provider,/تفعيل استقبال الطلبات/);
+ const apiCatalog=await readFile(new URL('../src/server-provider-catalog.mjs',import.meta.url),'utf8');
+ assert.match(apiCatalog,/save-order-settings/);assert.match(apiCatalog,/jowwa_admin_save_order_settings/);
+ const priority=await readFile(new URL('../src/market.js',import.meta.url),'utf8');
+ assert.match(priority,/Number\(b\.marketPriority\)/);
+ const sql=await readFile(new URL('../supabase/026_admin_order_controls.sql',import.meta.url),'utf8');
+ assert.match(sql,/jowwa_admin_save_order_settings/);assert.match(sql,/jowwa_is_admin/);assert.match(sql,/order_settings_audit/);
 });
