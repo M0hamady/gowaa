@@ -37,6 +37,16 @@ export function expectedCash(s,shiftId){const shift=s.shifts[shiftId];requireTha
 export function location(s,id){key(id);const p=s.locations[id];requireThat(p,'LOCATION','اختار نقطة معروفة أو أضف عنوانًا يدويًا من شاشة الأماكن.');return p;}
 export function taskVisible(s,actorId,t){if(isAdmin(s,actorId)||t.requesterId===actorId||t.courierId===actorId||t.customerId===actorId||t.shopId&&canShop(s,actorId,t.shopId,'dispatch'))return true;if(t.status!=='open')return false;const role=t.kind==='ride'?'driver':'courier';if(!approved(s,actorId,role)||!s.availability[actorId]?.available)return false;if(t.visibility==='public')return s.availability[actorId]?.public===true;return Object.values(s.courierLinks).some(l=>l.shopId===t.shopId&&l.courierId===actorId&&l.status==='accepted');}
 export function taskParty(s,actorId,t){return isAdmin(s,actorId)||actorId===t.requesterId||actorId===t.customerId||actorId===t.courierId||t.shopId&&canShop(s,actorId,t.shopId,'dispatch');}
+export function deliverySetupQuote(s,shopId,destinationId){
+ const shop=s.shops[shopId];requireThat(shop&&!shop.archived,'SHOP','النشاط غير متاح.');const dest=location(s,destinationId),area=dest.area||'غير محدد';
+ const amount=money(shop.areaFees?.[area]??shop.suggestedFee??0),mode=['jowwa','private','hybrid'].includes(shop.deliverySourceMode)?shop.deliverySourceMode:'hybrid';
+ const defaultVisibility=mode==='private'?'private':mode==='jowwa'?'public':Object.values(s.courierLinks||{}).some(l=>l.shopId===shopId&&l.status==='accepted')?'private':'public';
+ return Object.freeze({area,amount,mode,defaultVisibility,label:mode==='private'?'طيارين المحل':mode==='jowwa'?'طيارين جوه':'المحل أو جوه'});
+}
+export function allowedDeliveryVisibility(shop,visibility){
+ const mode=['jowwa','private','hybrid'].includes(shop?.deliverySourceMode)?shop.deliverySourceMode:'hybrid';
+ return mode==='hybrid'||mode==='jowwa'&&visibility==='public'||mode==='private'&&visibility==='private';
+}
 export function suggestedFare(s,fromId,toId,kind='parcel'){const a=location(s,fromId).coordinate,b=location(s,toId).coordinate,rad=n=>n*Math.PI/180;const dLat=rad(b[1]-a[1]),dLon=rad(b[0]-a[0]);const h=Math.sin(dLat/2)**2+Math.cos(rad(a[1]))*Math.cos(rad(b[1]))*Math.sin(dLon/2)**2;const km=6371*2*Math.atan2(Math.sqrt(h),Math.sqrt(1-h));const r=s.settings.rates[kind];return {amount:Math.round((r.base+km*r.perKm)/100)*100,roughKm:Math.round(km*10)/10,estimated:true,label:'اقتراح تجريبي حسب المسافة التقريبية؛ قابل للتعديل'};}
 export function quote(s,shopId,lines,{promoId=null,benefitCode='',customerId=null,deliveryFee=0,fulfillment='pickup',now=Date.now()}={}){
  const shop=s.shops[shopId];requireThat(shop&&!shop.archived,'SHOP','النشاط غير متاح.');requireThat(Array.isArray(lines)&&lines.length>0&&lines.length<=40,'LINES','اختار من ١ إلى ٤٠ صنف.');money(deliveryFee);
