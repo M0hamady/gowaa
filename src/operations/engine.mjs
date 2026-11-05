@@ -8,6 +8,7 @@ import {offlineCommand,offlineProjection} from './offline.mjs';
 import {restaurantReports} from './reports.mjs';
 import {beforeOperation,afterOperation,targetVisible} from './guards.mjs';
 import {emitOperationMessages} from './messages.mjs';
+import {performanceCommand,kpiFor} from './performance.mjs';
 export {OpsError};
 /** Return a new state only after every validator succeeds; failed commands have zero effects. */
 export function execute(state,actorId,command,{now=Date.now()}={}){
@@ -22,16 +23,16 @@ export function execute(state,actorId,command,{now=Date.now()}={}){
  int(command.expectedRevision,0,Number.MAX_SAFE_INTEGER);ok(command.expectedRevision===state.revision,'STALE','في تحديث جديد؛ راجع الشاشة قبل إعادة المحاولة.',409);
  const s=structuredClone(state),at=new Date(now).toISOString(),ctx={s,actorId,type,body,at,now};
  beforeOperation(ctx);
- const result=businessCommand(ctx)||offlineCommand(ctx)||inventoryCommand(ctx)||restaurantCommand(ctx)||orderCommand(ctx)||deliveryCommand(ctx);
+ const result=businessCommand(ctx)||offlineCommand(ctx)||inventoryCommand(ctx)||restaurantCommand(ctx)||orderCommand(ctx)||deliveryCommand(ctx)||performanceCommand(ctx);
  ok(result,'COMMAND','الإجراء غير معروف.');afterOperation(ctx,result);emitOperationMessages(ctx,result);for(const m of Object.values(s.team||{}))if(m.userId===actorId&&m.status==='active')m.lastActiveAt=at;assertInvariants(s);s.revision++;s.updatedAt=at;
  s.events.push({id:'event-'+s.revision,revision:s.revision,actorId,type,entityId:result.id||null,at});
  const reply={...result,revision:s.revision};s.processed[dedupeKey]={signature,result:reply};return {state:s,result:reply,replayed:false};
 }
 /** The deployed server returns only this projection; never the whole workspace/processed requests. */
-export function project(state,actorId,{now=Date.now()}={}){
+function projectBase(state,actorId,{now=Date.now()}={}){
  const s=state,user=s.users[actorId];ok(user?.verified,'AUTH','الحساب غير متاح.',401);const admin=isAdmin(s,actorId);
  const workerRoles=Object.values(s.team||{}).filter(m=>m.userId===actorId&&m.status==='active').map(m=>m.role);
- const limitedRetail=workerRoles.some(r=>['waiter','kitchen','floor_manager','cashier'].includes(r));
+ const limitedRetail=workerRoles.some(r=>['waiter','floor_worker','kitchen','floor_manager','cashier'].includes(r));
  const kitchenOnly=workerRoles.includes('kitchen')&&!admin;
  const shopIds=Object.values(s.shops).filter(sh=>canShop(s,actorId,sh.id,'orders')||canShop(s,actorId,sh.id,'catalog')||canShop(s,actorId,sh.id,'cash')).map(sh=>sh.id);
  const cashShops=Object.values(s.shops).filter(sh=>canShop(s,actorId,sh.id,'cash')).map(sh=>sh.id);
@@ -67,3 +68,4 @@ export function project(state,actorId,{now=Date.now()}={}){
   people:Object.values(s.users).filter(u=>admin||relatedUsers.has(u.id)).map(u=>({id:u.id,name:u.name})),updatedAt:s.updatedAt};
 }
 export function rolesFor(s,id){return ['customer',...['merchant','service_provider','courier','driver'].filter(r=>approved(s,id,r)),...Object.values(s.team||{}).filter(x=>x.userId===id&&x.status==='active').map(x=>x.role),...(isAdmin(s,id)?['admin']:[])];}
+export function project(state,actorId,options={}){const view=projectBase(state,actorId,options);const own=Object.values(state.orders).filter(o=>o.customerId===actorId);view.accountStats={completed:own.filter(o=>o.status==='completed').length};view.performance=kpiFor(state,actorId);return view;}

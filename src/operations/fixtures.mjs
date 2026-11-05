@@ -1,6 +1,6 @@
 import {calendarMonthEnd} from './core.mjs';
 export const personas=[
- ['customer','عميل التجربة','customer'],['owner','صاحب المحل','merchant'],['manager','مدير المحل','shop_manager'],['floorManager','مدير الصالة','floor_manager'],['waiter','عامل الصالة','waiter'],['cashier','موظف الكاشير','cashier'],['kitchen','عامل المطبخ','kitchen'],['courier','مندوب المنتجات','courier'],['driver','سائق أفراد','driver'],['admin','إدارة جوه','admin'],['applicant','حساب جديد','customer'],['courier2','مندوب آخر','courier'],['otherOwner','صاحب نشاط آخر','merchant']
+ ['customer','عميل التجربة','customer'],['owner','صاحب المحل','merchant'],['manager','مدير المحل','shop_manager'],['floorManager','مدير الصالة','floor_manager'],['waiter','عامل الصالة','waiter'],['floorWorker','عامل الصالة (تجربة قديمة)','floor_worker'],['cashier','موظف الكاشير','cashier'],['kitchen','عامل المطبخ','kitchen'],['courier','مندوب المنتجات','courier'],['driver','سائق أفراد','driver'],['admin','إدارة جوه','admin'],['applicant','حساب جديد','customer'],['courier2','مندوب آخر','courier'],['otherOwner','صاحب نشاط آخر','merchant']
 ];
 /** All records are synthetic. No fixture phone is ever used for messaging or dialing. */
 export function seedState(now=Date.now()){
@@ -42,9 +42,10 @@ export function seedState(now=Date.now()){
  s.team['manager-member']={id:'manager-member',userId:'manager',shopId:'shop-a',role:'shop_manager',permissions:[],grantedPermissions:['manage_staff'],deniedPermissions:['manage_managers','manage_settings'],status:'active',internalCode:'MGR-01',pinFingerprint:'testpin-fixture',createdAt:at,lastActiveAt:null,version:1,inviterId:'owner'};
  s.team['floor-manager-member']={id:'floor-manager-member',userId:'floorManager',shopId:'shop-a',role:'floor_manager',permissions:[],grantedPermissions:[],deniedPermissions:[],status:'active',internalCode:'FLOOR-01',pinFingerprint:'testpin-fixture',createdAt:at,lastActiveAt:null,version:1,inviterId:'owner'};
  s.team['waiter-member']={id:'waiter-member',userId:'waiter',shopId:'shop-a',role:'waiter',permissions:[],grantedPermissions:[],deniedPermissions:[],status:'active',internalCode:'WAIT-01',pinFingerprint:'testpin-fixture',createdAt:at,lastActiveAt:null,version:1,inviterId:'owner'};
+ s.team['floor-worker-member']={id:'floor-worker-member',userId:'floorWorker',shopId:'shop-a',role:'floor_worker',permissions:[],grantedPermissions:[],deniedPermissions:[],status:'active',internalCode:'FLOOR-W-01',pinFingerprint:'testpin-fixture',createdAt:at,lastActiveAt:null,version:1,inviterId:'owner'};
  s.team['cashier-member']={id:'cashier-member',userId:'cashier',shopId:'shop-a',role:'cashier',permissions:[],grantedPermissions:[],deniedPermissions:[],status:'active',internalCode:'CASH-01',pinFingerprint:'testpin-fixture',createdAt:at,lastActiveAt:null,version:1,inviterId:'owner'};
  s.team['kitchen-member']={id:'kitchen-member',userId:'kitchen',shopId:'shop-a',role:'kitchen',permissions:[],grantedPermissions:[],deniedPermissions:[],status:'active',internalCode:'KIT-01',pinFingerprint:'testpin-fixture',createdAt:at,lastActiveAt:null,version:1,inviterId:'owner'};
  s.courierLinks['private-courier']={id:'private-courier',shopId:'shop-a',name:users.courier.name,phone:users.courier.phone,courierId:'courier',visibility:'private',status:'accepted',version:1,inviterId:'owner'};
- for(const id of ['courier','courier2','driver'])s.availability[id]={available:true,public:id!=='courier2',updatedAt:at};
+ for(const id of ['courier','courier2','driver'])s.availability[id]={available:true,public:id!=='courier2',maxOrders:4,updatedAt:at};s.tables=Object.fromEntries(Object.values(s.restaurantTables).map(t=>[t.id,{...t,status:t.status==='empty'?'available':t.status,orderId:null}]));
  return s;
 }

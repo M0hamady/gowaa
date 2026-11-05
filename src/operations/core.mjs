@@ -21,17 +21,18 @@ export function testPinFingerprint(pin,shopId='test'){const value=String(pin||''
 export function calendarMonthEnd(iso){const d=new Date(iso);requireThat(Number.isFinite(+d),'DATE','تاريخ غير صحيح.');const day=d.getUTCDate();d.setUTCDate(1);d.setUTCMonth(d.getUTCMonth()+1);const end=new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth()+1,0)).getUTCDate();d.setUTCDate(Math.min(day,end));return d.toISOString();}
 export const roles=['merchant','service_provider','courier','driver'];
 export const activeTaskStates=['assigned','at_pickup','picked_up','en_route','arrived','awaiting_receipt','issue'];
-export const staffRoles=['shop_manager','floor_manager','waiter','cashier','kitchen'];
+export const maxTasksPerRoute=4;
+export const staffRoles=['shop_manager','floor_manager','waiter','floor_worker','cashier','kitchen'];
 export const staffPermissions=['view_orders','create_pos_order','edit_open_order','send_to_kitchen','view_kitchen','update_kitchen_status','take_payment','refund_payment','manage_tables','move_table_order','merge_checks','manage_products','manage_recipes','view_inventory','adjust_inventory','record_waste','view_reports','approve_discount','manage_staff','manage_settings','manage_managers'];
 export const rolePermissionDefaults=Object.freeze({
  shop_manager:['view_orders','create_pos_order','edit_open_order','send_to_kitchen','view_kitchen','update_kitchen_status','take_payment','refund_payment','manage_tables','move_table_order','merge_checks','manage_products','manage_recipes','view_inventory','adjust_inventory','record_waste','view_reports','approve_discount'],
  floor_manager:['view_orders','edit_open_order','send_to_kitchen','manage_tables','move_table_order','merge_checks','approve_discount'],
- waiter:['view_orders','edit_open_order','send_to_kitchen'],
+ waiter:['view_orders','edit_open_order','send_to_kitchen'],floor_worker:['view_orders','create_pos_order','edit_open_order','send_to_kitchen'],
  cashier:['view_orders','create_pos_order','edit_open_order','send_to_kitchen','take_payment','refund_payment'],
  kitchen:['view_kitchen','update_kitchen_status','view_inventory','record_waste']
 });
 export const permissions=staffPermissions;
-const legacyPermissionMap={catalog:'manage_products',orders:'view_orders',cash:'create_pos_order',dispatch:'view_orders',reports:'view_reports'};
+const legacyPermissionMap={catalog:'manage_products',orders:'view_orders',cash:'create_pos_order',dispatch:'view_orders',reports:'view_reports',floor:'edit_open_order'};
 export function employeeMembership(s,id,shopId){return Object.values(s.team||{}).find(m=>m.shopId===shopId&&m.userId===id&&m.status==='active');}
 export function shopPermissionSet(s,id,shopId){
  const shop=s.shops?.[shopId];if(!shop)return new Set();if(isAdmin(s,id)||shop.ownerId===id)return new Set(staffPermissions);
@@ -72,7 +73,28 @@ export function allowedDeliveryVisibility(shop,visibility){
  const mode=['jowwa','private','hybrid'].includes(shop?.deliverySourceMode)?shop.deliverySourceMode:'hybrid';
  return mode==='hybrid'||mode==='jowwa'&&visibility==='public'||mode==='private'&&visibility==='private';
 }
+export function routeCompatible(s,base,next){
+ requireThat(base&&next&&base.kind==='parcel'&&next.kind==='parcel','ROUTE','الرحلة المجمعة للطلبات فقط.');
+ requireThat(base.toId!==next.toId||s.locations[base.toId]?.area===s.locations[next.toId]?.area,'ROUTE_AREA','طلبات الرحلة المجمعة لازم تكون في نفس النطاق.');
+ const active=Object.values(s.tasks).filter(t=>t.courierId===base.courierId&&activeTaskStates.includes(t.status)&&t.routeId===base.routeId),capacity=Math.min(maxTasksPerRoute,Math.max(1,s.availability[base.courierId]?.maxOrders||1));
+ requireThat(active.length<capacity,'ROUTE_FULL','الرحلة وصلت للحد الأقصى الذي حددته الإدارة لهذا الطيار.');
+ const distance=(a,b)=>{const rad=n=>n*Math.PI/180,dLat=rad(b[1]-a[1]),dLon=rad(b[0]-a[0]),h=Math.sin(dLat/2)**2+Math.cos(rad(a[1]))*Math.cos(rad(b[1]))*Math.sin(dLon/2)**2;return 6371*2*Math.atan2(Math.sqrt(h),Math.sqrt(1-h));};
+ requireThat(distance(s.locations[base.fromId].coordinate,s.locations[next.fromId].coordinate)<=5&&distance(s.locations[base.toId].coordinate,s.locations[next.toId].coordinate)<=5,'ROUTE_DISTANCE','نقاط الرحلة المجمعة بعيدة عن النطاق المسموح.');
+ return true;
+}
 export function suggestedFare(s,fromId,toId,kind='parcel'){const a=location(s,fromId).coordinate,b=location(s,toId).coordinate,rad=n=>n*Math.PI/180;const dLat=rad(b[1]-a[1]),dLon=rad(b[0]-a[0]);const h=Math.sin(dLat/2)**2+Math.cos(rad(a[1]))*Math.cos(rad(b[1]))*Math.sin(dLon/2)**2;const km=6371*2*Math.atan2(Math.sqrt(h),Math.sqrt(1-h));const r=s.settings.rates[kind];return {amount:Math.round((r.base+km*r.perKm)/100)*100,roughKm:Math.round(km*10)/10,estimated:true,label:'اقتراح تجريبي حسب المسافة التقريبية؛ قابل للتعديل'};}
+export function rebuildRoutePlan(s,routeId,now=Date.now()){
+ const rows=Object.values(s.tasks).filter(t=>t.routeId===routeId&&!['cancelled','delivered'].includes(t.status));if(!rows.length)return null;
+ const point=id=>location(s,id).coordinate,rad=n=>n*Math.PI/180;
+ const km=(a,b)=>{const dLat=rad(b[1]-a[1]),dLon=rad(b[0]-a[0]),h=Math.sin(dLat/2)**2+Math.cos(rad(a[1]))*Math.cos(rad(b[1]))*Math.sin(dLon/2)**2;return 6371*2*Math.atan2(Math.sqrt(h),Math.sqrt(1-h));};
+ const travel=(a,b)=>Math.max(3,Math.ceil(km(a,b)/25*60)+3),pickups=rows.slice().sort((a,b)=>(a.routePosition||0)-(b.routePosition||0));
+ let cursor=point(pickups[0].fromId),minutes=0;
+ for(let i=0;i<pickups.length;i++){const t=pickups[i];minutes+=travel(cursor,point(t.fromId));t.routePickupPosition=i+1;t.routePickupEtaAt=new Date(now+minutes*60000).toISOString();minutes+=4;cursor=point(t.fromId);}
+ const deliveries=[],left=rows.slice();while(left.length){let pick=0,best=Infinity;for(let i=0;i<left.length;i++){const d=km(cursor,point(left[i].toId));if(d<best){best=d;pick=i;}}const t=left.splice(pick,1)[0];minutes+=travel(cursor,point(t.toId));t.routeDeliveryPosition=deliveries.length+1;t.routeDeliveryEtaAt=new Date(now+minutes*60000).toISOString();minutes+=3;cursor=point(t.toId);deliveries.push(t);}
+ const buffer=Math.max(10,Math.ceil(minutes*.2)),stops=[...pickups.map(t=>({taskId:t.id,type:'pickup',position:t.routePickupPosition,at:t.routePickupEtaAt})),...deliveries.map(t=>({taskId:t.id,type:'delivery',position:t.routeDeliveryPosition,at:t.routeDeliveryEtaAt}))];
+ for(const t of rows){t.routeBufferMinutes=buffer;t.routePlanAt=new Date(now).toISOString();t.routePlan={routeId,stops,bufferMinutes:buffer,totalMinutes:minutes+buffer};}
+ return {routeId,stops,bufferMinutes:buffer,totalMinutes:minutes+buffer};
+}
 export function quote(s,shopId,lines,{promoId=null,benefitCode='',customerId=null,deliveryFee=0,fulfillment='pickup',now=Date.now()}={}){
  const shop=s.shops[shopId];requireThat(shop&&!shop.archived,'SHOP','النشاط غير متاح.');requireThat(Array.isArray(lines)&&lines.length>0&&lines.length<=40,'LINES','اختار من ١ إلى ٤٠ صنف.');money(deliveryFee);
  const consolidated=new Map();for(const l of lines){key(l.productId);const quantity=int(l.quantity,1,999),variantId=l.variantId?key(l.variantId):'';const k=l.productId+':'+variantId;const old=consolidated.get(k);consolidated.set(k,{productId:l.productId,variantId,quantity:quantity+(old?.quantity||0)});}
@@ -100,6 +122,6 @@ export function assertInvariants(s){
  for(const p of Object.values(s.products)){requireThat(p.stock===null||Number.isSafeInteger(p.stock)&&p.stock>=0,'INVARIANT','رصيد مخزون غير صحيح.');requireThat(s.shops[p.shopId],'INVARIANT','منتج بدون محل.');}
  for(const e of s.ledger){requireThat(Number.isSafeInteger(e.amount)&&e.amount>0&&e.entries.length===2&&e.entries.reduce((n,l)=>n+l.delta,0)===0,'INVARIANT','قيد مالي غير متزن.');}
  for(const o of Object.values(s.orders)){const paid=paidNet(s,o.id);requireThat(paid>=0&&paid<=o.total,'INVARIANT','تحصيل الطلب غير متزن.');}
- const busy=new Set();for(const t of Object.values(s.tasks)){if(t.courierId&&activeTaskStates.includes(t.status)){requireThat(!busy.has(t.courierId),'INVARIANT','المندوب مرتبط بمهمتين نشطتين.');busy.add(t.courierId);}}
+ const busy=new Map();for(const t of Object.values(s.tasks)){if(t.courierId&&activeTaskStates.includes(t.status)){const slot=t.courierId+':'+(t.routeId||t.id),count=(busy.get(slot)||0)+1,capacity=t.routeId?Math.min(maxTasksPerRoute,Math.max(1,s.availability[t.courierId]?.maxOrders||1)):1;requireThat(count<=capacity,'INVARIANT','المندوب مرتبط بعدد مهام أكبر من سعة رحلته.');busy.set(slot,count);}}
  return true;
 }
