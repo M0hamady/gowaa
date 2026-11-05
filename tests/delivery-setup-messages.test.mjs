@@ -71,3 +71,36 @@ test('orders and status changes notify both the customer and the merchant with a
  w.run('owner','order.transition',{id,version:w.s.orders[id].version,state:'accepted'});
  const accepted=project(w.s,'customer').messages.at(-1);assert.match(accepted.title,/قبل طلبك/);assert.match(accepted.nextAction,/التجهيز/);
 });
+
+test('admin starts with exactly Yasmin and Narges compounds and can add/archive compounds and buildings',()=>{
+ const w=world(),initial=Object.values(w.s.settings.compounds).filter(x=>x.active).map(x=>x.name).sort();
+ assert.deepEqual(initial,['النرجس','الياسمين'].sort());
+ w.reject('owner','compound.save',{name:'كمبوند ثالث',active:true},'FORBIDDEN');
+ const compound=w.run('admin','compound.save',{name:'كمبوند ثالث',active:true}).id;
+ assert.equal(w.s.settings.compounds[compound].active,true);
+ const building=w.run('admin','building.save',{compoundId:compound,name:'عمارة 12',locationId:'gate',active:true}).id;
+ assert.equal(w.s.compoundBuildings[building].compoundId,compound);
+ w.run('admin','building.archive',{id:building,version:w.s.compoundBuildings[building].version});
+ assert.equal(w.s.compoundBuildings[building].active,false);
+ w.run('admin','compound.archive',{id:compound,version:w.s.settings.compounds[compound].version});
+ assert.equal(w.s.settings.compounds[compound].active,false);
+});
+
+test('optional apartment is saved privately to the customer and reused on later orders',()=>{
+ const w=world(),sh=w.s.shops['shop-a'];saveShop(w,{deliveryPolicy:'customer',compoundFees:{'compound-yasmin':2500,'compound-narges':3500}});
+ const lines=[{productId:'meal',quantity:1}],delivery=deliverySetupQuote(w.s,'shop-a','building-yasmin-test'),expectedTotal=quote(w.s,'shop-a',lines,{fulfillment:'delivery',customerId:'customer',deliveryFee:delivery.amount,now:NOW}).total;
+ const first=w.run('customer','order.create',{shopId:'shop-a',fulfillment:'delivery',compoundId:'compound-yasmin',buildingId:'building-yasmin-test',apartment:'14B',lines,expectedTotal}).id;
+ assert.equal(w.s.orders[first].apartmentNumber,'14B');assert.equal(w.s.orders[first].deliveryBuildingName,'عمارة تجريبية — الياسمين');
+ const rows=Object.values(w.s.userResidences);assert.equal(rows.length,1);assert.equal(rows[0].userId,'customer');assert.equal(rows[0].apartment,'14B');
+ assert.equal(project(w.s,'customer').residences.length,1);assert.equal(project(w.s,'owner').residences.length,0);
+ const second=w.run('customer','order.create',{shopId:'shop-a',fulfillment:'delivery',compoundId:'compound-yasmin',buildingId:'building-yasmin-test',apartment:'14B',lines,expectedTotal}).id;
+ assert.equal(Object.values(w.s.userResidences).length,1);assert.equal(w.s.orders[second].residenceId,w.s.orders[first].residenceId);
+});
+
+test('apartment stays optional and inactive compounds or buildings cannot receive new delivery addresses',()=>{
+ const w=world(),lines=[{productId:'meal',quantity:1}],d=deliverySetupQuote(w.s,'shop-a','building-narges-test'),expectedTotal=quote(w.s,'shop-a',lines,{fulfillment:'delivery',customerId:'customer',deliveryFee:0,now:NOW}).total;
+ const id=w.run('customer','order.create',{shopId:'shop-a',fulfillment:'delivery',compoundId:'compound-narges',buildingId:'building-narges-test',apartment:'',lines,expectedTotal}).id;
+ assert.equal(w.s.orders[id].apartmentNumber,null);assert.equal(Object.values(w.s.userResidences).length,0);
+ w.run('admin','building.archive',{id:'building-narges-test',version:w.s.compoundBuildings['building-narges-test'].version});
+ assert.throws(()=>deliverySetupQuote(w.s,'shop-a','building-narges-test'),e=>e.code==='BUILDING');
+});
