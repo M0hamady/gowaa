@@ -1477,6 +1477,11 @@
     ],
     "schemaType": "Bakery",
     "menuUrl": "https://jowwa-kayan.vercel.app/menus/caramia/page-1.jpg",
-    "image": "/menus/caramia/photo-1.jpg"
+    "image": "/social/directory-caramia.png",
+    "cardPhotos": [
+      "/menus/caramia/photo-12.jpg",
+      "/menus/caramia/photo-1.jpg",
+      "/menus/caramia/photo-8.jpg"
+    ]
   }
 ]

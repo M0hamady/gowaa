@@ -1,3 +1,4 @@
+import {shareMeta,shareTags} from './share-meta.mjs';
 import {createClient} from '@supabase/supabase-js';
 import {MEMBER_COOKIE,safeReturnPath,verifiedMember} from '../public/member-core.js';
 import {esc} from '../public/market-core.js';
@@ -17,13 +18,13 @@ export async function authenticatedMember(req,{clientFactory=createClient,env=pr
  return {ok:true,db,user:data.user,token,admin:isAdmin};
  }catch{return {ok:false,status:503};}
 }
-export function memberPage(next='/'){
+export function memberPage(next='/',meta=null){
  const target=safeReturnPath(next);
- return '<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>كمّل مع جوه</title><link rel="stylesheet" href="/market.css"><link rel="stylesheet" href="/customer.css"><script type="module" src="/customer.js"></script></head><body data-member-page data-member-next="'+esc(target)+'"><main class="member-welcome"><a href="/"><img src="/icon.svg" alt="جوه" width="64" height="64"></a><h1>اختيارك محفوظ</h1><p>سجّل أو ادخل لحسابك، وهنكمّل من نفس المكان.</p><button class="primary" data-member-login>دخول / تسجيل</button><a href="/" class="secondary">رجوع للرئيسية</a><noscript>فعّل JavaScript لإكمال التسجيل.</noscript></main></body></html>';
+ return '<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">'+(meta?shareTags(meta):'<title>كمّل مع جوه</title>')+'<link rel="stylesheet" href="/market.css"><link rel="stylesheet" href="/customer.css"><script type="module" src="/customer.js"></script></head><body data-member-page data-member-next="'+esc(target)+'"><main class="member-welcome"><a href="/"><img src="/icon.svg" alt="جوه" width="64" height="64"></a><h1>اختيارك محفوظ</h1><p>سجّل أو ادخل لحسابك، وهنكمّل من نفس المكان.</p><button class="primary" data-member-login>دخول / تسجيل</button><a href="/" class="secondary">رجوع للرئيسية</a><noscript>فعّل JavaScript لإكمال التسجيل.</noscript></main></body></html>';
 }
 export async function requireMemberPage(req,res,next,options={}){
  noStore(res);const member=await authenticatedMember(req,options);if(member.ok){req.member=member;return true;}
- res.statusCode=member.status;res.setHeader('Content-Type','text/html; charset=utf-8');res.setHeader('X-Robots-Tag','noindex, nofollow');res.end(memberPage(next));return false;
+ res.statusCode=member.status;res.setHeader('Content-Type','text/html; charset=utf-8');res.setHeader('X-Robots-Tag','noindex, nofollow');let meta=null;try{meta=await shareMeta(safeReturnPath(next));}catch{}res.end(memberPage(next,meta));return false;
 }
 function sameOrigin(req){const origin=req.headers?.origin;if(!origin)return true;try{return new URL(origin).host===req.headers.host;}catch{return false;}}
 export function createMemberHandler(options={}){return async(req,res)=>{
