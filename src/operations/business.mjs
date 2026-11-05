@@ -26,12 +26,13 @@ export function businessCommand(c){
   row.status=b.decision;row.reviewNote=note;row.reviewerId=a;row.reviewedAt=at;bump(row);return {id:row.id,message:'قرار المراجعة اتحفظ.'};
  }
  case 'shop.save':{
-  only(b.fields,['name','category','address','locationId','description','accepting','deliveryPolicy','suggestedFee','prepMinutes','archived']);
+  only(b.fields,['name','category','address','locationId','description','accepting','deliveryPolicy','deliverySourceMode','areaFees','suggestedFee','prepMinutes','archived']);
   let shop=b.id?s.shops[key(b.id)]:null;if(b.id){requireShop(s,a,b.id,'catalog');checkVersion(shop,b.version);}
   else ok(approved(s,a,'merchant')||approved(s,a,'service_provider'),'ROLE','اعتماد النشاط مطلوب قبل إنشاء المحل.',403);
   const f=b.fields,name=text(f.name,2,100);ok(s.settings.categories.includes(f.category),'CATEGORY','اختار تصنيفًا عامًا معتمدًا.');ok(s.locations[f.locationId],'LOCATION','حدد نقطة النشاط.');
-  ok(['customer','shop'].includes(f.deliveryPolicy),'FEE','حدد مين بيتحمل التوصيل.');
-  const id=shop?.id||nextId(s,'shop');s.shops[id]={...shop,id,ownerId:shop?.ownerId||a,name,category:f.category,address:text(f.address,3,250),locationId:f.locationId,description:text(f.description||'',0,500),accepting:f.accepting===true,deliveryPolicy:f.deliveryPolicy,suggestedFee:money(f.suggestedFee),prepMinutes:int(f.prepMinutes,1,240),archived:f.archived===true,version:(shop?.version||0)+1};return {id,message:'بيانات النشاط اتحفظت.'};
+  ok(['customer','shop'].includes(f.deliveryPolicy),'FEE','حدد مين بيتحمل التوصيل.');ok(['jowwa','private','hybrid'].includes(f.deliverySourceMode),'DELIVERY_SOURCE','حدد هتعتمد على طيارين جوه أو طيارين المحل أو الاثنين.');
+  object(f.areaFees||{});const knownAreas=new Set(Object.values(s.locations).map(x=>x.area).filter(Boolean)),areaFees={};for(const[area,value]of Object.entries(f.areaFees||{})){ok(knownAreas.has(area),'DELIVERY_AREA','منطقة توصيل غير معروفة.');areaFees[area]=money(value);}ok(Object.keys(areaFees).length>0,'DELIVERY_AREA','حدد سعر توصيل افتراضي لمنطقة واحدة على الأقل.');
+  const id=shop?.id||nextId(s,'shop');s.shops[id]={...shop,id,ownerId:shop?.ownerId||a,name,category:f.category,address:text(f.address,3,250),locationId:f.locationId,description:text(f.description||'',0,500),accepting:f.accepting===true,deliveryPolicy:f.deliveryPolicy,deliverySourceMode:f.deliverySourceMode,areaFees,suggestedFee:money(f.suggestedFee),prepMinutes:int(f.prepMinutes,1,240),archived:f.archived===true,version:(shop?.version||0)+1};return {id,message:'بيانات النشاط والتوصيل اتحفظت.'};
  }
  case 'platform.category':{admin();const value=text(b.name,2,60);ok(!s.settings.categories.includes(value),'CATEGORY','التصنيف موجود.');s.settings.categories.push(value);return {id:value,message:'التصنيف العام اتضاف.'};}
  case 'fee.rule.save':{
