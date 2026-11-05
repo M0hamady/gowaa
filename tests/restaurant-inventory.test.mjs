@@ -41,7 +41,7 @@ test('manager can supply count and transfer stock with reasons while kitchen wor
 });
 
 test('approved recipe cost is based only on declared ingredient quantities and unit costs',()=>{
- const s=seedState(NOW),r=s.recipes['recipe-meal'];const cost=r.ingredients.reduce((n,x)=>n+x.quantity*s.kitchenItems[x.itemId].unitCost,0);assert.equal(cost,1120); // 500 bread + 450 chicken + 40 sauce + 30 veg + 150 pack
+ const s=seedState(NOW),r=s.recipes['recipe-meal'];const cost=r.ingredients.reduce((n,x)=>n+x.quantity*s.kitchenItems[x.itemId].unitCost,0);assert.equal(cost,1170); // 500 bread + 450 chicken + 40 sauce + 30 veg + 150 pack
 });
 
 test('inventory projection is hidden from waiter and visible to kitchen/manager according to permissions',()=>{
