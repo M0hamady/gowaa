@@ -96,7 +96,7 @@ export function restaurantCommand(c){
  default:return null;
  }
 }
-export function restaurantOrderVisible(s,a,o){const member=employeeMembership(s,a,o.shopId);if(s.users[a]?.internal&&!member)return false;if(member?.role==='waiter')return o.assignedStaffId===a;if(hasShopPermission(s,a,o.shopId,'view_orders')||hasShopPermission(s,a,o.shopId,'view_kitchen')||hasShopPermission(s,a,o.shopId,'take_payment'))return true;return o.assignedStaffId===a;}
+export function restaurantOrderVisible(s,a,o){const member=employeeMembership(s,a,o.shopId),hadMembership=Object.values(s.team||{}).some(m=>m.userId===a&&m.shopId===o.shopId);if(hadMembership&&!member)return false;if(member?.role==='waiter')return o.assignedStaffId===a;if(hasShopPermission(s,a,o.shopId,'view_orders')||hasShopPermission(s,a,o.shopId,'view_kitchen')||hasShopPermission(s,a,o.shopId,'take_payment'))return true;return o.assignedStaffId===a;}
 export function restaurantOrderProjection(s,a,o){
  const kitchenOnly=hasShopPermission(s,a,o.shopId,'view_kitchen')&&!hasShopPermission(s,a,o.shopId,'view_orders');
  if(kitchenOnly)return{id:o.id,queue:o.queue,shopId:o.shopId,mode:o.mode,tableId:o.tableId,status:o.status,assignedStaffId:o.assignedStaffId,createdAt:o.createdAt,sentAt:o.sentAt,lines:o.lines.map(l=>({id:l.id,title:l.title,quantity:l.quantity,notes:l.notes,kitchenStatus:l.kitchenStatus,sentAt:l.sentAt,readyAt:l.readyAt,servedAt:l.servedAt})),version:o.version};
