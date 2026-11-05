@@ -18,4 +18,5 @@ test('confirmed food provider is promoted with ownership and offerings', () => {
   assert.deepEqual(lead.userReportedOfferings, ['مشويات', 'كريبات', 'شاورما سوري']);
   assert.equal(lead.businessOwnerVerified, true);
   assert.match(ui, /تم تأكيد الخدمة/);
+  assert.match(ui, /تفاصيل النشاط/);
 });
