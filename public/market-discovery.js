@@ -1,5 +1,6 @@
 import {activePrice,categories,digits,publicLink} from './market-core.js';
 import {localMenuImage} from './menu-source.js';
+import {AVAILABILITY} from './provider-catalog-core.js';
 
 export const categoryIcons={food:'store',grocery:'bag',home:'building',fashion:'bag',electronics:'grid',care:'heart',transport:'car',education:'school',nursery:'heart',health:'heart',office:'building',other:'grid'};
 export const confirmedProviderPlaces=[{id:'directory-guide-food-location',name:'Food Location',category:'مطاعم',address:'كيان سيتي — العنوان التفصيلي يحدده صاحب النشاط',phone:'01033138856',whatsapp:'01033138856',ownerAccountPhone:'201033751633',description:'مطعم مؤكد على جوه يقدم مشويات وكريبات وشاورما سوري. اللوجو والمنيو من المادة المرفوعة، والأسعار والتوفر يراجعهما صاحب النشاط من حسابه.',status:'تم تأكيد مقدم الخدمة مع جوه؛ حساب الإدارة المستهدف 201033751633.',businessOwnerVerified:true,mapCategory:'restaurant',schemaType:'Restaurant',url:'/place/directory-guide-food-location',image:'/assets/market/food-location/logo.png'}];
@@ -22,7 +23,7 @@ export function listingFacts(item){
  const selected=liveVariants.length?liveVariants:variants,prices=selected.map(v=>amount(v.price)).filter(v=>v!==null);
  const base=item.price_mode==='inquiry'?null:item.price_mode==='free'?0:amount(activePrice(item));
  const price=variants.length?(prices.length?Math.min(...prices):null):base;
- return {price,range:prices.length>1&&Math.min(...prices)!==Math.max(...prices),available,offer:!variants.length&&base!==null&&base<Number(item.price),stock:available?'متاح حسب البائع':'غير متاح',kind:item.kind,district:item.sellers?.district||item.district||'other',source:'managed'};
+ return {price,range:prices.length>1&&Math.min(...prices)!==Math.max(...prices),available,offer:!variants.length&&base!==null&&base<Number(item.price),stock:available?(AVAILABILITY[item.availability_mode]||'متاح حسب البائع'):'غير متاح',kind:item.kind,district:item.sellers?.district||item.district||'other',source:'managed'};
 }
 export function normalizeDirectoryCatalog(payload){
  const seen=new Set();return (Array.isArray(payload?.items)?payload.items:[]).flatMap(v=>{

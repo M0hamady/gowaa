@@ -31,7 +31,7 @@ test('every migration already in production has a recognisable marker for safe a
  for(const name of Object.keys(manifest)){const sql=await readFile(new URL('../supabase/'+name+'.sql',import.meta.url),'utf8');assert.ok(markerOf(sql),name+' has no marker');}
 });
 
-test('worst case: empty ledger on a database that already has 001-020 -> adopt 001-020, apply 021-030 once',async()=>{
+test('worst case: empty ledger on a database that already has 001-020 -> adopt 001-020, apply every newer migration once',async()=>{
  const {markerOf}=await import('../scripts/migrate-guarded.mjs');
  const {freshDb,apply}=await import('./helpers/ops-db.mjs');
  const {readdir}=await import('node:fs/promises');
@@ -50,6 +50,6 @@ test('worst case: empty ledger on a database that already has 001-020 -> adopt 0
  for(const f of files){const name=f.slice(0,-4),sql=await readFile(new URL('../supabase/'+f,import.meta.url),'utf8');
   if(manifest[name]){assert.ok(await exists(markerOf(sql)),name+' marker missing');adopted.push(name);continue;}
   await apply(db,f);applied.push(name);}
- assert.equal(adopted.length,20);assert.deepEqual(applied.map(n=>n.slice(0,3)),['021','022','023','024','025','026','027','028','029','030']);
+ assert.equal(adopted.length,20);assert.deepEqual(applied,files.map(f=>f.slice(0,-4)).filter(n=>n.slice(0,3)>'020'));assert.ok(applied.length>=11);
  await db.close();
 });
