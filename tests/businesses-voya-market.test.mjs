@@ -26,3 +26,13 @@ test('businesses view reads live place overrides so admin priority reaches the p
   assert.match(ui, /Number\(b\.marketPriority\)/);
   assert.match(fs.readFileSync(new URL('../src/server-public-places.mjs', import.meta.url), 'utf8'), /site_content/);
 });
+
+test('shops tab includes sweets shops and any place with a menu (Caramia)', () => {
+  const src = ui.match(/selected=places\.filter\((p=>[\s\S]*?)\)\.sort\(/)[1];
+  const market = JSON.parse(fs.readFileSync(new URL('../public/data/market-directory.json', import.meta.url), 'utf8'));
+  const counts = market.items.reduce((m, x) => (x.placeId && (m[x.placeId] = (m[x.placeId] || 0) + 1), m), {});
+  const keep = new Function('counts', 'return ' + src)(counts);
+  const shown = places.filter(keep).map(p => p.id);
+  assert.ok(shown.includes('directory-caramia'));
+  for (const id of Object.keys(counts)) if (places.some(p => p.id === id)) assert.ok(shown.includes(id), id + ' has a menu but is missing from the shops tab');
+});

@@ -16,7 +16,7 @@ test('Caramia: place, 55 owner-provided menu rows, all kept by the catalog norma
 
 test('Caramia prices match the supplied menu',()=>{
  const price=t=>rows.find(r=>r.title===t)?.price;
- const expect={'قشطوطة مانجا':75,'قشطوطة بستاشيو':80,'ريد فلفت':65,'الهنة كيك':70,'الهنة بستاشيو':75,'تشيز كيك':70,'إكلير تراميسو':35,'إكلير توت':40,'إكلير بستاشيو':40,
+ const expect={'قشطوطة مانجا':75,'قشطوطة بستاشيو':80,'ريد فلفت':65,'هاني كيك':70,'هاني كيك بستاشيو':75,'تشيز كيك':70,'إكلير تراميسو':35,'إكلير توت':40,'إكلير بستاشيو':40,
   'سينابون كلاسيك':70,'إضافة صوص للسينابون':5,'إنجلش فانيليا كيك — القالب مقاس 1':90,'إنجلش جوز هند كيك — القالب مقاس 2':120,'كيكة سعادة فانيليا توت':40,'كيكة سعادة شوكليت نوتيلا':35,
   'ميني تارت كاستر':45,'ميني تارت بستاشيو جناش':55,'ميني تارت توت':55,'ميني تارت فراولة':50};
  for(const [t,p] of Object.entries(expect))assert.equal(price(t),p,t);
@@ -35,4 +35,21 @@ test('add-ons rank after the main items in the default order',async()=>{
  const ranked=discover(normalizeDirectoryCatalog({items:rows}),{sort:'recommended'});
  const firstAddOn=ranked.findIndex(r=>r.isAddOn);
  assert.ok(firstAddOn>=ranked.length-2,'add-ons at the end, got index '+firstAddOn);
+});
+
+test('Caramia profile matches what the owner said: pre-order, high demand, Monday off', async () => {
+  const {readFileSync} = await import('node:fs');
+  const read = f => JSON.parse(readFileSync(new URL('../public/data/' + f, import.meta.url), 'utf8'));
+  const items = read('market-directory.json').items.filter(i => i.placeId === 'directory-caramia');
+  const by = t => items.find(i => i.title === t);
+  for (const t of ['سينابون كلاسيك', 'إنجلش فانيليا كيك — القالب مقاس 1']) assert.equal(by(t).availability, 'preorder', t);
+  for (const t of ['قشطوطة مانجا', 'ماتيلدا كيك', 'هاني كيك', 'هاني كيك بستاشيو']) assert.equal(by(t).availability, 'high_demand', t);
+  assert.equal(by('ريد فلفت').availability, 'varies');
+  assert.ok(items.every(i => ['preorder', 'high_demand', 'varies'].includes(i.availability)));
+  assert.equal(read('directory.json').find(p => p.id === 'directory-caramia').weeklyDayOff, 'الاتنين');
+  assert.match(read('business-hours.json').records.find(r => r.placeId === 'directory-caramia').publicLabel, /الاتنين/);
+  const {catalogForProvider, availabilityLabel} = await import('../public/provider-catalog-core.js');
+  const cat = catalogForProvider({id: 'directory-caramia', category: 'حلويات'}, items, []);
+  assert.match(availabilityLabel(cat.find(p => p.title === 'سينابون كلاسيك')), /بالحجز/);
+  assert.match(availabilityLabel(cat.find(p => p.title === 'هاني كيك')), /سحب/);
 });
