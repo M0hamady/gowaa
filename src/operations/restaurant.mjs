@@ -70,7 +70,15 @@ export function restaurantCommand(c){
   const o=s.restaurantOrders[key(b.id)];checkVersion(o,b.version);can(s,a,o.shopId,'update_kitchen_status');const l=o.lines.find(x=>x.id===b.lineId);ok(l&&l.kitchenStatus,'NOT_FOUND','صنف المطبخ مش موجود.',404);const next=b.status;ok(kitchenStates.includes(next),'STATE','حالة المطبخ غير صحيحة.');ok(next===l.kitchenStatus||kitchenNext[l.kitchenStatus]===next,'STATE','انتقال حالة المطبخ غير مسموح.');l.kitchenStatus=next;if(next==='ready')l.readyAt=at;if(next==='served')l.servedAt=at;l.kitchenActorId=a;o.updatedAt=at;if(o.requestId)touchOffline(s,o,a,at);syncOrderKitchenStatus(s,o);bump(o);return{id:o.id,message:next==='ready'?'الصنف جاهز.':next==='served'?'الصنف اتسلّم للصالة/الكاشير.':'حالة التجهيز اتحدثت.'};
  }
  case 'restaurant.order.mark_served':{
-  const o=s.restaurantOrders[key(b.id)];checkVersion(o,b.version);ok(orderAccess(s,a,o,'edit_open_order'),'FORBIDDEN','مش عندك صلاحية تقديم الطلب.',403);ok(o.lines.length&&o.lines.every(l=>['ready','served'].includes(l.kitchenStatus)),'STATE','كل الأصناف لازم تكون جاهزة الأول.');for(const l of o.lines)if(l.kitchenStatus==='ready'){l.kitchenStatus='served';l.servedAt=at;l.servedBy=a;}o.status='served';o.updatedAt=at;bump(o);tableStateFromOrder(s,o);audit(s,{shopId:o.shopId,actorId:a,kind:'order_served',entityId:o.id,reason:text(b.reason||'تم تقديم الطلب للضيف',3,200),at});return{id:o.id,message:'الطلب اتقدم للصالة.'};
+  const o=s.restaurantOrders[key(b.id)];ok(o,'NOT_FOUND','الطلب مش موجود.',404);checkVersion(o,b.version);
+  const assigned=o.assignedStaffId===a&&hasShopPermission(s,a,o.shopId,'edit_open_order');
+  ok(assigned||hasShopPermission(s,a,o.shopId,'manage_tables'),'FORBIDDEN','التقديم للعامل المسؤول أو مدير الصالة فقط.',403);
+  ok(o.status==='ready'||o.status==='served','STATE','لا يمكن تقديم طلب قبل جاهزية كل أصنافه.');
+  ok(o.lines.length>0&&o.lines.every(l=>['ready','served'].includes(l.kitchenStatus)),'STATE','في أصناف لم تجهز بعد.');
+  for(const l of o.lines)if(l.kitchenStatus==='ready'){l.kitchenStatus='served';l.servedAt=at;}
+  o.status='served';o.servedAt=at;o.servedBy=a;o.updatedAt=at;bump(o);tableStateFromOrder(s,o);
+  audit(s,{shopId:o.shopId,actorId:a,kind:'restaurant_order_served',entityId:o.id,reason:text(b.reason||'تم تقديم الطلب للضيوف',3,200),at});
+  return{id:o.id,message:'تم تسجيل تقديم الطلب للصالة.'};
  }
  case 'restaurant.order.move_table':{
   const o=s.restaurantOrders[key(b.id)];checkVersion(o,b.version);can(s,a,o.shopId,'move_table_order');ok(o.mode==='dine_in'&&!['paid','cancelled','merged'].includes(o.status),'STATE','الطلب مش قابل للنقل.');const to=s.restaurantTables[key(b.toTableId)];ok(to&&to.shopId===o.shopId&&!to.archived&&to.status!=='out_of_service','TABLE','الطاولة الجديدة غير متاحة.');ok(!activeTableOrder(s,to.id),'TABLE_BUSY','الطاولة الجديدة عليها طلب.');const from=s.restaurantTables[o.tableId],before=o.tableId;o.tableId=to.id;o.updatedAt=at;bump(o);if(from){from.status='empty';bump(from);}tableStateFromOrder(s,o);audit(s,{shopId:o.shopId,actorId:a,kind:'table_order_moved',entityId:o.id,reason:text(b.reason,3,200),before:{tableId:before},after:{tableId:to.id},at});return{id:o.id,message:'الطلب اتنقل للطاولة الجديدة.'};
@@ -92,17 +100,6 @@ export function restaurantCommand(c){
  }
  case 'restaurant.payment.refund':{
   const o=s.restaurantOrders[key(b.id)];ok(o,'NOT_FOUND','الطلب مش موجود.',404);checkVersion(o,b.version);can(s,a,o.shopId,'refund_payment');const amount=money(b.amount);ok(amount>0&&amount<=restaurantPaid(s,o.id),'REFUND','مبلغ الرد أكبر من المحصل المؤكد.');const method=b.method;ok(['cash','card_external','transfer_external'].includes(method),'PAYMENT','وسيلة الرد غير صحيحة.');if(method==='cash'){const sh=openShift(s,a,o.shopId);ok(sh,'SHIFT','افتح وردية الكاشير الأول.');ok(expectedCash(s,sh.id)>=amount,'CASH','النقد الموجود في الدرج لا يكفي للرد.');addCash(s,a,o.shopId,-amount,'restaurant_refund',o.id,at);}const id=nextId(s,'restaurant-payment');s.restaurantPayments[id]={id,orderId:o.id,shopId:o.shopId,actorId:a,kind:'refund',amount,method,verificationStatus:'verified_external',at,note:text(b.reason,3,200)};o.status='account_open';o.receiptSnapshot=receiptSnapshot(s,o,at);bump(o);audit(s,{shopId:o.shopId,actorId:a,kind:'restaurant_refund',entityId:o.id,reason:b.reason,at,after:{amount,method}});return{id,message:'المرتجع اتسجل.'};
- }
- case 'restaurant.order.mark_served':{
-  const o=s.restaurantOrders[key(b.id)];ok(o,'NOT_FOUND','الطلب مش موجود.',404);checkVersion(o,b.version);
-  const assigned=o.assignedStaffId===a&&hasShopPermission(s,a,o.shopId,'edit_open_order');
-  ok(assigned||hasShopPermission(s,a,o.shopId,'manage_tables'),'FORBIDDEN','التقديم للعامل المسؤول أو مدير الصالة فقط.',403);
-  ok(o.status==='ready'||o.status==='served','STATE','لا يمكن تقديم طلب قبل جاهزية كل أصنافه.');
-  ok(o.lines.length>0&&o.lines.every(l=>['ready','served'].includes(l.kitchenStatus)),'STATE','في أصناف لم تجهز بعد.');
-  for(const l of o.lines)if(l.kitchenStatus==='ready'){l.kitchenStatus='served';l.servedAt=at;}
-  o.status='served';o.servedAt=at;o.servedBy=a;o.updatedAt=at;bump(o);tableStateFromOrder(s,o);
-  audit(s,{shopId:o.shopId,actorId:a,kind:'restaurant_order_served',entityId:o.id,reason:text(b.reason||'تم تقديم الطلب للضيوف',3,200),at});
-  return{id:o.id,message:'تم تسجيل تقديم الطلب للصالة.'};
  }
  case 'restaurant.order.account_open':{
   const o=s.restaurantOrders[key(b.id)];checkVersion(o,b.version);ok(orderAccess(s,a,o,'view_orders'),'FORBIDDEN','مش عندك صلاحية على الطلب.',403);ok(['served','ready'].includes(o.status),'STATE','الحساب يفتح بعد تجهيز/تقديم الطلب.');o.status='account_open';bump(o);tableStateFromOrder(s,o);return{id:o.id,message:'الحساب مفتوح للتحصيل.'};
