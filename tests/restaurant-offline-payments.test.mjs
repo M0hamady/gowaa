@@ -6,6 +6,7 @@ import {expectedCash} from '../src/operations/core.mjs';
 
 const NOW=Date.parse('2026-11-05T08:00:00Z');
 function world(){let s=seedState(NOW),n=0;return{get s(){return s},run(actor,type,body={}){const out=execute(s,actor,{id:'offline-'+(++n),type,body,expectedRevision:s.revision},{now:NOW+n});s=out.state;return out.result;},reject(actor,type,body,code){const before=structuredClone(s);assert.throws(()=>this.run(actor,type,body),e=>e.code===code);assert.deepEqual(s,before);}};}
+function ackFor(w,q){const now=w.s.offlineQueue[q.id],o=w.s.restaurantOrders[now.orderId];return{source:'isolated-local-sync-simulator',confirmed:true,requestId:now.requestId,orderId:o.id,payloadVersion:now.payloadVersion,receiptId:'test-sync-'+now.requestId};}
 function take(w,{offline=false,requestId='take-1'}={}){const id=w.run('cashier','restaurant.order.open',{shopId:'shop-a',mode:'takeaway',requestId,offline}).id;w.run('cashier','restaurant.order.add_item',{id,version:w.s.restaurantOrders[id].version,productId:'meal',quantity:1,notes:'تيك أواي'});return id;}
 
 test('cashier creates a local offline order with requestId and repeated creation never duplicates it',()=>{
@@ -13,8 +14,8 @@ test('cashier creates a local offline order with requestId and repeated creation
 });
 
 test('offline order is not called synced until explicit simulated server acknowledgement',()=>{
- const w=world(),id=take(w,{offline:true,requestId:'req-sync-001'}),q=Object.values(w.s.offlineQueue).find(x=>x.orderId===id);assert.notEqual(w.s.restaurantOrders[id].syncStatus,'synced');w.run('cashier','offline.sync',{id:q.id,outcome:'success'});assert.equal(w.s.restaurantOrders[id].syncStatus,'synced');assert.ok(w.s.offlineQueue[q.id].syncedAt);
- const again=w.run('cashier','offline.sync',{id:q.id,outcome:'success'});assert.equal(again.replayed,true);assert.equal(Object.values(w.s.restaurantOrders).filter(x=>x.requestId==='req-sync-001').length,1);
+ const w=world(),id=take(w,{offline:true,requestId:'req-sync-001'}),q=Object.values(w.s.offlineQueue).find(x=>x.orderId===id);assert.notEqual(w.s.restaurantOrders[id].syncStatus,'synced');w.reject('cashier','offline.sync',{id:q.id,outcome:'success'},'ACK_REQUIRED');w.run('cashier','offline.sync',{id:q.id,outcome:'success',ack:ackFor(w,q)});assert.equal(w.s.restaurantOrders[id].syncStatus,'synced');assert.ok(w.s.offlineQueue[q.id].syncedAt);
+ const again=w.run('cashier','offline.sync',{id:q.id,outcome:'success',ack:ackFor(w,q)});assert.equal(again.replayed,true);assert.equal(Object.values(w.s.restaurantOrders).filter(x=>x.requestId==='req-sync-001').length,1);
 });
 
 test('offline external payment is recorded as unverified and cannot falsely close the order',()=>{
