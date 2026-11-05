@@ -234,8 +234,9 @@ async function action(op,id,button){const s=app.raw,t=s.tasks[id],o=s.orders[id]
 }
 async function init(){
  $('ops-persona').innerHTML=personas.map(([id,name])=>`<option value="${id}">${esc(name)}</option>`).join('');app.store=await openTestStore();await load();app.store.subscribe(()=>{if(refreshQueued)return;refreshQueued=true;queueMicrotask(async()=>{refreshQueued=false;await load();});});
- $('ops-persona').onchange=async e=>{await trip?.destroy();trip=null;trackingTask=null;close();app.actor=e.target.value;sessionStorage.setItem('jowwa-test-actor',app.actor);app.tab='';app.shopId=app.actor==='otherOwner'?'shop-b':'shop-a';app.search='';app.section='';await load();notify('إنت دلوقتي بتجرب دور '+app.model.user.name+'. كل البيانات محلية ووهمية.');};
+ $('ops-persona').onchange=async e=>{await trip?.destroy();trip=null;trackingTask=null;close();app.actor=e.target.value;sessionStorage.setItem('jowwa-test-actor',app.actor);app.tab='';app.shopId=app.actor==='otherOwner'?'shop-b':'shop-a';app.search='';app.section='';app.rposCart=[];app.floorOrderId=null;await load();notify('إنت دلوقتي بتجرب دور '+app.model.user.name+'. كل البيانات محلية ووهمية.');};
  document.addEventListener('click',async e=>{const tab=e.target.closest('[data-tab]');if(tab){close();app.tab=tab.dataset.tab;app.search='';app.section='';loadCart();draw();return;}const button=e.target.closest('[data-op]');if(!button||button.disabled)return;const old=button.innerHTML;button.disabled=true;try{await action(button.dataset.op,button.dataset.id,button);}catch(error){notify(error.message,true);}finally{if(button.isConnected){button.disabled=false;button.innerHTML=old;}}});
- $('ops-modal').addEventListener('cancel',()=>close());notify('جاهز للتجربة. ابدأ كعميل، وبعدها بدّل للمحل ثم المندوب لمتابعة نفس الطلب.');
+ window.addEventListener('offline',()=>notify('الاتصال اتقطع — طلبات الكاشير الجديدة هتتحفظ محليًا.'));window.addEventListener('online',async()=>{notify('الاتصال رجع — بنراجع العمليات المنتظرة للمزامنة…');await syncPendingOffline();});
+  $('ops-modal').addEventListener('cancel',()=>close());notify('جاهز للتجربة. ابدأ كعميل، وبعدها بدّل للمحل ثم المندوب لمتابعة نفس الطلب.');
 }
 init().catch(error=>{notify('تعذر فتح مساحة الاختبار: '+error.message,true);$('ops-main').innerHTML='<p>فعّل تخزين المتصفح وأعد فتح الصفحة. مفيش تأثير على اللايف.</p>';});
