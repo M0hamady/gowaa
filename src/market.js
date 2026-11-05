@@ -4,7 +4,7 @@ import {readStoreDraft,clearStoreDraft} from '../public/welcome-journey.js';
 import {createServiceClaims} from './service-claims-ui.js';
 import {createMarketplace} from './market-discovery-ui.js';
 import {icon} from '../public/ui-icons.js';
-import {confirmedProviderPlaces,listingFacts,categoryIcons} from '../public/market-discovery.js';
+import {confirmedProviderPlaces,confirmedProviderCatalog,listingFacts,categoryIcons} from '../public/market-discovery.js';
 import {createCommerce} from './commerce.js';
 import {createPhoneAuth} from './phone-auth.js';
 import {readAssistantAction,assistantActionKey,clearAssistantContext,bindAssistantAccount} from '../public/assistant-handoff.js';
@@ -112,7 +112,7 @@ async function consumeAssistantAction(){const action=readAssistantAction();if(!a
  const service=action.type==='add_service';await listingForm({...action.draft,_assistantDraft:true,kind:service?'service':'product',price_mode:service&&action.draft.price===undefined?'inquiry':'fixed'});if($('listing-form'))complete();
 }
 function resumeAfterLogin(){if(readAssistantAction()){consumeAssistantAction().catch(()=>toast('المسودة محفوظة. حاول فتحها مرة تانية.'));return true;}const next=new URLSearchParams(location.search).get('next');if(next&&next.startsWith('/')&&!next.startsWith('//')){const url=new URL(next,location.origin);if(url.origin===location.origin){location.assign(url.href);return true;}}return false;}
-const phoneAuth=createPhoneAuth({db,modal,close,toast,refreshUser,getUser:()=>user,emailLogin:next=>authForm('login',next),ready:()=>config.phoneAuth===true});
+    const phoneAuth=createPhoneAuth({db,modal,close,toast,refreshUser,getUser:()=>user,emailLogin:next=>authForm('login',next),emailSignup:next=>authForm('signup',next),ready:()=>config.phoneAuth===true});
 const serviceClaims=createServiceClaims({db,modal,close,toast,task,requireUser,getUser:()=>user,verifyPhone:next=>phoneAuth.open(next,{link:true}),isAdmin:()=>admin,openCatalogs:()=>commerce.catalogs()});
 const marketplace=createMarketplace({db,modal,close,listingCard,wireCards,ordering,empty,startSelling,share,showClaims:(id)=>serviceClaims.open(id)});
 const commerce=createCommerce({db,modal,close,toast,requireUser,ordering,upload,task,loadImages,photo,getUser:()=>user,isAdmin:()=>admin,refreshUser,refreshMine:()=>view==='admin'?showAdmin():showMine()});
