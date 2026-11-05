@@ -17,6 +17,7 @@ export const digest=value=>JSON.stringify(value,Object.keys(value||{}).sort());
 export function stable(value){if(Array.isArray(value))return '['+value.map(stable).join(',')+']';if(value&&typeof value==='object')return '{'+Object.keys(value).sort().map(k=>JSON.stringify(k)+':'+stable(value[k])).join(',')+'}';return JSON.stringify(value);}
 export function normalizePhone(v){let s=String(v||'').replace(/[٠-٩]/g,d=>String('٠١٢٣٤٥٦٧٨٩'.indexOf(d))).replace(/[\s()-]/g,'');if(s.startsWith('0020'))s='+'+s.slice(2);if(/^01[0125]\d{8}$/.test(s))s='+2'+s;requireThat(/^\+201[0125]\d{8}$/.test(s),'PHONE','اكتب رقم موبايل مصري صحيح.');return s;}
 export const nextId=(s,prefix)=>prefix+'-'+(++s.nextId);
+export function testPinFingerprint(pin,shopId='test'){const value=String(pin||'');requireThat(/^\d{4,6}$/.test(value),'PIN','اكتب PIN تجريبي من 4 إلى 6 أرقام.');let h=2166136261;for(const ch of shopId+':'+value){h^=ch.charCodeAt(0);h=Math.imul(h,16777619);}return 'testpin-'+(h>>>0).toString(16).padStart(8,'0');}
 export function calendarMonthEnd(iso){const d=new Date(iso);requireThat(Number.isFinite(+d),'DATE','تاريخ غير صحيح.');const day=d.getUTCDate();d.setUTCDate(1);d.setUTCMonth(d.getUTCMonth()+1);const end=new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth()+1,0)).getUTCDate();d.setUTCDate(Math.min(day,end));return d.toISOString();}
 export const roles=['merchant','service_provider','courier','driver'];
 export const activeTaskStates=['assigned','at_pickup','picked_up','en_route','arrived','awaiting_receipt','issue'];
