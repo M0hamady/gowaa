@@ -1,0 +1,116 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-11-06",
+  "timezone": "Africa/Cairo",
+  "coverage": "operator_specific_date_lookup",
+  "sources": [
+    {
+      "id": "etaa-superjet",
+      "title": "غرفة شركات السياحة — الاتحاد العربي للنقل البري والسياحة (سوبر جيت)، ترخيص 855",
+      "url": "https://www.etaa-egypt.org/SitePages/CompanyDetails.aspx?licc=855",
+      "checkedAt": "2026-11-06",
+      "kind": "official_industry_registry",
+      "scope": "يثبت اسم الشركة وموقعها superjet.com.eg؛ لا يثبت مواعيد رحلة"
+    },
+    {
+      "id": "superjet-booking",
+      "title": "بحث الرحلات الرسمي لسوبر جيت",
+      "url": "https://superjet.transport-ticket.com/?retailerPartnerNumber=130331&marketingCarrierCode=SUJT&locale=ar",
+      "checkedAt": "2026-11-06",
+      "kind": "official_operator_booking",
+      "scope": "وجهة إعادة توجيه superjet.com.eg؛ رحلة بتاريخ ومحطة محددين وليست تذكرة أو ضمان مقعد"
+    },
+    {
+      "id": "superjet-locations",
+      "title": "قائمة محطات ووجهات البحث المستخدم بموقع سوبر جيت",
+      "url": "https://global-api.distribusion.com/suggestion-service/v3/locations?q=&rpn=130331&locale=en&carriers%5B%5D=SUJT&departureLocation=EGCAICIN&departureLocationType=station&limitTopLevel=100",
+      "checkedAt": "2026-11-06",
+      "kind": "official_operator_public_lookup",
+      "scope": "تحقق محطة Cairo Torgoman Bus Station ذات الكود EGCAICIN؛ وجهتا الإسكندرية وبورسعيد ظهرتا لهذا المشغل وقت المراجعة. لا تشمل كل شركات الترجمان."
+    },
+    {
+      "id": "bsic-operators",
+      "title": "مركز معلومات قطاع الأعمال العام — شركات النقل البري التابعة",
+      "url": "https://www.bsic.gov.eg/SubCo.aspx?CoID=3",
+      "checkedAt": "2026-11-06",
+      "kind": "official_government_directory",
+      "scope": "الهوية الحكومية لشرق الدلتا ورابط eastdelta-travel.com؛ بيانات الدليل القديمة لا تكفي لإثبات سلامة أي رابط آخر حاليًا"
+    },
+    {
+      "id": "eastdelta-stations",
+      "title": "شرق الدلتا — محطات الشركة",
+      "url": "https://eastdelta-travel.com/master/station",
+      "checkedAt": "2026-11-06",
+      "kind": "official_operator_directory",
+      "scope": "تدرج محطة الترجمان في مول وسط العاصمة ومحطة القللي في مجمع رمسيس الخدمي كمحطتين منفصلتين"
+    },
+    {
+      "id": "eastdelta-contact",
+      "title": "شرق الدلتا — الحجز والاستفسار",
+      "url": "https://eastdelta-travel.com/master/contact-us",
+      "checkedAt": "2026-11-06",
+      "kind": "official_operator_contact",
+      "scope": "قنوات الاستفسار المنشورة؛ لا مواعيد مستنتجة منها"
+    }
+  ],
+  "operators": [
+    {
+      "id": "superjet",
+      "name": "سوبر جيت",
+      "aliases": ["سوبر جيت", "سوبرجيت", "السوبر جيت", "superjet", "super jet"],
+      "officialUrl": "https://superjet.com.eg/",
+      "bookingUrl": "https://superjet.transport-ticket.com/?retailerPartnerNumber=130331&marketingCarrierCode=SUJT&locale=ar",
+      "marketingCarrierCode": "SUJT",
+      "retailerPartnerNumber": "130331",
+      "scheduleStatus": "live_date_lookup",
+      "sourceIds": ["etaa-superjet", "superjet-booking", "superjet-locations"],
+      "note": "النتائج من بحث سوبر جيت فقط، لكل يوم تختاره. تأكيد المقعد والسعر والحجز يتم عند المشغّل."
+    },
+    {
+      "id": "east-delta",
+      "name": "شرق الدلتا",
+      "aliases": ["شرق الدلتا", "شرق دلتا", "east delta"],
+      "officialUrl": "https://eastdelta-travel.com/",
+      "bookingUrl": "https://eastdelta-travel.com/",
+      "scheduleStatus": "official_link_only",
+      "sourceIds": ["bsic-operators", "eastdelta-stations", "eastdelta-contact"],
+      "contact": {"mobileShortCode": "5900", "landlineBooking": "09000217", "sourceId": "eastdelta-contact"},
+      "note": "محطة الترجمان مدرجة بموقع الشركة. مواعيد رحلاتها لم تُستخرج هنا؛ راجع البحث الرسمي أو الاستفسار المباشر."
+    }
+  ],
+  "terminals": [
+    {
+      "id": "turgoman",
+      "name": "محطة الترجمان — ميناء القاهرة البري",
+      "aliases": ["الترجمان", "ترجمان", "موقف الترجمان", "محطة الترجمان", "ميناء القاهرة البري", "مول وسط العاصمة", "cairo gateway", "turgoman", "torgoman"],
+      "mapStationId": "terminal-turgoman",
+      "operatorStations": [
+        {"operatorId": "superjet", "code": "EGCAICIN", "name": "Cairo Torgoman Bus Station", "sourceId": "superjet-locations"},
+        {"operatorId": "east-delta", "code": null, "name": "محطة الترجمان — مول وسط العاصمة", "sourceId": "eastdelta-stations"}
+      ]
+    }
+  ],
+  "destinations": [
+    {
+      "id": "alexandria",
+      "name": "الإسكندرية — محرم بك",
+      "nameEn": "Alexandria Moharam Bek",
+      "aliases": ["اسكندرية", "الإسكندرية", "اسكندريه", "اسكندريا", "اسكندرية محرم بك", "محرم بك", "محرم بيك", "alexandria", "alexandria eg"],
+      "operatorStations": [{"operatorId": "superjet", "code": "EGALEALE", "cityCode": "EGALE", "name": "Alexandria Moharam Bek", "sourceId": "superjet-locations"}]
+    },
+    {
+      "id": "port-said",
+      "name": "بورسعيد",
+      "nameEn": "Port Said",
+      "aliases": ["بورسعيد", "بور سعيد", "port said", "portsaid"],
+      "operatorStations": [{"operatorId": "superjet", "code": "EGPSDBPS", "cityCode": "EGPSD", "name": "Port Said Bus Station", "sourceId": "superjet-locations"}]
+    }
+  ],
+  "limitations": [
+    "لا يوجد جدول موحد موثّق لكل شركات الترجمان في هذه البيانات.",
+    "نتائج البحث المتاحة داخل جوه تخص سوبر جيت ومحطة الترجمان بالاسم والكود، ولا تشمل أي محطة أخرى في القاهرة.",
+    "مواعيد الوصول الواردة عند المشغّل مواعيد جدول وليست تتبعًا حيًا أو ضمان الوصول.",
+    "الوصول من كيان إلى الترجمان ووقت التبديل يحتاجان مراجعة منفصلة؛ لا نفترض ربطًا مضمونًا.",
+    "لا نحفظ رحلة حجز، ولا نشتري أو نحجز مقاعد من نتيجة البحث."
+  ]
+}

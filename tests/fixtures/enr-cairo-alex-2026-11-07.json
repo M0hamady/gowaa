@@ -1,0 +1,241 @@
+{
+  "sourcePage": "https://enr.gov.eg/o-city/obs/enr/railway/ar/booktickets?from=CAIRO&to=ALEXANDRIA&trip=oneway&departure=2026-11-07",
+  "sourceUrl": "https://enr.gov.eg/api/v1/tickets/search?from=606534187276566625&to=606535384603557938&transfers=false&with_reservations=true&without_reservations=false&skip_places_information=true&departureDate=2026-11-07&project=enr",
+  "observedAt": "2026-11-06T14:21:32.483Z",
+  "date": "2026-11-07",
+  "origin": {
+    "id": "606534187276566625",
+    "name": "CAIRO",
+    "ar": "القاهره"
+  },
+  "destination": {
+    "id": "606535384603557938",
+    "name": "ALEXANDRIA",
+    "ar": "الاسكندريه"
+  },
+  "timezone": "Africa/Cairo",
+  "httpStatus": 200,
+  "scope": "date-specific official public search; not a recurring timetable or confirmed ticket; no purchase/authentication",
+  "blockedMutations": [],
+  "rows": [
+    {
+      "train": "2007",
+      "departure": "2026-11-07T04:35:00.000+02:00",
+      "arrival": "2026-11-07T07:20:00.000+02:00",
+      "minutes": 165
+    },
+    {
+      "train": "119",
+      "departure": "2026-11-07T05:00:00.000+02:00",
+      "arrival": "2026-11-07T09:45:00.000+02:00",
+      "minutes": 285
+    },
+    {
+      "train": "903",
+      "departure": "2026-11-07T06:00:00.000+02:00",
+      "arrival": "2026-11-07T09:30:00.000+02:00",
+      "minutes": 210
+    },
+    {
+      "train": "7",
+      "departure": "2026-11-07T06:20:00.000+02:00",
+      "arrival": "2026-11-07T10:15:00.000+02:00",
+      "minutes": 235
+    },
+    {
+      "train": "1131",
+      "departure": "2026-11-07T07:00:00.000+02:00",
+      "arrival": "2026-11-07T09:55:00.000+02:00",
+      "minutes": 175
+    },
+    {
+      "train": "2025",
+      "departure": "2026-11-07T08:00:00.000+02:00",
+      "arrival": "2026-11-07T10:30:00.000+02:00",
+      "minutes": 150
+    },
+    {
+      "train": "901",
+      "departure": "2026-11-07T08:10:00.000+02:00",
+      "arrival": "2026-11-07T11:15:00.000+02:00",
+      "minutes": 185
+    },
+    {
+      "train": "1015",
+      "departure": "2026-11-07T08:25:00.000+02:00",
+      "arrival": "2026-11-07T11:40:00.000+02:00",
+      "minutes": 195
+    },
+    {
+      "train": "1109",
+      "departure": "2026-11-07T08:35:00.000+02:00",
+      "arrival": "2026-11-07T12:10:00.000+02:00",
+      "minutes": 215
+    },
+    {
+      "train": "1089",
+      "departure": "2026-11-07T08:40:00.000+02:00",
+      "arrival": "2026-11-07T11:20:00.000+02:00",
+      "minutes": 160
+    },
+    {
+      "train": "905",
+      "departure": "2026-11-07T09:00:00.000+02:00",
+      "arrival": "2026-11-07T11:30:00.000+02:00",
+      "minutes": 150
+    },
+    {
+      "train": "911",
+      "departure": "2026-11-07T10:00:00.000+02:00",
+      "arrival": "2026-11-07T13:05:00.000+02:00",
+      "minutes": 185
+    },
+    {
+      "train": "1211",
+      "departure": "2026-11-07T10:10:00.000+02:00",
+      "arrival": "2026-11-07T14:25:00.000+02:00",
+      "minutes": 255
+    },
+    {
+      "train": "89",
+      "departure": "2026-11-07T11:15:00.000+02:00",
+      "arrival": "2026-11-07T13:55:00.000+02:00",
+      "minutes": 160
+    },
+    {
+      "train": "913",
+      "departure": "2026-11-07T12:00:00.000+02:00",
+      "arrival": "2026-11-07T14:50:00.000+02:00",
+      "minutes": 170
+    },
+    {
+      "train": "15",
+      "departure": "2026-11-07T12:15:00.000+02:00",
+      "arrival": "2026-11-07T16:00:00.000+02:00",
+      "minutes": 225
+    },
+    {
+      "train": "2023",
+      "departure": "2026-11-07T14:00:00.000+02:00",
+      "arrival": "2026-11-07T16:30:00.000+02:00",
+      "minutes": 150
+    },
+    {
+      "train": "919",
+      "departure": "2026-11-07T14:25:00.000+02:00",
+      "arrival": "2026-11-07T18:05:00.000+02:00",
+      "minutes": 220
+    },
+    {
+      "train": "917",
+      "departure": "2026-11-07T15:00:00.000+02:00",
+      "arrival": "2026-11-07T17:30:00.000+02:00",
+      "minutes": 150
+    },
+    {
+      "train": "915",
+      "departure": "2026-11-07T15:10:00.000+02:00",
+      "arrival": "2026-11-07T18:15:00.000+02:00",
+      "minutes": 185
+    },
+    {
+      "train": "21",
+      "departure": "2026-11-07T15:25:00.000+02:00",
+      "arrival": "2026-11-07T19:15:00.000+02:00",
+      "minutes": 230
+    },
+    {
+      "train": "923",
+      "departure": "2026-11-07T16:00:00.000+02:00",
+      "arrival": "2026-11-07T19:25:00.000+02:00",
+      "minutes": 205
+    },
+    {
+      "train": "23",
+      "departure": "2026-11-07T16:30:00.000+02:00",
+      "arrival": "2026-11-07T20:50:00.000+02:00",
+      "minutes": 260
+    },
+    {
+      "train": "3023",
+      "departure": "2026-11-07T17:00:00.000+02:00",
+      "arrival": "2026-11-07T19:55:00.000+02:00",
+      "minutes": 175
+    },
+    {
+      "train": "921",
+      "departure": "2026-11-07T18:00:00.000+02:00",
+      "arrival": "2026-11-07T20:35:00.000+02:00",
+      "minutes": 155
+    },
+    {
+      "train": "2027",
+      "departure": "2026-11-07T19:00:00.000+02:00",
+      "arrival": "2026-11-07T21:30:00.000+02:00",
+      "minutes": 150
+    },
+    {
+      "train": "3009",
+      "departure": "2026-11-07T19:10:00.000+02:00",
+      "arrival": "2026-11-07T21:55:00.000+02:00",
+      "minutes": 165
+    },
+    {
+      "train": "157",
+      "departure": "2026-11-07T19:40:00.000+02:00",
+      "arrival": "2026-11-07T22:50:00.000+02:00",
+      "minutes": 190
+    },
+    {
+      "train": "931",
+      "departure": "2026-11-07T20:15:00.000+02:00",
+      "arrival": "2026-11-07T23:35:00.000+02:00",
+      "minutes": 200
+    },
+    {
+      "train": "31",
+      "departure": "2026-11-07T20:30:00.000+02:00",
+      "arrival": "2026-11-08T00:15:00.000+02:00",
+      "minutes": 225
+    },
+    {
+      "train": "927",
+      "departure": "2026-11-07T21:10:00.000+02:00",
+      "arrival": "2026-11-07T23:50:00.000+02:00",
+      "minutes": 160
+    },
+    {
+      "train": "17",
+      "departure": "2026-11-07T21:20:00.000+02:00",
+      "arrival": "2026-11-08T00:25:00.000+02:00",
+      "minutes": 185
+    },
+    {
+      "train": "29",
+      "departure": "2026-11-07T21:30:00.000+02:00",
+      "arrival": "2026-11-08T01:35:00.000+02:00",
+      "minutes": 245
+    },
+    {
+      "train": "935",
+      "departure": "2026-11-07T22:30:00.000+02:00",
+      "arrival": "2026-11-08T01:05:00.000+02:00",
+      "minutes": 155
+    },
+    {
+      "train": "3007",
+      "departure": "2026-11-07T23:00:00.000+02:00",
+      "arrival": "2026-11-08T01:40:00.000+02:00",
+      "minutes": 160
+    }
+  ],
+  "directPublicFetch": {
+    "httpStatus": 200,
+    "contentType": "application/json",
+    "elapsedMs": 9503,
+    "array": true,
+    "count": 35,
+    "authenticated": false,
+    "cookiesSent": false
+  }
+}

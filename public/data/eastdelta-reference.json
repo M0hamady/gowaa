@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-11-06",
+  "timezone": "Africa/Cairo",
+  "operator": {
+    "id": "eastdelta",
+    "name": "شرق الدلتا للنقل والسياحة",
+    "url": "https://eastdelta-travel.com/",
+    "stationDirectoryUrl": "https://eastdelta-travel.com/master/station",
+    "contactUrl": "https://eastdelta-travel.com/master/contact-us",
+    "inquiryPhones": ["5900", "09000217", "0222633254"],
+    "identitySourceId": "government-company-directory"
+  },
+  "sources": [
+    {"id":"government-company-directory","title":"مركز معلومات قطاع الأعمال العام — شرق الدلتا","url":"https://www.bsic.gov.eg/SubCo.aspx?CoID=3","kind":"official_government_directory","checkedAt":"2026-11-06","publishedAt":null},
+    {"id":"eastdelta-home","title":"شرق الدلتا — نموذج البحث الرسمي والمدن المتاحة","url":"https://eastdelta-travel.com/","kind":"official_operator_search_form","checkedAt":"2026-11-06","publishedAt":null},
+    {"id":"eastdelta-stations","title":"شرق الدلتا — دليل المحطات","url":"https://eastdelta-travel.com/master/station","kind":"official_operator_directory","checkedAt":"2026-11-06","publishedAt":null},
+    {"id":"eastdelta-cairo-origins","title":"محطات القيام في القاهرة — نتيجة القائمة الرسمية","url":"https://eastdelta-travel.com/statid5?city_id=1","kind":"official_public_lookup","checkedAt":"2026-11-06","publishedAt":null},
+    {"id":"eastdelta-alex-destinations","title":"محطات الوصول بالإسكندرية — نتيجة القائمة الرسمية","url":"https://eastdelta-travel.com/statid6?city_id=2","kind":"official_public_lookup","checkedAt":"2026-11-06","publishedAt":null},
+    {"id":"eastdelta-sharm-destinations","title":"محطات الوصول بشرم الشيخ — نتيجة القائمة الرسمية","url":"https://eastdelta-travel.com/statid6?city_id=74","kind":"official_public_lookup","checkedAt":"2026-11-06","publishedAt":null},
+    {"id":"eastdelta-contact","title":"شرق الدلتا — اتصل بنا","url":"https://eastdelta-travel.com/master/contact-us","kind":"official_operator_contact","checkedAt":"2026-11-06","publishedAt":null}
+  ],
+  "search": {
+    "url": "https://eastdelta-travel.com/master/tripcity",
+    "method": "GET",
+    "queryFields": ["from_city_id", "from_station_id", "to_city_id", "to_station_id", "trip_date"],
+    "dateFormat": "YYYY-MM-DD",
+    "requiresDate": true,
+    "requiresExactStations": true,
+    "originStationLookup": "https://eastdelta-travel.com/statid5",
+    "destinationStationLookup": "https://eastdelta-travel.com/statid6",
+    "stationLookupQueryField": "city_id",
+    "coverage": "official_link_only"
+  },
+  "cities": [
+    {"id":"68","name":"ابورديس"},
+    {"id":"69","name":"ابوزنيمة"},
+    {"id":"17","name":"اسيوط"},
+    {"id":"2","name":"الاسكندرية","aliases":["الإسكندرية","اسكندرية","alexandria"]},
+    {"id":"5","name":"الاسماعيلية"},
+    {"id":"28","name":"الاقصر"},
+    {"id":"136","name":"الزقازيق"},
+    {"id":"135","name":"السويس"},
+    {"id":"298","name":"الشرقية"},
+    {"id":"76","name":"الطور"},
+    {"id":"241","name":"العريش"},
+    {"id":"36","name":"الغردقة"},
+    {"id":"161","name":"الفيوم"},
+    {"id":"1","name":"القاهرة","aliases":["cairo"]},
+    {"id":"249","name":"المثلث"},
+    {"id":"90","name":"المنصورة"},
+    {"id":"225","name":"المنيا"},
+    {"id":"167","name":"بنها"},
+    {"id":"60","name":"بني سويف"},
+    {"id":"67","name":"بورسعيد"},
+    {"id":"131","name":"جرجا"},
+    {"id":"239","name":"جنوب سيناء"},
+    {"id":"15","name":"دراو"},
+    {"id":"110","name":"دمياط"},
+    {"id":"111","name":"دمياط الجديدة"},
+    {"id":"73","name":"دهب"},
+    {"id":"18","name":"ديروط"},
+    {"id":"112","name":"راس البر"},
+    {"id":"72","name":"راس سدر"},
+    {"id":"124","name":"سوهاج"},
+    {"id":"74","name":"شرم الشيخ","aliases":["شرم","sharm el sheikh"]},
+    {"id":"138","name":"فاقوس"},
+    {"id":"224","name":"ملوى"},
+    {"id":"140","name":"منيا القمح"},
+    {"id":"92","name":"ميت غمر"}
+  ],
+  "stations": [
+    {"id":"30248","cityId":"1","name":"التجنيد","role":"departure","sourceId":"eastdelta-cairo-origins","note":"محطة شرق الدلتا بجسر السويس، وليست بوابة التجنيد في كيان."},
+    {"id":"30210","cityId":"1","name":"الترجمان","aliases":["ميناء القاهرة البري","مول وسط العاصمة","turgoman"],"role":"departure","sourceId":"eastdelta-cairo-origins","address":"مول وسط العاصمة","addressSourceId":"eastdelta-stations"},
+    {"id":"30213","cityId":"1","name":"القللى","role":"departure","sourceId":"eastdelta-cairo-origins"},
+    {"id":"30215","cityId":"1","name":"الماظة","role":"departure","sourceId":"eastdelta-cairo-origins"},
+    {"id":"30211","cityId":"1","name":"المحطه الدوليه","role":"departure","sourceId":"eastdelta-cairo-origins"},
+    {"id":"30216","cityId":"1","name":"عبود","role":"departure","sourceId":"eastdelta-cairo-origins"},
+    {"id":"30480","cityId":"1","name":"نادى السكة","role":"departure","sourceId":"eastdelta-cairo-origins"},
+    {"id":"30319","cityId":"2","name":"اسكندرية","role":"arrival","sourceId":"eastdelta-alex-destinations"},
+    {"id":"30278","cityId":"2","name":"محرم بيك","aliases":["محرم بك"],"role":"arrival","sourceId":"eastdelta-alex-destinations"},
+    {"id":"30327","cityId":"74","name":"حى النور","aliases":["حي النور"],"role":"arrival","sourceId":"eastdelta-sharm-destinations"},
+    {"id":"30221","cityId":"74","name":"شرم الشيخ","role":"arrival","sourceId":"eastdelta-sharm-destinations"}
+  ],
+  "capabilities": {
+    "browserReadOnlyLookupVerified": true,
+    "serverLookupVerified": false,
+    "currentScheduleInDataset": false,
+    "stationCoverageComplete": false,
+    "stationSpecificResultRequired": true,
+    "seatAvailabilityConfirmed": false
+  },
+  "verification": {
+    "checkedAt": "2026-11-06",
+    "examples": [
+      {"fromStationId":"30210","toStationId":"30221","date":"2026-11-07","result":"dated_results_displayed","resultCount":6},
+      {"fromStationId":"30210","toStationId":"30278","date":"2026-11-07","result":"no_results_displayed","resultCount":0}
+    ],
+    "reusableTimetable": false
+  },
+  "notes": [
+    "المدن دي اختيارات ظهرت في نموذج الشركة، ومش إثبات خط مباشر من الترجمان لكل مدينة.",
+    "اختار مدينة ومحطة وصول وتاريخًا محددًا، وراجع النتيجة عند الشركة قبل السفر.",
+    "ظهور محطة بالقائمة لا يثبت رحلة متاحة منها أو إليها في يوم بعينه.",
+    "النتيجة الفارغة تخص الاستعلام واليوم المحددين، ومش إثبات توقف الخط نهائيًا.",
+    "مفيش حجز أو مقعد أو سعر ثابت مؤكد من البيانات دي."
+  ]
+}

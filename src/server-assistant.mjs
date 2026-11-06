@@ -9,7 +9,7 @@ export const ASSISTANT_INTENTS=['find_place','navigate','bus','shop','service','
 export const ASSISTANT_ACTIONS=['prepare_basket','prepare_route','prepare_round','add_product','add_service','manage_catalog'];
 const digitize=s=>String(s??'').replace(/[٠-٩]/g,c=>'٠١٢٣٤٥٦٧٨٩'.indexOf(c)).replace(/[۰-۹]/g,c=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(c));
 export function redactPrivate(value){
- const dates=[];const input=digitize(value).replace(/\b\d{4}-\d{2}-\d{2}\b/g,date=>{if(!validOfferDate(date))return date;const key='[JOWWADATE'+String.fromCharCode(65+dates.length)+']';dates.push([key,date]);return key;});
+ const dates=[];const input=digitize(value).replace(/\b\d{4}-\d{2}-\d{2}\b|(?<!\d)(?:[01]\d|2[0-3]):[0-5]\d(?!\d)/g,date=>{if(!date.includes(':')&&!validOfferDate(date))return date;const key='[JOWWADATE'+String.fromCharCode(65+dates.length)+']';dates.push([key,date]);return key;});
  let result=input.replace(/[\w.+-]+@[\w.-]+\.[a-z]{2,}/gi,'[بريد محذوف]')
   .replace(/(?:otp|password|token|كلمة\s*السر|كلمه\s*السر|رمز\s*التحقق|كود\s*التفعيل)\s*[:=：]?\s*\S+/gi,'[بيانات دخول محذوفة]')
   .replace(/(?:https?:\/\/|www\.)\S+/gi,'[رابط محذوف]')
@@ -22,7 +22,7 @@ const clean=(v,max=240)=>redactPrivate(v).slice(0,max);
 const safeId=v=>typeof v==='string'&&/^[A-Za-z0-9_-]{1,120}$/.test(v);
 const idList=(values,known,max=5)=>Array.isArray(values)?[...new Set(values.filter(x=>safeId(x)&&known.has(x)))].slice(0,max):[];
 export function validateQuestion(body){
- if(!body||typeof body!=='object'||typeof body.query!=='string'||body.query.trim().length<2||body.query.length>500)throw Error('اكتب سؤالك من حرفين إلى 500 حرف.');
+ if(!body||typeof body!=='object'||typeof body.query!=='string'||(body.query.trim().length<2&&!(body.context?.travel?.version===1&&['time','timePeriod','hubTime'].includes(body.context?.travel?.pending)&&/^[0-9٠-٩]$/.test(body.query.trim())))||body.query.length>500)throw Error('اكتب سؤالك من حرفين إلى 500 حرف.');
  return redactPrivate(body.query);
 }
 export function mergePublicRecords(base,rows,kind){

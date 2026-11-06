@@ -1,0 +1,3006 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-11-06",
+  "timezone": "Africa/Cairo",
+  "purpose": "مرجع محطات وتبادلات وأول وآخر قطار؛ ليس تتبعًا حيًا أو حجز تذكرة",
+  "scheduleBasis": {
+    "sourceId": "winter-2026",
+    "publishedAt": "2026-10-28",
+    "effectiveFrom": "2026-10-30",
+    "expiresAt": null,
+    "specialEventOverridesAvailable": false,
+    "fullDailyTimetableAvailable": false
+  },
+  "sources": [
+    {
+      "id": "winter-2026",
+      "title": "بيان وزارة النقل والهيئة القومية للأنفاق عن جداول التوقيت الشتوي 2026",
+      "publisher": "الهيئة العامة للاستعلامات — بيان وزارة النقل",
+      "url": "https://sis.gov.eg/ar/المركز-الإعلامي/الأخبار/وزارة-النقل-تعلن-مواعيد-تشغيل-خطوط-مترو-الأنفاق-الثلاثة-والقطار-الكهربائي-الخفيف-lrt-ومونوريل-شرق-النيل-تزامن-ا-مع-تطبيق-التوقيت-الشتوي/",
+      "publishedAt": "2026-10-28",
+      "effectiveFrom": "2026-10-30",
+      "checkedAt": "2026-11-06",
+      "kind": "official_government_release",
+      "scope": "أول وآخر قطار من المحطات الطرفية وبعض مواعيد تبادل آخر القطارات، وليس جدول كل محطة أو تتبعًا حيًا",
+      "retrievalRef": "turn13search1"
+    },
+    {
+      "id": "cairo-governorate-metro",
+      "title": "بوابة محافظة القاهرة — خطوط المترو ومحطاته",
+      "publisher": "محافظة القاهرة",
+      "url": "https://www.cairo.gov.eg/ar/governorate-services/transportation-services/metro/",
+      "publishedAt": null,
+      "checkedAt": "2026-11-06",
+      "kind": "official_government_guide",
+      "scope": "ترتيب محطات الخطين الأول والثاني؛ لا نعتمد فقرة تبادل الخط الرابع باعتباره قيد الإنشاء",
+      "retrievalRef": "turn13search2"
+    },
+    {
+      "id": "mobility-line3",
+      "title": "الخط الأخضر الثالث — ترتيب المحطات والفرعين",
+      "publisher": "RATP Dev Mobility Cairo",
+      "url": "https://www.mobilitycairo.com/ar/node/83",
+      "publishedAt": null,
+      "checkedAt": "2026-11-06",
+      "kind": "official_operator_route",
+      "scope": "محطات عدلي منصور إلى الكيت كات وفرعي محور روض الفرج وجامعة القاهرة",
+      "retrievalRef": "turn5view0"
+    },
+    {
+      "id": "mobility-lrt",
+      "title": "قطار العاصمة — محطات LRT",
+      "publisher": "RATP Dev Mobility Cairo",
+      "url": "https://www.mobilitycairo.com/ar/travel-information/lines/line-commuter-train-lrt",
+      "publishedAt": null,
+      "checkedAt": "2026-11-06",
+      "kind": "official_operator_route",
+      "scope": "المحطات المشغلة حتى الفنون والثقافة وفرع مدينة المعرفة؛ ليس خط سيارات تغذية بوابة 1",
+      "retrievalRef": "turn8view1"
+    },
+    {
+      "id": "metro-important-stations",
+      "title": "مترو القاهرة — المحطات المهمة للركاب",
+      "publisher": "الشركة المصرية لإدارة وتشغيل المترو",
+      "url": "https://cairometro.gov.eg/ar/passengers/4",
+      "publishedAt": null,
+      "checkedAt": "2026-11-06",
+      "kind": "official_operator_guide",
+      "scope": "الشهداء عند رمسيس ومحطة مصر، والتبادلات الرئيسية؛ لا أوقات مشي مضمونة",
+      "retrievalRef": "turn13search4"
+    },
+    {
+      "id": "mobility-projects",
+      "title": "المشروعات الحالية — 34 محطة للخط الثالث و12 لقطار العاصمة",
+      "publisher": "RATP Dev Mobility Cairo",
+      "url": "https://www.mobilitycairo.com/en/about-us/projects",
+      "publishedAt": null,
+      "checkedAt": "2026-11-06",
+      "kind": "official_operator_overview",
+      "scope": "تأكيد عدد المحطات العام؛ لا جداول أو مواعيد وصول",
+      "retrievalRef": "turn13view0"
+    }
+  ],
+  "stations": [
+    {
+      "id": "helwan",
+      "name": "حلوان",
+      "nameEn": "Helwan",
+      "aliases": [
+        "حلوان",
+        "Helwan"
+      ],
+      "lines": [
+        "metro-1"
+      ],
+      "sourceIds": [
+        "cairo-governorate-metro"
+      ],
+      "coordinate": [
+        31.3342033,
+        29.8488841
+      ],
+      "mapStationId": "rail-helwan",
+      "mapUrl": "/?transport=1&station=rail-helwan",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/316636980",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "ain-helwan",
+      "name": "عين حلوان",
+      "nameEn": "Ain Helwan",
+      "aliases": [
+        "عين حلوان",
+        "Ain Helwan"
+      ],
+      "lines": [
+        "metro-1"
+      ],
+      "sourceIds": [
+        "cairo-governorate-metro"
+      ],
+      "coordinate": [
+        31.3250068,
+        29.8626591
+      ],
+      "mapStationId": "rail-ain-helwan",
+      "mapUrl": "/?transport=1&station=rail-ain-helwan",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/5344953911",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "helwan-university",
+      "name": "جامعة حلوان",
+      "nameEn": "Helwan University",
+      "aliases": [
+        "جامعة حلوان",
+        "Helwan University"
+      ],
+      "lines": [
+        "metro-1"
+      ],
+      "sourceIds": [
+        "cairo-governorate-metro"
+      ],
+      "coordinate": [
+        31.3203657,
+        29.8690198
+      ],
+      "mapStationId": "rail-helwan-university",
+      "mapUrl": "/?transport=1&station=rail-helwan-university",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/14107180933",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "wadi-hof",
+      "name": "وادي حوف",
+      "nameEn": "Wadi Hof",
+      "aliases": [
+        "وادي حوف",
+        "Wadi Hof"
+      ],
+      "lines": [
+        "metro-1"
+      ],
+      "sourceIds": [
+        "cairo-governorate-metro"
+      ],
+      "coordinate": [
+        31.3134042,
+        29.8794379
+      ],
+      "mapStationId": "rail-wadi-hof",
+      "mapUrl": "/?transport=1&station=rail-wadi-hof",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/5344953909",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "hadayeq-helwan",
+      "name": "حدائق حلوان",
+      "nameEn": "Hadayeq Helwan",
+      "aliases": [
+        "حدائق حلوان",
+        "Hadayeq Helwan"
+      ],
+      "lines": [
+        "metro-1"
+      ],
+      "sourceIds": [
+        "cairo-governorate-metro"
+      ],
+      "coordinate": [
+        31.3040668,
+        29.8971871
+      ],
+      "mapStationId": "rail-hadayeq-helwan",
+      "mapUrl": "/?transport=1&station=rail-hadayeq-helwan",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/5344953908",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "el-maasara",
+      "name": "المعصرة",
+      "nameEn": "El Maasara",
+      "aliases": [
+        "المعصرة",
+        "El Maasara"
+      ],
+      "lines": [
+        "metro-1"
+      ],
+      "sourceIds": [
+        "cairo-governorate-metro"
+      ],
+      "coordinate": [
+        31.2997264,
+        29.9061043
+      ],
+      "mapStationId": "rail-el-maasara",
+      "mapUrl": "/?transport=1&station=rail-el-maasara",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/5348846068",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "tora-el-asmant",
+      "name": "طرة الأسمنت",
+      "nameEn": "Tora El Asmant",
+      "aliases": [
+        "طرة الأسمنت",
+        "Tora El Asmant",
+        "طرة الاسمنت",
+        "Tora Cement"
+      ],
+      "lines": [
+        "metro-1"
+      ],
+      "sourceIds": [
+        "cairo-governorate-metro"
+      ],
+      "coordinate": [
+        31.2876941,
+        29.9258484
+      ],
+      "mapStationId": "rail-tora-el-asmant",
+      "mapUrl": "/?transport=1&station=rail-tora-el-asmant",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/316638605",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "kozzika",
+      "name": "كوتسيكا",
+      "nameEn": "Kozzika",
+      "aliases": [
+        "كوتسيكا",
+        "Kozzika",
+        "Kotsika"
+      ],
+      "lines": [
+        "metro-1"
+      ],
+      "sourceIds": [
+        "cairo-governorate-metro"
+      ],
+      "coordinate": [
+        31.2817074,
+        29.9361514
+      ],
+      "mapStationId": "rail-kozzika",
+      "mapUrl": "/?transport=1&station=rail-kozzika",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/316638613",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "tora-el-balad",
+      "name": "طرة البلد",
+      "nameEn": "Tora El Balad",
+      "aliases": [
+        "طرة البلد",
+        "Tora El Balad"
+      ],
+      "lines": [
+        "metro-1"
+      ],
+      "sourceIds": [
+        "cairo-governorate-metro"
+      ],
+      "coordinate": [
+        31.2735808,
+        29.9463299
+      ],
+      "mapStationId": "rail-tora-el-balad",
+      "mapUrl": "/?transport=1&station=rail-tora-el-balad",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/5349031096",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "thakanat-el-maadi",
+      "name": "ثكنات المعادي",
+      "nameEn": "Thakanat El Maadi",
+      "aliases": [
+        "ثكنات المعادي",
+        "Thakanat El Maadi",
+        "ثكنات المعادى",
+        "Sakanat El Maadi"
+      ],
+      "lines": [
+        "metro-1"
+      ],
+      "sourceIds": [
+        "cairo-governorate-metro"
+      ],
+      "coordinate": [
+        31.2634668,
+        29.9528426
+      ],
+      "mapStationId": "rail-thakanat-el-maadi",
+      "mapUrl": "/?transport=1&station=rail-thakanat-el-maadi",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/316638736",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "maadi",
+      "name": "المعادي",
+      "nameEn": "Maadi",
+      "aliases": [
+        "المعادي",
+        "Maadi"
+      ],
+      "lines": [
+        "metro-1"
+      ],
+      "sourceIds": [
+        "cairo-governorate-metro"
+      ],
+      "coordinate": [
+        31.2580736,
+        29.9598395
+      ],
+      "mapStationId": "rail-maadi",
+      "mapUrl": "/?transport=1&station=rail-maadi",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/312555676",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "hadayeq-el-maadi",
+      "name": "حدائق المعادي",
+      "nameEn": "Hadayeq El Maadi",
+      "aliases": [
+        "حدائق المعادي",
+        "Hadayeq El Maadi"
+      ],
+      "lines": [
+        "metro-1"
+      ],
+      "sourceIds": [
+        "cairo-governorate-metro"
+      ],
+      "coordinate": [
+        31.2506712,
+        29.9701006
+      ],
+      "mapStationId": "rail-hadayeq-el-maadi",
+      "mapUrl": "/?transport=1&station=rail-hadayeq-el-maadi",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/2110350259",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "dar-el-salam",
+      "name": "دار السلام",
+      "nameEn": "Dar El Salam",
+      "aliases": [
+        "دار السلام",
+        "Dar El Salam"
+      ],
+      "lines": [
+        "metro-1"
+      ],
+      "sourceIds": [
+        "cairo-governorate-metro"
+      ],
+      "coordinate": [
+        31.2422043,
+        29.98203
+      ],
+      "mapStationId": "rail-dar-el-salam",
+      "mapUrl": "/?transport=1&station=rail-dar-el-salam",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/5194246947",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "el-zahraa",
+      "name": "الزهراء",
+      "nameEn": "El Zahraa",
+      "aliases": [
+        "الزهراء",
+        "El Zahraa"
+      ],
+      "lines": [
+        "metro-1"
+      ],
+      "sourceIds": [
+        "cairo-governorate-metro"
+      ],
+      "coordinate": [
+        31.2313586,
+        29.9954381
+      ],
+      "mapStationId": "rail-el-zahraa",
+      "mapUrl": "/?transport=1&station=rail-el-zahraa",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/5194246950",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "mar-girgis",
+      "name": "مار جرجس",
+      "nameEn": "Mar Girgis",
+      "aliases": [
+        "مار جرجس",
+        "Mar Girgis"
+      ],
+      "lines": [
+        "metro-1"
+      ],
+      "sourceIds": [
+        "cairo-governorate-metro"
+      ],
+      "coordinate": [
+        31.2295229,
+        30.0058496
+      ],
+      "mapStationId": "rail-mar-girgis",
+      "mapUrl": "/?transport=1&station=rail-mar-girgis",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/5218109287",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "el-malek-el-saleh",
+      "name": "الملك الصالح",
+      "nameEn": "El Malek El Saleh",
+      "aliases": [
+        "الملك الصالح",
+        "El Malek El Saleh"
+      ],
+      "lines": [
+        "metro-1"
+      ],
+      "sourceIds": [
+        "cairo-governorate-metro"
+      ],
+      "coordinate": [
+        31.2312066,
+        30.0176827
+      ],
+      "mapStationId": "rail-el-malek-el-saleh",
+      "mapUrl": "/?transport=1&station=rail-el-malek-el-saleh",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/5349031092",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "sayeda-zeinab",
+      "name": "السيدة زينب",
+      "nameEn": "Sayeda Zeinab",
+      "aliases": [
+        "السيدة زينب",
+        "Sayeda Zeinab"
+      ],
+      "lines": [
+        "metro-1"
+      ],
+      "sourceIds": [
+        "cairo-governorate-metro"
+      ],
+      "coordinate": [
+        31.2353861,
+        30.0292488
+      ],
+      "mapStationId": "rail-sayeda-zeinab",
+      "mapUrl": "/?transport=1&station=rail-sayeda-zeinab",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/5349031090",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "saad-zaghloul",
+      "name": "سعد زغلول",
+      "nameEn": "Saad Zaghloul",
+      "aliases": [
+        "سعد زغلول",
+        "Saad Zaghloul"
+      ],
+      "lines": [
+        "metro-1"
+      ],
+      "sourceIds": [
+        "cairo-governorate-metro"
+      ],
+      "coordinate": [
+        31.2380818,
+        30.036568
+      ],
+      "mapStationId": "rail-saad-zaghloul",
+      "mapUrl": "/?transport=1&station=rail-saad-zaghloul",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/5349031086",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "sadat",
+      "name": "السادات",
+      "nameEn": "Sadat",
+      "aliases": [
+        "السادات",
+        "Sadat",
+        "أنور السادات",
+        "التحرير",
+        "ميدان التحرير",
+        "Tahrir"
+      ],
+      "lines": [
+        "metro-1",
+        "metro-2"
+      ],
+      "sourceIds": [
+        "cairo-governorate-metro"
+      ],
+      "coordinate": [
+        31.2353785,
+        30.0439485
+      ],
+      "mapStationId": "rail-sadat",
+      "mapUrl": "/?transport=1&station=rail-sadat",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/316633428",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "nasser",
+      "name": "جمال عبد الناصر",
+      "nameEn": "Nasser",
+      "aliases": [
+        "جمال عبد الناصر",
+        "Nasser",
+        "ناصر",
+        "عبد الناصر",
+        "الإسعاف",
+        "Gamal Abdel Nasser"
+      ],
+      "lines": [
+        "metro-1",
+        "metro-3"
+      ],
+      "sourceIds": [
+        "cairo-governorate-metro",
+        "mobility-line3"
+      ],
+      "coordinate": [
+        31.2388016,
+        30.0535567
+      ],
+      "mapStationId": "rail-nasser",
+      "mapUrl": "/?transport=1&station=rail-nasser",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/5349031081",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "orabi",
+      "name": "أحمد عرابي",
+      "nameEn": "Orabi",
+      "aliases": [
+        "أحمد عرابي",
+        "Orabi",
+        "عرابي",
+        "Ahmed Orabi"
+      ],
+      "lines": [
+        "metro-1"
+      ],
+      "sourceIds": [
+        "cairo-governorate-metro"
+      ],
+      "coordinate": [
+        31.2425378,
+        30.0573315
+      ],
+      "mapStationId": "rail-orabi",
+      "mapUrl": "/?transport=1&station=rail-orabi",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/5353485467",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "el-shohadaa",
+      "name": "الشهداء",
+      "nameEn": "El Shohadaa",
+      "aliases": [
+        "الشهداء",
+        "El Shohadaa",
+        "رمسيس",
+        "ميدان رمسيس",
+        "محطة مصر",
+        "محطة قطار رمسيس",
+        "Ramses",
+        "Ramsis",
+        "Martyrs"
+      ],
+      "lines": [
+        "metro-1",
+        "metro-2"
+      ],
+      "sourceIds": [
+        "cairo-governorate-metro"
+      ],
+      "nearbyDestinations": [
+        {
+          "id": "ramses-railway",
+          "name": "محطة قطارات رمسيس (محطة مصر)",
+          "relation": "adjacent_national_rail_station",
+          "sourceId": "metro-important-stations",
+          "walkingMinutes": null,
+          "note": "محطة المترو تخدم محطة مصر؛ لا يُفترض رصيف القطار أو مخرجه أو وقت المشي من دون تحقق."
+        }
+      ],
+      "coordinate": [
+        31.2460174,
+        30.061851
+      ],
+      "mapStationId": "rail-el-shohadaa",
+      "mapUrl": "/?transport=1&station=rail-el-shohadaa",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/5194295702",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "ghamra",
+      "name": "غمرة",
+      "nameEn": "Ghamra",
+      "aliases": [
+        "غمرة",
+        "Ghamra"
+      ],
+      "lines": [
+        "metro-1"
+      ],
+      "sourceIds": [
+        "cairo-governorate-metro"
+      ],
+      "coordinate": [
+        31.2646738,
+        30.068964
+      ],
+      "mapStationId": "rail-ghamra",
+      "mapUrl": "/?transport=1&station=rail-ghamra",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/5349031080",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "el-demerdash",
+      "name": "الدمرداش",
+      "nameEn": "El Demerdash",
+      "aliases": [
+        "الدمرداش",
+        "El Demerdash"
+      ],
+      "lines": [
+        "metro-1"
+      ],
+      "sourceIds": [
+        "cairo-governorate-metro"
+      ],
+      "coordinate": [
+        31.2778133,
+        30.0772574
+      ],
+      "mapStationId": "rail-el-demerdash",
+      "mapUrl": "/?transport=1&station=rail-el-demerdash",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/5349031078",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "manshiet-el-sadr",
+      "name": "منشية الصدر",
+      "nameEn": "Manshiet El Sadr",
+      "aliases": [
+        "منشية الصدر",
+        "Manshiet El Sadr"
+      ],
+      "lines": [
+        "metro-1"
+      ],
+      "sourceIds": [
+        "cairo-governorate-metro"
+      ],
+      "coordinate": [
+        31.2878414,
+        30.0822064
+      ],
+      "mapStationId": "rail-manshiet-el-sadr",
+      "mapUrl": "/?transport=1&station=rail-manshiet-el-sadr",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/5349031077",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "kobri-el-qobba",
+      "name": "كوبري القبة",
+      "nameEn": "Kobri El Qobba",
+      "aliases": [
+        "كوبري القبة",
+        "Kobri El Qobba"
+      ],
+      "lines": [
+        "metro-1"
+      ],
+      "sourceIds": [
+        "cairo-governorate-metro"
+      ],
+      "coordinate": [
+        31.2938181,
+        30.0869694
+      ],
+      "mapStationId": "rail-kobri-el-qobba",
+      "mapUrl": "/?transport=1&station=rail-kobri-el-qobba",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/5349031076",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "hammamat-el-qobba",
+      "name": "حمامات القبة",
+      "nameEn": "Hammamat El Qobba",
+      "aliases": [
+        "حمامات القبة",
+        "Hammamat El Qobba"
+      ],
+      "lines": [
+        "metro-1"
+      ],
+      "sourceIds": [
+        "cairo-governorate-metro"
+      ],
+      "coordinate": [
+        31.2981109,
+        30.0903392
+      ],
+      "mapStationId": "rail-hammamat-el-qobba",
+      "mapUrl": "/?transport=1&station=rail-hammamat-el-qobba",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/5349031075",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "saray-el-qobba",
+      "name": "سراي القبة",
+      "nameEn": "Saray El Qobba",
+      "aliases": [
+        "سراي القبة",
+        "Saray El Qobba"
+      ],
+      "lines": [
+        "metro-1"
+      ],
+      "sourceIds": [
+        "cairo-governorate-metro"
+      ],
+      "coordinate": [
+        31.3047494,
+        30.0980698
+      ],
+      "mapStationId": "rail-saray-el-qobba",
+      "mapUrl": "/?transport=1&station=rail-saray-el-qobba",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/5349031074",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "hadayeq-el-zeitoun",
+      "name": "حدائق الزيتون",
+      "nameEn": "Hadayeq El Zeitoun",
+      "aliases": [
+        "حدائق الزيتون",
+        "Hadayeq El Zeitoun"
+      ],
+      "lines": [
+        "metro-1"
+      ],
+      "sourceIds": [
+        "cairo-governorate-metro"
+      ],
+      "coordinate": [
+        31.3099368,
+        30.1051989
+      ],
+      "mapStationId": "rail-hadayeq-el-zeitoun",
+      "mapUrl": "/?transport=1&station=rail-hadayeq-el-zeitoun",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/5349031073",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "helmiet-el-zeitoun",
+      "name": "حلمية الزيتون",
+      "nameEn": "Helmiet El Zeitoun",
+      "aliases": [
+        "حلمية الزيتون",
+        "Helmiet El Zeitoun"
+      ],
+      "lines": [
+        "metro-1"
+      ],
+      "sourceIds": [
+        "cairo-governorate-metro"
+      ],
+      "coordinate": [
+        31.3139,
+        30.1143455
+      ],
+      "mapStationId": "rail-helmiet-el-zeitoun",
+      "mapUrl": "/?transport=1&station=rail-helmiet-el-zeitoun",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/316643091",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "el-matareya",
+      "name": "المطرية",
+      "nameEn": "El Matareya",
+      "aliases": [
+        "المطرية",
+        "El Matareya"
+      ],
+      "lines": [
+        "metro-1"
+      ],
+      "sourceIds": [
+        "cairo-governorate-metro"
+      ],
+      "coordinate": [
+        31.3139749,
+        30.1213801
+      ],
+      "mapStationId": "rail-el-matareya",
+      "mapUrl": "/?transport=1&station=rail-el-matareya",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/5349031070",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "ain-shams",
+      "name": "عين شمس",
+      "nameEn": "Ain Shams",
+      "aliases": [
+        "عين شمس",
+        "Ain Shams"
+      ],
+      "lines": [
+        "metro-1"
+      ],
+      "sourceIds": [
+        "cairo-governorate-metro"
+      ],
+      "coordinate": [
+        31.3190751,
+        30.1310378
+      ],
+      "mapStationId": "rail-ain-shams",
+      "mapUrl": "/?transport=1&station=rail-ain-shams",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/5349031069",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "ezbet-el-nakhl",
+      "name": "عزبة النخل",
+      "nameEn": "Ezbet El Nakhl",
+      "aliases": [
+        "عزبة النخل",
+        "Ezbet El Nakhl"
+      ],
+      "lines": [
+        "metro-1"
+      ],
+      "sourceIds": [
+        "cairo-governorate-metro"
+      ],
+      "coordinate": [
+        31.3244931,
+        30.1392826
+      ],
+      "mapStationId": "rail-ezbet-el-nakhl",
+      "mapUrl": "/?transport=1&station=rail-ezbet-el-nakhl",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/5349031067",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "el-marg",
+      "name": "المرج",
+      "nameEn": "El Marg",
+      "aliases": [
+        "المرج",
+        "El Marg",
+        "المرج القديمة"
+      ],
+      "lines": [
+        "metro-1"
+      ],
+      "sourceIds": [
+        "cairo-governorate-metro"
+      ],
+      "coordinate": [
+        31.3357665,
+        30.1520818
+      ],
+      "mapStationId": "rail-el-marg",
+      "mapUrl": "/?transport=1&station=rail-el-marg",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/5349031066",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "new-el-marg",
+      "name": "المرج الجديدة",
+      "nameEn": "New El Marg",
+      "aliases": [
+        "المرج الجديدة",
+        "New El Marg"
+      ],
+      "lines": [
+        "metro-1"
+      ],
+      "sourceIds": [
+        "cairo-governorate-metro"
+      ],
+      "coordinate": [
+        31.338272,
+        30.1635097
+      ],
+      "mapStationId": "rail-new-el-marg",
+      "mapUrl": "/?transport=1&station=rail-new-el-marg",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/5353444300",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "shubra-el-kheima",
+      "name": "شبرا الخيمة",
+      "nameEn": "Shubra El Kheima",
+      "aliases": [
+        "شبرا الخيمة",
+        "Shubra El Kheima"
+      ],
+      "lines": [
+        "metro-2"
+      ],
+      "sourceIds": [
+        "cairo-governorate-metro"
+      ],
+      "coordinate": [
+        31.2434932,
+        30.1240927
+      ],
+      "mapStationId": "rail-shubra-el-kheima",
+      "mapUrl": "/?transport=1&station=rail-shubra-el-kheima",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/9164359293",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "kolleyet-el-zeraa",
+      "name": "كلية الزراعة",
+      "nameEn": "Kolleyet El Zeraa",
+      "aliases": [
+        "كلية الزراعة",
+        "Kolleyet El Zeraa"
+      ],
+      "lines": [
+        "metro-2"
+      ],
+      "sourceIds": [
+        "cairo-governorate-metro"
+      ],
+      "coordinate": [
+        31.2487433,
+        30.1137638
+      ],
+      "mapStationId": "rail-kolleyet-el-zeraa",
+      "mapUrl": "/?transport=1&station=rail-kolleyet-el-zeraa",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/9164359294",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "el-mazallat",
+      "name": "المظلات",
+      "nameEn": "El Mazallat",
+      "aliases": [
+        "المظلات",
+        "El Mazallat"
+      ],
+      "lines": [
+        "metro-2"
+      ],
+      "sourceIds": [
+        "cairo-governorate-metro"
+      ],
+      "coordinate": [
+        31.2461248,
+        30.1040913
+      ],
+      "mapStationId": "rail-el-mazallat",
+      "mapUrl": "/?transport=1&station=rail-el-mazallat",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/316635179",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "el-khalafawy",
+      "name": "الخلفاوي",
+      "nameEn": "El Khalafawy",
+      "aliases": [
+        "الخلفاوي",
+        "El Khalafawy"
+      ],
+      "lines": [
+        "metro-2"
+      ],
+      "sourceIds": [
+        "cairo-governorate-metro"
+      ],
+      "coordinate": [
+        31.2454368,
+        30.0977898
+      ],
+      "mapStationId": "rail-el-khalafawy",
+      "mapUrl": "/?transport=1&station=rail-el-khalafawy",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/2181318225",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "saint-teresa",
+      "name": "سانت تريزا",
+      "nameEn": "Saint Teresa",
+      "aliases": [
+        "سانت تريزا",
+        "Saint Teresa",
+        "سانت تريز",
+        "سانتا تريزا",
+        "St Teresa"
+      ],
+      "lines": [
+        "metro-2"
+      ],
+      "sourceIds": [
+        "cairo-governorate-metro"
+      ],
+      "coordinate": [
+        31.2454098,
+        30.0883026
+      ],
+      "mapStationId": "rail-saint-teresa",
+      "mapUrl": "/?transport=1&station=rail-saint-teresa",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/316634831",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "rod-el-farag",
+      "name": "روض الفرج",
+      "nameEn": "Rod El Farag",
+      "aliases": [
+        "روض الفرج",
+        "Rod El Farag"
+      ],
+      "lines": [
+        "metro-2"
+      ],
+      "sourceIds": [
+        "cairo-governorate-metro"
+      ],
+      "coordinate": [
+        31.245351,
+        30.0805647
+      ],
+      "mapStationId": "rail-rod-el-farag",
+      "mapUrl": "/?transport=1&station=rail-rod-el-farag",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/316634715",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "masarra",
+      "name": "مسرة",
+      "nameEn": "Masarra",
+      "aliases": [
+        "مسرة",
+        "Masarra",
+        "المسرة"
+      ],
+      "lines": [
+        "metro-2"
+      ],
+      "sourceIds": [
+        "cairo-governorate-metro"
+      ],
+      "coordinate": [
+        31.2450193,
+        30.0711007
+      ],
+      "mapStationId": "rail-masarra",
+      "mapUrl": "/?transport=1&station=rail-masarra",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/316634158",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "attaba",
+      "name": "العتبة",
+      "nameEn": "Attaba",
+      "aliases": [
+        "العتبة",
+        "Attaba"
+      ],
+      "lines": [
+        "metro-2",
+        "metro-3"
+      ],
+      "sourceIds": [
+        "cairo-governorate-metro",
+        "mobility-line3"
+      ],
+      "coordinate": [
+        31.246899,
+        30.0524299
+      ],
+      "mapStationId": "rail-attaba",
+      "mapUrl": "/?transport=1&station=rail-attaba",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/5194348149",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "mohamed-naguib",
+      "name": "محمد نجيب",
+      "nameEn": "Mohamed Naguib",
+      "aliases": [
+        "محمد نجيب",
+        "Mohamed Naguib"
+      ],
+      "lines": [
+        "metro-2"
+      ],
+      "sourceIds": [
+        "cairo-governorate-metro"
+      ],
+      "coordinate": [
+        31.244276,
+        30.0453923
+      ],
+      "mapStationId": "rail-mohamed-naguib",
+      "mapUrl": "/?transport=1&station=rail-mohamed-naguib",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/329978615",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "opera",
+      "name": "الأوبرا",
+      "nameEn": "Opera",
+      "aliases": [
+        "الأوبرا",
+        "Opera"
+      ],
+      "lines": [
+        "metro-2"
+      ],
+      "sourceIds": [
+        "cairo-governorate-metro"
+      ],
+      "coordinate": [
+        31.2250592,
+        30.0419584
+      ],
+      "mapStationId": "rail-opera",
+      "mapUrl": "/?transport=1&station=rail-opera",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/316632961",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "dokki",
+      "name": "الدقي",
+      "nameEn": "Dokki",
+      "aliases": [
+        "الدقي",
+        "Dokki"
+      ],
+      "lines": [
+        "metro-2"
+      ],
+      "sourceIds": [
+        "cairo-governorate-metro"
+      ],
+      "coordinate": [
+        31.2120446,
+        30.0382224
+      ],
+      "mapStationId": "rail-dokki",
+      "mapUrl": "/?transport=1&station=rail-dokki",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/316632940",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "el-bohooth",
+      "name": "البحوث",
+      "nameEn": "El Bohooth",
+      "aliases": [
+        "البحوث",
+        "El Bohooth"
+      ],
+      "lines": [
+        "metro-2"
+      ],
+      "sourceIds": [
+        "cairo-governorate-metro"
+      ],
+      "coordinate": [
+        31.2003443,
+        30.0357796
+      ],
+      "mapStationId": "rail-el-bohooth",
+      "mapUrl": "/?transport=1&station=rail-el-bohooth",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/316632871",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "cairo-university",
+      "name": "جامعة القاهرة",
+      "nameEn": "Cairo University",
+      "aliases": [
+        "جامعة القاهرة",
+        "Cairo University"
+      ],
+      "lines": [
+        "metro-2",
+        "metro-3"
+      ],
+      "sourceIds": [
+        "cairo-governorate-metro",
+        "mobility-line3"
+      ],
+      "coordinate": [
+        31.2012032,
+        30.0259937
+      ],
+      "mapStationId": "rail-cairo-university",
+      "mapUrl": "/?transport=1&station=rail-cairo-university",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/9162042095",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "faisal",
+      "name": "فيصل",
+      "nameEn": "Faisal",
+      "aliases": [
+        "فيصل",
+        "Faisal"
+      ],
+      "lines": [
+        "metro-2"
+      ],
+      "sourceIds": [
+        "cairo-governorate-metro"
+      ],
+      "coordinate": [
+        31.2040345,
+        30.0172948
+      ],
+      "mapStationId": "rail-faisal",
+      "mapUrl": "/?transport=1&station=rail-faisal",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/9162042096",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "giza",
+      "name": "الجيزة",
+      "nameEn": "Giza",
+      "aliases": [
+        "الجيزة",
+        "Giza"
+      ],
+      "lines": [
+        "metro-2"
+      ],
+      "sourceIds": [
+        "cairo-governorate-metro"
+      ],
+      "coordinate": [
+        31.2071246,
+        30.0105702
+      ],
+      "mapStationId": "rail-giza",
+      "mapUrl": "/?transport=1&station=rail-giza",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/9162042097",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "umm-el-masryeen",
+      "name": "أم المصريين",
+      "nameEn": "Umm El Masryeen",
+      "aliases": [
+        "أم المصريين",
+        "Umm El Masryeen",
+        "ضواحي الجيزة",
+        "ام المصريين",
+        "Giza Suburbs"
+      ],
+      "lines": [
+        "metro-2"
+      ],
+      "sourceIds": [
+        "cairo-governorate-metro"
+      ],
+      "coordinate": [
+        31.2079638,
+        30.0052084
+      ],
+      "mapStationId": "rail-umm-el-masryeen",
+      "mapUrl": "/?transport=1&station=rail-umm-el-masryeen",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/316631605",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "sakiat-mekki",
+      "name": "ساقية مكي",
+      "nameEn": "Sakiat Mekki",
+      "aliases": [
+        "ساقية مكي",
+        "Sakiat Mekki"
+      ],
+      "lines": [
+        "metro-2"
+      ],
+      "sourceIds": [
+        "cairo-governorate-metro"
+      ],
+      "coordinate": [
+        31.208614,
+        29.9954853
+      ],
+      "mapStationId": "rail-sakiat-mekki",
+      "mapUrl": "/?transport=1&station=rail-sakiat-mekki",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/9160395525",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "el-moneeb",
+      "name": "المنيب",
+      "nameEn": "El Moneeb",
+      "aliases": [
+        "المنيب",
+        "El Moneeb"
+      ],
+      "lines": [
+        "metro-2"
+      ],
+      "sourceIds": [
+        "cairo-governorate-metro"
+      ],
+      "coordinate": [
+        31.2119674,
+        29.9811369
+      ],
+      "mapStationId": "rail-el-moneeb",
+      "mapUrl": "/?transport=1&station=rail-el-moneeb",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/9160333614",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "adly-mansour",
+      "name": "عدلي منصور",
+      "nameEn": "Adly Mansour",
+      "aliases": [
+        "عدلي منصور",
+        "Adly Mansour",
+        "المستشار عدلي منصور",
+        "عدلى منصور"
+      ],
+      "lines": [
+        "metro-3",
+        "lrt"
+      ],
+      "sourceIds": [
+        "mobility-line3",
+        "mobility-lrt"
+      ],
+      "coordinate": [
+        31.4215168,
+        30.1470316
+      ],
+      "mapStationId": "rail-adly-mansour",
+      "mapUrl": "/?transport=1&station=rail-adly-mansour",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/9159388948",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "el-haykestep",
+      "name": "الهايكستب",
+      "nameEn": "El Haykestep",
+      "aliases": [
+        "الهايكستب",
+        "El Haykestep",
+        "Haykestep"
+      ],
+      "lines": [
+        "metro-3"
+      ],
+      "sourceIds": [
+        "mobility-line3"
+      ],
+      "coordinate": [
+        31.4048488,
+        30.1438828
+      ],
+      "mapStationId": "rail-el-haykestep",
+      "mapUrl": "/?transport=1&station=rail-el-haykestep",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/9159388949",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "omar-ibn-el-khattab",
+      "name": "عمر بن الخطاب",
+      "nameEn": "Omar Ibn El Khattab",
+      "aliases": [
+        "عمر بن الخطاب",
+        "Omar Ibn El Khattab"
+      ],
+      "lines": [
+        "metro-3"
+      ],
+      "sourceIds": [
+        "mobility-line3"
+      ],
+      "coordinate": [
+        31.39448,
+        30.1404081
+      ],
+      "mapStationId": "rail-omar-ibn-el-khattab",
+      "mapUrl": "/?transport=1&station=rail-omar-ibn-el-khattab",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/9159388950",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "qubaa",
+      "name": "قباء",
+      "nameEn": "Qubaa",
+      "aliases": [
+        "قباء",
+        "Qubaa"
+      ],
+      "lines": [
+        "metro-3"
+      ],
+      "sourceIds": [
+        "mobility-line3"
+      ],
+      "coordinate": [
+        31.3840616,
+        30.1347604
+      ],
+      "mapStationId": "rail-qubaa",
+      "mapUrl": "/?transport=1&station=rail-qubaa",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/9159388951",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "hesham-barakat",
+      "name": "هشام بركات",
+      "nameEn": "Hesham Barakat",
+      "aliases": [
+        "هشام بركات",
+        "Hesham Barakat"
+      ],
+      "lines": [
+        "metro-3"
+      ],
+      "sourceIds": [
+        "mobility-line3"
+      ],
+      "coordinate": [
+        31.3730901,
+        30.1309653
+      ],
+      "mapStationId": "rail-hesham-barakat",
+      "mapUrl": "/?transport=1&station=rail-hesham-barakat",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/9159388952",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "el-nozha",
+      "name": "النزهة",
+      "nameEn": "El Nozha",
+      "aliases": [
+        "النزهة",
+        "El Nozha"
+      ],
+      "lines": [
+        "metro-3"
+      ],
+      "sourceIds": [
+        "mobility-line3"
+      ],
+      "coordinate": [
+        31.3605199,
+        30.1281171
+      ],
+      "mapStationId": "rail-el-nozha",
+      "mapUrl": "/?transport=1&station=rail-el-nozha",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/9159388953",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "el-shams-club",
+      "name": "نادي الشمس",
+      "nameEn": "El Shams Club",
+      "aliases": [
+        "نادي الشمس",
+        "El Shams Club"
+      ],
+      "lines": [
+        "metro-3"
+      ],
+      "sourceIds": [
+        "mobility-line3"
+      ],
+      "coordinate": [
+        31.3439721,
+        30.1223062
+      ],
+      "mapStationId": "rail-el-shams-club",
+      "mapUrl": "/?transport=1&station=rail-el-shams-club",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/7153613351",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "alf-maskan",
+      "name": "ألف مسكن",
+      "nameEn": "Alf Maskan",
+      "aliases": [
+        "ألف مسكن",
+        "Alf Maskan"
+      ],
+      "lines": [
+        "metro-3"
+      ],
+      "sourceIds": [
+        "mobility-line3"
+      ],
+      "coordinate": [
+        31.3398266,
+        30.1180729
+      ],
+      "mapStationId": "rail-alf-maskan",
+      "mapUrl": "/?transport=1&station=rail-alf-maskan",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/7153613350",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "heliopolis",
+      "name": "هليوبوليس",
+      "nameEn": "Heliopolis",
+      "aliases": [
+        "هليوبوليس",
+        "Heliopolis"
+      ],
+      "lines": [
+        "metro-3"
+      ],
+      "sourceIds": [
+        "mobility-line3"
+      ],
+      "coordinate": [
+        31.3381815,
+        30.1079599
+      ],
+      "mapStationId": "rail-heliopolis",
+      "mapUrl": "/?transport=1&station=rail-heliopolis",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/7153613353",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "haroun",
+      "name": "هارون",
+      "nameEn": "Haroun",
+      "aliases": [
+        "هارون",
+        "Haroun"
+      ],
+      "lines": [
+        "metro-3"
+      ],
+      "sourceIds": [
+        "mobility-line3"
+      ],
+      "coordinate": [
+        31.332762,
+        30.1011092
+      ],
+      "mapStationId": "rail-haroun",
+      "mapUrl": "/?transport=1&station=rail-haroun",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/7153613352",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "el-ahram",
+      "name": "الأهرام",
+      "nameEn": "El Ahram",
+      "aliases": [
+        "الأهرام",
+        "El Ahram"
+      ],
+      "lines": [
+        "metro-3"
+      ],
+      "sourceIds": [
+        "mobility-line3"
+      ],
+      "coordinate": [
+        31.3264965,
+        30.0913176
+      ],
+      "mapStationId": "rail-el-ahram",
+      "mapUrl": "/?transport=1&station=rail-el-ahram",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/5194348148",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "kolleyet-el-banat",
+      "name": "كلية البنات",
+      "nameEn": "Kolleyet El Banat",
+      "aliases": [
+        "كلية البنات",
+        "Kolleyet El Banat"
+      ],
+      "lines": [
+        "metro-3"
+      ],
+      "sourceIds": [
+        "mobility-line3"
+      ],
+      "coordinate": [
+        31.3292503,
+        30.0843667
+      ],
+      "mapStationId": "rail-kolleyet-el-banat",
+      "mapUrl": "/?transport=1&station=rail-kolleyet-el-banat",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/5007646022",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "stadium",
+      "name": "الاستاد",
+      "nameEn": "Stadium",
+      "aliases": [
+        "الاستاد",
+        "Stadium",
+        "استاد القاهرة",
+        "الإستاد",
+        "Cairo Stadium"
+      ],
+      "lines": [
+        "metro-3"
+      ],
+      "sourceIds": [
+        "mobility-line3"
+      ],
+      "coordinate": [
+        31.3173959,
+        30.072948
+      ],
+      "mapStationId": "rail-stadium",
+      "mapUrl": "/?transport=1&station=rail-stadium",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/5194348153",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "fair-zone",
+      "name": "أرض المعارض",
+      "nameEn": "Fair Zone",
+      "aliases": [
+        "أرض المعارض",
+        "Fair Zone",
+        "ارض المعارض",
+        "Cairo Fair"
+      ],
+      "lines": [
+        "metro-3"
+      ],
+      "sourceIds": [
+        "mobility-line3"
+      ],
+      "coordinate": [
+        31.3011479,
+        30.073329
+      ],
+      "mapStationId": "rail-fair-zone",
+      "mapUrl": "/?transport=1&station=rail-fair-zone",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/5194348141",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "abbasiya",
+      "name": "العباسية",
+      "nameEn": "Abbasiya",
+      "aliases": [
+        "العباسية",
+        "Abbasiya",
+        "العباسيه",
+        "Abassiya"
+      ],
+      "lines": [
+        "metro-3"
+      ],
+      "sourceIds": [
+        "mobility-line3"
+      ],
+      "coordinate": [
+        31.2840893,
+        30.0727858
+      ],
+      "mapStationId": "rail-abbasiya",
+      "mapUrl": "/?transport=1&station=rail-abbasiya",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/5194348142",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "abdou-pasha",
+      "name": "عبده باشا",
+      "nameEn": "Abdou Pasha",
+      "aliases": [
+        "عبده باشا",
+        "Abdou Pasha"
+      ],
+      "lines": [
+        "metro-3"
+      ],
+      "sourceIds": [
+        "mobility-line3"
+      ],
+      "coordinate": [
+        31.2764414,
+        30.0653633
+      ],
+      "mapStationId": "rail-abdou-pasha",
+      "mapUrl": "/?transport=1&station=rail-abdou-pasha",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/5194348143",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "el-geish",
+      "name": "الجيش",
+      "nameEn": "El Geish",
+      "aliases": [
+        "الجيش",
+        "El Geish"
+      ],
+      "lines": [
+        "metro-3"
+      ],
+      "sourceIds": [
+        "mobility-line3"
+      ],
+      "coordinate": [
+        31.267974,
+        30.0622622
+      ],
+      "mapStationId": "rail-el-geish",
+      "mapUrl": "/?transport=1&station=rail-el-geish",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/9710900077",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "bab-el-shaaria",
+      "name": "باب الشعرية",
+      "nameEn": "Bab El Shaaria",
+      "aliases": [
+        "باب الشعرية",
+        "Bab El Shaaria"
+      ],
+      "lines": [
+        "metro-3"
+      ],
+      "sourceIds": [
+        "mobility-line3"
+      ],
+      "coordinate": [
+        31.255875,
+        30.0537108
+      ],
+      "mapStationId": "rail-bab-el-shaaria",
+      "mapUrl": "/?transport=1&station=rail-bab-el-shaaria",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/5194348146",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "maspero",
+      "name": "ماسبيرو",
+      "nameEn": "Maspero",
+      "aliases": [
+        "ماسبيرو",
+        "Maspero"
+      ],
+      "lines": [
+        "metro-3"
+      ],
+      "sourceIds": [
+        "mobility-line3"
+      ],
+      "coordinate": [
+        31.2322096,
+        30.0554909
+      ],
+      "mapStationId": "rail-maspero",
+      "mapUrl": "/?transport=1&station=rail-maspero",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/10099279472",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "safaa-hegazy",
+      "name": "صفاء حجازي",
+      "nameEn": "Safaa Hegazy",
+      "aliases": [
+        "صفاء حجازي",
+        "Safaa Hegazy"
+      ],
+      "lines": [
+        "metro-3"
+      ],
+      "sourceIds": [
+        "mobility-line3"
+      ],
+      "coordinate": [
+        31.2225161,
+        30.062404
+      ],
+      "mapStationId": "rail-safaa-hegazy",
+      "mapUrl": "/?transport=1&station=rail-safaa-hegazy",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/10099279485",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "kit-kat",
+      "name": "الكيت كات",
+      "nameEn": "Kit Kat",
+      "aliases": [
+        "الكيت كات",
+        "Kit Kat"
+      ],
+      "lines": [
+        "metro-3"
+      ],
+      "sourceIds": [
+        "mobility-line3"
+      ],
+      "coordinate": [
+        31.2129901,
+        30.0667936
+      ],
+      "mapStationId": "rail-kit-kat",
+      "mapUrl": "/?transport=1&station=rail-kit-kat",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/10099279487",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "sudan",
+      "name": "السودان",
+      "nameEn": "Sudan",
+      "aliases": [
+        "السودان",
+        "Sudan"
+      ],
+      "lines": [
+        "metro-3"
+      ],
+      "sourceIds": [
+        "mobility-line3"
+      ],
+      "coordinate": [
+        31.2053352,
+        30.0697816
+      ],
+      "mapStationId": "rail-sudan",
+      "mapUrl": "/?transport=1&station=rail-sudan",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/11495611079",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "imbaba",
+      "name": "إمبابة",
+      "nameEn": "Imbaba",
+      "aliases": [
+        "إمبابة",
+        "Imbaba"
+      ],
+      "lines": [
+        "metro-3"
+      ],
+      "sourceIds": [
+        "mobility-line3"
+      ],
+      "coordinate": [
+        31.2075611,
+        30.0759487
+      ],
+      "mapStationId": "rail-imbaba",
+      "mapUrl": "/?transport=1&station=rail-imbaba",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/11495591853",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "el-bohy",
+      "name": "البوهي",
+      "nameEn": "El Bohy",
+      "aliases": [
+        "البوهي",
+        "El Bohy"
+      ],
+      "lines": [
+        "metro-3"
+      ],
+      "sourceIds": [
+        "mobility-line3"
+      ],
+      "coordinate": [
+        31.2104856,
+        30.0821151
+      ],
+      "mapStationId": "rail-el-bohy",
+      "mapUrl": "/?transport=1&station=rail-el-bohy",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/11495591842",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "el-qawmia",
+      "name": "القومية العربية",
+      "nameEn": "El Qawmia",
+      "aliases": [
+        "القومية العربية",
+        "El Qawmia",
+        "القومية"
+      ],
+      "lines": [
+        "metro-3"
+      ],
+      "sourceIds": [
+        "mobility-line3"
+      ],
+      "coordinate": [
+        31.2088797,
+        30.0932033
+      ],
+      "mapStationId": "rail-el-qawmia",
+      "mapUrl": "/?transport=1&station=rail-el-qawmia",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/11495591841",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "ring-road",
+      "name": "الطريق الدائري",
+      "nameEn": "Ring Road",
+      "aliases": [
+        "الطريق الدائري",
+        "Ring Road"
+      ],
+      "lines": [
+        "metro-3"
+      ],
+      "sourceIds": [
+        "mobility-line3"
+      ],
+      "coordinate": [
+        31.1995819,
+        30.0964108
+      ],
+      "mapStationId": "rail-ring-road",
+      "mapUrl": "/?transport=1&station=rail-ring-road",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/11495591819",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "rod-el-farag-corridor",
+      "name": "محور روض الفرج",
+      "nameEn": "Rod El Farag Corridor",
+      "aliases": [
+        "محور روض الفرج",
+        "Rod El Farag Corridor"
+      ],
+      "lines": [
+        "metro-3"
+      ],
+      "sourceIds": [
+        "mobility-line3"
+      ],
+      "coordinate": [
+        31.1842088,
+        30.1022462
+      ],
+      "mapStationId": "rail-rod-el-farag-corridor",
+      "mapUrl": "/?transport=1&station=rail-rod-el-farag-corridor",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/11328539169",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "el-tawfiqia",
+      "name": "التوفيقية",
+      "nameEn": "El Tawfiqia",
+      "aliases": [
+        "التوفيقية",
+        "El Tawfiqia"
+      ],
+      "lines": [
+        "metro-3"
+      ],
+      "sourceIds": [
+        "mobility-line3"
+      ],
+      "coordinate": [
+        31.2021562,
+        30.0650735
+      ],
+      "mapStationId": "rail-el-tawfiqia",
+      "mapUrl": "/?transport=1&station=rail-el-tawfiqia",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/11926766474",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "wadi-el-nil",
+      "name": "وادي النيل",
+      "nameEn": "Wadi El Nil",
+      "aliases": [
+        "وادي النيل",
+        "Wadi El Nil"
+      ],
+      "lines": [
+        "metro-3"
+      ],
+      "sourceIds": [
+        "mobility-line3"
+      ],
+      "coordinate": [
+        31.2010183,
+        30.0584617
+      ],
+      "mapStationId": "rail-wadi-el-nil",
+      "mapUrl": "/?transport=1&station=rail-wadi-el-nil",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/11923457960",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "gameat-el-dewal",
+      "name": "جامعة الدول العربية",
+      "nameEn": "Gameat El Dewal",
+      "aliases": [
+        "جامعة الدول العربية",
+        "Gameat El Dewal",
+        "جامعة الدول",
+        "Arab League"
+      ],
+      "lines": [
+        "metro-3"
+      ],
+      "sourceIds": [
+        "mobility-line3"
+      ],
+      "coordinate": [
+        31.1996873,
+        30.0509547
+      ],
+      "mapStationId": "rail-gameat-el-dewal",
+      "mapUrl": "/?transport=1&station=rail-gameat-el-dewal",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/11923472283",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "bulaq-el-dakrour",
+      "name": "بولاق الدكرور",
+      "nameEn": "Bulaq El Dakrour",
+      "aliases": [
+        "بولاق الدكرور",
+        "Bulaq El Dakrour"
+      ],
+      "lines": [
+        "metro-3"
+      ],
+      "sourceIds": [
+        "mobility-line3"
+      ],
+      "coordinate": [
+        31.1955031,
+        30.0375445
+      ],
+      "mapStationId": "rail-bulaq-el-dakrour",
+      "mapUrl": "/?transport=1&station=rail-bulaq-el-dakrour",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/11923472313",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "lrt-obour",
+      "name": "العبور",
+      "nameEn": "Obour",
+      "aliases": [
+        "العبور",
+        "Obour"
+      ],
+      "lines": [
+        "lrt"
+      ],
+      "sourceIds": [
+        "mobility-lrt"
+      ],
+      "coordinate": [
+        31.4816102,
+        30.1629263
+      ],
+      "mapStationId": "rail-lrt-obour",
+      "mapUrl": "/?transport=1&station=rail-lrt-obour",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/9885252630",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "lrt-mostakbal",
+      "name": "المستقبل",
+      "nameEn": "Mostakbal",
+      "aliases": [
+        "المستقبل",
+        "Mostakbal"
+      ],
+      "lines": [
+        "lrt"
+      ],
+      "sourceIds": [
+        "mobility-lrt"
+      ],
+      "coordinate": [
+        31.5540997,
+        30.173119
+      ],
+      "mapStationId": "rail-lrt-mostakbal",
+      "mapUrl": "/?transport=1&station=rail-lrt-mostakbal",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/9885252628",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "lrt-shorouk",
+      "name": "الشروق",
+      "nameEn": "El Shorouk",
+      "aliases": [
+        "الشروق",
+        "El Shorouk"
+      ],
+      "lines": [
+        "lrt"
+      ],
+      "sourceIds": [
+        "mobility-lrt"
+      ],
+      "coordinate": [
+        31.6057965,
+        30.1796323
+      ],
+      "mapStationId": "rail-lrt-shorouk",
+      "mapUrl": "/?transport=1&station=rail-lrt-shorouk",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/9885252631",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "lrt-new-heliopolis",
+      "name": "هليوبوليس الجديدة",
+      "nameEn": "New Heliopolis",
+      "aliases": [
+        "هليوبوليس الجديدة",
+        "New Heliopolis",
+        "نيو هليوبوليس"
+      ],
+      "lines": [
+        "lrt"
+      ],
+      "sourceIds": [
+        "mobility-lrt"
+      ],
+      "coordinate": [
+        31.6526735,
+        30.1837293
+      ],
+      "mapStationId": "rail-lrt-new-heliopolis",
+      "mapUrl": "/?transport=1&station=rail-lrt-new-heliopolis",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/9885252634",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "lrt-badr",
+      "name": "بدر",
+      "nameEn": "Badr",
+      "aliases": [
+        "بدر",
+        "Badr"
+      ],
+      "lines": [
+        "lrt"
+      ],
+      "sourceIds": [
+        "mobility-lrt"
+      ],
+      "coordinate": [
+        31.7160192,
+        30.1751897
+      ],
+      "mapStationId": "rail-lrt-badr",
+      "mapUrl": "/?transport=1&station=rail-lrt-badr",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/9885252627",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "lrt-robaiki",
+      "name": "الروبيكي",
+      "nameEn": "El Robaiki",
+      "aliases": [
+        "الروبيكي",
+        "El Robaiki"
+      ],
+      "lines": [
+        "lrt"
+      ],
+      "sourceIds": [
+        "mobility-lrt"
+      ],
+      "coordinate": [
+        31.752453,
+        30.1665323
+      ],
+      "mapStationId": "rail-lrt-robaiki",
+      "mapUrl": "/?transport=1&station=rail-lrt-robaiki",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/9885200016",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "lrt-capital-gardens",
+      "name": "حدائق العاصمة",
+      "nameEn": "Capital Gardens",
+      "aliases": [
+        "حدائق العاصمة",
+        "Capital Gardens",
+        "بدر الجديدة",
+        "نيو بدر"
+      ],
+      "lines": [
+        "lrt"
+      ],
+      "sourceIds": [
+        "mobility-lrt"
+      ],
+      "coordinate": [
+        31.8067825,
+        30.1366817
+      ],
+      "mapStationId": "rail-lrt-capital-gardens",
+      "mapUrl": "/?transport=1&station=rail-lrt-capital-gardens",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/9885199998",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "lrt-capital-airport",
+      "name": "مطار العاصمة",
+      "nameEn": "Capital Airport",
+      "aliases": [
+        "مطار العاصمة",
+        "Capital Airport"
+      ],
+      "lines": [
+        "lrt"
+      ],
+      "sourceIds": [
+        "mobility-lrt"
+      ],
+      "coordinate": [
+        31.7824843,
+        30.0758949
+      ],
+      "mapStationId": "rail-lrt-capital-airport",
+      "mapUrl": "/?transport=1&station=rail-lrt-capital-airport",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/9885200014",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "lrt-arts-culture",
+      "name": "مدينة الفنون والثقافة",
+      "nameEn": "Arts and Culture City",
+      "aliases": [
+        "مدينة الفنون والثقافة",
+        "Arts and Culture City",
+        "الفنون والثقافة",
+        "محطة الفنون والثقافة",
+        "Arts and Culture",
+        "Capital Arts and Culture"
+      ],
+      "lines": [
+        "lrt"
+      ],
+      "sourceIds": [
+        "mobility-lrt"
+      ],
+      "coordinate": [
+        31.7250475,
+        30.0136472
+      ],
+      "mapStationId": "rail-lrt-arts-culture",
+      "mapUrl": "/?transport=1&station=rail-lrt-arts-culture",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/9885200015",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "lrt-industrial-zone",
+      "name": "المنطقة الصناعية",
+      "nameEn": "Industrial Zone",
+      "aliases": [
+        "المنطقة الصناعية",
+        "Industrial Zone",
+        "المنطقه الصناعيه"
+      ],
+      "lines": [
+        "lrt"
+      ],
+      "sourceIds": [
+        "mobility-lrt"
+      ],
+      "coordinate": [
+        31.7155954,
+        30.2039612
+      ],
+      "mapStationId": "rail-lrt-industrial-zone",
+      "mapUrl": "/?transport=1&station=rail-lrt-industrial-zone",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/9885252617",
+      "locationStatus": "osm_reference"
+    },
+    {
+      "id": "lrt-knowledge-city",
+      "name": "مدينة المعرفة",
+      "nameEn": "Knowledge City",
+      "aliases": [
+        "مدينة المعرفة",
+        "Knowledge City",
+        "العبور الجديدة",
+        "العبور الجديدة المعرفة",
+        "المعرفة",
+        "New Obour"
+      ],
+      "lines": [
+        "lrt"
+      ],
+      "sourceIds": [
+        "mobility-lrt"
+      ],
+      "coordinate": [
+        31.6916138,
+        30.2307243
+      ],
+      "mapStationId": "rail-lrt-knowledge-city",
+      "mapUrl": "/?transport=1&station=rail-lrt-knowledge-city",
+      "coordinateSourceUrl": "https://www.openstreetmap.org/node/9885252618",
+      "locationStatus": "osm_reference"
+    }
+  ],
+  "lines": [
+    {
+      "headwayMinutes": null,
+      "liveVehicleFeed": false,
+      "intermediateArrivalTimes": null,
+      "fare": null,
+      "status": "published_reference",
+      "scheduleSourceId": "winter-2026",
+      "id": "metro-1",
+      "name": "مترو الخط الأول",
+      "nameEn": "Metro Line 1",
+      "aliases": [
+        "الخط الاول",
+        "مترو 1",
+        "L1",
+        "Metro line 1",
+        "حلوان المرج"
+      ],
+      "mode": "metro",
+      "operator": "الشركة المصرية لإدارة وتشغيل المترو",
+      "branches": [
+        {
+          "id": "metro-1-main",
+          "stationIds": [
+            "helwan",
+            "ain-helwan",
+            "helwan-university",
+            "wadi-hof",
+            "hadayeq-helwan",
+            "el-maasara",
+            "tora-el-asmant",
+            "kozzika",
+            "tora-el-balad",
+            "thakanat-el-maadi",
+            "maadi",
+            "hadayeq-el-maadi",
+            "dar-el-salam",
+            "el-zahraa",
+            "mar-girgis",
+            "el-malek-el-saleh",
+            "sayeda-zeinab",
+            "saad-zaghloul",
+            "sadat",
+            "nasser",
+            "orabi",
+            "el-shohadaa",
+            "ghamra",
+            "el-demerdash",
+            "manshiet-el-sadr",
+            "kobri-el-qobba",
+            "hammamat-el-qobba",
+            "saray-el-qobba",
+            "hadayeq-el-zeitoun",
+            "helmiet-el-zeitoun",
+            "el-matareya",
+            "ain-shams",
+            "ezbet-el-nakhl",
+            "el-marg",
+            "new-el-marg"
+          ]
+        }
+      ],
+      "services": [
+        {
+          "id": "l1-helwan-marg",
+          "fromStationId": "helwan",
+          "toStationId": "new-el-marg",
+          "firstDeparture": "05:15",
+          "lastDeparture": "23:40",
+          "lastDepartureDayOffset": 0,
+          "timezone": "Africa/Cairo",
+          "sourceId": "winter-2026",
+          "validFrom": "2026-10-30",
+          "validUntil": null,
+          "datePolicy": "published_winter_reference",
+          "weekdays": null,
+          "stationArrivalTimes": null
+        },
+        {
+          "id": "l1-marg-helwan",
+          "fromStationId": "new-el-marg",
+          "toStationId": "helwan",
+          "firstDeparture": "05:15",
+          "lastDeparture": "23:40",
+          "lastDepartureDayOffset": 0,
+          "timezone": "Africa/Cairo",
+          "sourceId": "winter-2026",
+          "validFrom": "2026-10-30",
+          "validUntil": null,
+          "datePolicy": "published_winter_reference",
+          "weekdays": null,
+          "stationArrivalTimes": null
+        }
+      ],
+      "sourceIds": [
+        "cairo-governorate-metro",
+        "winter-2026"
+      ],
+      "notes": [
+        "المواعيد أول وآخر انطلاق من نهايتي الخط، مش أول وآخر مرور في كل محطة."
+      ]
+    },
+    {
+      "headwayMinutes": null,
+      "liveVehicleFeed": false,
+      "intermediateArrivalTimes": null,
+      "fare": null,
+      "status": "published_reference",
+      "scheduleSourceId": "winter-2026",
+      "id": "metro-2",
+      "name": "مترو الخط الثاني",
+      "nameEn": "Metro Line 2",
+      "aliases": [
+        "الخط الثاني",
+        "الخط التاني",
+        "مترو 2",
+        "L2",
+        "Metro line 2",
+        "شبرا المنيب"
+      ],
+      "mode": "metro",
+      "operator": "الشركة المصرية لإدارة وتشغيل المترو",
+      "branches": [
+        {
+          "id": "metro-2-main",
+          "stationIds": [
+            "shubra-el-kheima",
+            "kolleyet-el-zeraa",
+            "el-mazallat",
+            "el-khalafawy",
+            "saint-teresa",
+            "rod-el-farag",
+            "masarra",
+            "el-shohadaa",
+            "attaba",
+            "mohamed-naguib",
+            "sadat",
+            "opera",
+            "dokki",
+            "el-bohooth",
+            "cairo-university",
+            "faisal",
+            "giza",
+            "umm-el-masryeen",
+            "sakiat-mekki",
+            "el-moneeb"
+          ]
+        }
+      ],
+      "services": [
+        {
+          "id": "l2-shubra-moneeb",
+          "fromStationId": "shubra-el-kheima",
+          "toStationId": "el-moneeb",
+          "firstDeparture": "05:15",
+          "lastDeparture": "23:55",
+          "lastDepartureDayOffset": 0,
+          "timezone": "Africa/Cairo",
+          "sourceId": "winter-2026",
+          "validFrom": "2026-10-30",
+          "validUntil": null,
+          "datePolicy": "published_winter_reference",
+          "weekdays": null,
+          "stationArrivalTimes": null
+        },
+        {
+          "id": "l2-moneeb-shubra",
+          "fromStationId": "el-moneeb",
+          "toStationId": "shubra-el-kheima",
+          "firstDeparture": "05:15",
+          "lastDeparture": "00:05",
+          "lastDepartureDayOffset": 1,
+          "timezone": "Africa/Cairo",
+          "sourceId": "winter-2026",
+          "validFrom": "2026-10-30",
+          "validUntil": null,
+          "datePolicy": "published_winter_reference",
+          "weekdays": null,
+          "stationArrivalTimes": null
+        }
+      ],
+      "sourceIds": [
+        "cairo-governorate-metro",
+        "winter-2026"
+      ],
+      "notes": [
+        "آخر قطار من المنيب 00:05 بعد منتصف الليل في يوم التقويم التالي ليوم تشغيل الرحلة."
+      ]
+    },
+    {
+      "headwayMinutes": null,
+      "liveVehicleFeed": false,
+      "intermediateArrivalTimes": null,
+      "fare": null,
+      "status": "published_reference",
+      "scheduleSourceId": "winter-2026",
+      "id": "metro-3",
+      "name": "مترو الخط الأخضر الثالث",
+      "nameEn": "Green Line 3",
+      "aliases": [
+        "الخط الثالث",
+        "الخط التالت",
+        "الخط الاخضر",
+        "مترو 3",
+        "GL3",
+        "Metro line 3"
+      ],
+      "mode": "metro",
+      "operator": "RATP Dev Mobility Cairo",
+      "branches": [
+        {
+          "id": "metro-3-rod-el-farag",
+          "stationIds": [
+            "adly-mansour",
+            "el-haykestep",
+            "omar-ibn-el-khattab",
+            "qubaa",
+            "hesham-barakat",
+            "el-nozha",
+            "el-shams-club",
+            "alf-maskan",
+            "heliopolis",
+            "haroun",
+            "el-ahram",
+            "kolleyet-el-banat",
+            "stadium",
+            "fair-zone",
+            "abbasiya",
+            "abdou-pasha",
+            "el-geish",
+            "bab-el-shaaria",
+            "attaba",
+            "nasser",
+            "maspero",
+            "safaa-hegazy",
+            "kit-kat",
+            "sudan",
+            "imbaba",
+            "el-bohy",
+            "el-qawmia",
+            "ring-road",
+            "rod-el-farag-corridor"
+          ]
+        },
+        {
+          "id": "metro-3-cairo-university",
+          "stationIds": [
+            "adly-mansour",
+            "el-haykestep",
+            "omar-ibn-el-khattab",
+            "qubaa",
+            "hesham-barakat",
+            "el-nozha",
+            "el-shams-club",
+            "alf-maskan",
+            "heliopolis",
+            "haroun",
+            "el-ahram",
+            "kolleyet-el-banat",
+            "stadium",
+            "fair-zone",
+            "abbasiya",
+            "abdou-pasha",
+            "el-geish",
+            "bab-el-shaaria",
+            "attaba",
+            "nasser",
+            "maspero",
+            "safaa-hegazy",
+            "kit-kat",
+            "el-tawfiqia",
+            "wadi-el-nil",
+            "gameat-el-dewal",
+            "bulaq-el-dakrour",
+            "cairo-university"
+          ]
+        }
+      ],
+      "branchJunctions": [
+        "kit-kat"
+      ],
+      "services": [
+        {
+          "id": "l3-adly-university",
+          "fromStationId": "adly-mansour",
+          "toStationId": "cairo-university",
+          "firstDeparture": "05:15",
+          "lastDeparture": "23:33",
+          "lastDepartureDayOffset": 0,
+          "timezone": "Africa/Cairo",
+          "sourceId": "winter-2026",
+          "validFrom": "2026-10-30",
+          "validUntil": null,
+          "datePolicy": "published_winter_reference",
+          "weekdays": null,
+          "stationArrivalTimes": null
+        },
+        {
+          "id": "l3-university-adly",
+          "fromStationId": "cairo-university",
+          "toStationId": "adly-mansour",
+          "firstDeparture": "05:15",
+          "lastDeparture": "23:52",
+          "lastDepartureDayOffset": 0,
+          "timezone": "Africa/Cairo",
+          "sourceId": "winter-2026",
+          "validFrom": "2026-10-30",
+          "validUntil": null,
+          "datePolicy": "published_winter_reference",
+          "weekdays": null,
+          "stationArrivalTimes": null
+        },
+        {
+          "id": "l3-adly-rod",
+          "fromStationId": "adly-mansour",
+          "toStationId": "rod-el-farag-corridor",
+          "firstDeparture": "05:20",
+          "lastDeparture": "23:29",
+          "lastDepartureDayOffset": 0,
+          "timezone": "Africa/Cairo",
+          "sourceId": "winter-2026",
+          "validFrom": "2026-10-30",
+          "validUntil": null,
+          "datePolicy": "published_winter_reference",
+          "weekdays": null,
+          "stationArrivalTimes": null
+        },
+        {
+          "id": "l3-rod-adly",
+          "fromStationId": "rod-el-farag-corridor",
+          "toStationId": "adly-mansour",
+          "firstDeparture": "05:15",
+          "lastDeparture": "23:55",
+          "lastDepartureDayOffset": 0,
+          "timezone": "Africa/Cairo",
+          "sourceId": "winter-2026",
+          "validFrom": "2026-10-30",
+          "validUntil": null,
+          "datePolicy": "published_winter_reference",
+          "weekdays": null,
+          "stationArrivalTimes": null
+        }
+      ],
+      "sourceIds": [
+        "mobility-line3",
+        "mobility-projects",
+        "winter-2026"
+      ],
+      "notes": [
+        "الخط بيتفرع بعد الكيت كات. راجع اسم آخر محطة على القطار؛ قطار جامعة القاهرة غير قطار محور روض الفرج.",
+        "وجود مسار في الشبكة لا يضمن قطارًا مباشرًا بين الفرعين."
+      ]
+    },
+    {
+      "headwayMinutes": null,
+      "liveVehicleFeed": false,
+      "intermediateArrivalTimes": null,
+      "fare": null,
+      "status": "published_reference",
+      "scheduleSourceId": "winter-2026",
+      "id": "lrt",
+      "name": "قطار العاصمة LRT",
+      "nameEn": "Capital Train LRT",
+      "aliases": [
+        "LRT",
+        "القطار الكهربائي الخفيف",
+        "قطار العاصمة",
+        "قطار الفنون والثقافة",
+        "light rail"
+      ],
+      "mode": "lrt",
+      "operator": "RATP Dev Mobility Cairo",
+      "branches": [
+        {
+          "id": "lrt-arts-culture",
+          "stationIds": [
+            "adly-mansour",
+            "lrt-obour",
+            "lrt-mostakbal",
+            "lrt-shorouk",
+            "lrt-new-heliopolis",
+            "lrt-badr",
+            "lrt-robaiki",
+            "lrt-capital-gardens",
+            "lrt-capital-airport",
+            "lrt-arts-culture"
+          ]
+        },
+        {
+          "id": "lrt-knowledge",
+          "stationIds": [
+            "lrt-badr",
+            "lrt-industrial-zone",
+            "lrt-knowledge-city"
+          ]
+        }
+      ],
+      "branchJunctions": [
+        "lrt-badr"
+      ],
+      "services": [
+        {
+          "id": "lrt-adly-arts",
+          "fromStationId": "adly-mansour",
+          "toStationId": "lrt-arts-culture",
+          "firstDeparture": "06:00",
+          "lastDeparture": "23:20",
+          "lastDepartureDayOffset": 0,
+          "timezone": "Africa/Cairo",
+          "sourceId": "winter-2026",
+          "validFrom": "2026-10-30",
+          "validUntil": null,
+          "datePolicy": "published_winter_reference",
+          "weekdays": null,
+          "stationArrivalTimes": null,
+          "additionalPublishedDirectDepartures": [
+            "07:30",
+            "08:00"
+          ],
+          "directDepartureNote": "البيان يذكر قطارين مباشرين بهذين الموعدين؛ القائمة لا تمثل كل انطلاقات اليوم ولا تثبت توقفاتهما الوسيطة."
+        },
+        {
+          "id": "lrt-arts-adly",
+          "fromStationId": "lrt-arts-culture",
+          "toStationId": "adly-mansour",
+          "firstDeparture": "06:00",
+          "lastDeparture": "23:20",
+          "lastDepartureDayOffset": 0,
+          "timezone": "Africa/Cairo",
+          "sourceId": "winter-2026",
+          "validFrom": "2026-10-30",
+          "validUntil": null,
+          "datePolicy": "published_winter_reference",
+          "weekdays": null,
+          "stationArrivalTimes": null
+        },
+        {
+          "id": "lrt-badr-adly",
+          "fromStationId": "lrt-badr",
+          "toStationId": "adly-mansour",
+          "firstDeparture": "06:01",
+          "lastDeparture": null,
+          "lastDepartureDayOffset": 0,
+          "timezone": "Africa/Cairo",
+          "sourceId": "winter-2026",
+          "validFrom": "2026-10-30",
+          "validUntil": null,
+          "datePolicy": "published_winter_reference",
+          "weekdays": null,
+          "stationArrivalTimes": null
+        },
+        {
+          "id": "lrt-adly-badr",
+          "fromStationId": "adly-mansour",
+          "toStationId": "lrt-badr",
+          "firstDeparture": null,
+          "lastDeparture": "23:40",
+          "lastDepartureDayOffset": 0,
+          "timezone": "Africa/Cairo",
+          "sourceId": "winter-2026",
+          "validFrom": "2026-10-30",
+          "validUntil": null,
+          "datePolicy": "published_winter_reference",
+          "weekdays": null,
+          "stationArrivalTimes": null
+        },
+        {
+          "id": "lrt-arts-badr",
+          "fromStationId": "lrt-arts-culture",
+          "toStationId": "lrt-badr",
+          "firstDeparture": null,
+          "lastDeparture": "23:40",
+          "lastDepartureDayOffset": 0,
+          "timezone": "Africa/Cairo",
+          "sourceId": "winter-2026",
+          "validFrom": "2026-10-30",
+          "validUntil": null,
+          "datePolicy": "published_winter_reference",
+          "weekdays": null,
+          "stationArrivalTimes": null
+        },
+        {
+          "id": "lrt-badr-knowledge",
+          "fromStationId": "lrt-badr",
+          "toStationId": "lrt-knowledge-city",
+          "firstDeparture": "06:25",
+          "lastDeparture": "23:30",
+          "lastDepartureDayOffset": 0,
+          "timezone": "Africa/Cairo",
+          "sourceId": "winter-2026",
+          "validFrom": "2026-10-30",
+          "validUntil": null,
+          "datePolicy": "published_winter_reference",
+          "weekdays": null,
+          "stationArrivalTimes": null
+        },
+        {
+          "id": "lrt-knowledge-badr",
+          "fromStationId": "lrt-knowledge-city",
+          "toStationId": "lrt-badr",
+          "firstDeparture": "06:38",
+          "lastDeparture": "23:47",
+          "lastDepartureDayOffset": 0,
+          "timezone": "Africa/Cairo",
+          "sourceId": "winter-2026",
+          "validFrom": "2026-10-30",
+          "validUntil": null,
+          "datePolicy": "published_winter_reference",
+          "weekdays": null,
+          "stationArrivalTimes": null
+        }
+      ],
+      "sourceIds": [
+        "mobility-lrt",
+        "mobility-projects",
+        "winter-2026"
+      ],
+      "notes": [
+        "مواعيد قطار LRT منفصلة عن سيارة التغذية بين الفنون والثقافة وبوابة 1؛ نافذة سيارة التغذية تُقرأ من بيانات الموقف ولا تُستخدم كجدول قطارات.",
+        "فرع مدينة المعرفة يبدأ من بدر. راجع اتجاه القطار واحتياج تغيير القطار في بدر؛ بعض الرحلات آخرها بدر.",
+        "المحطات الإضافية قيد الإنشاء لا تدخل هذه الشبكة.",
+        "أول أو آخر قطار غير المنشور لاتجاه معين يظل غير معروف؛ لا نستنتجه من الاتجاه العكسي."
+      ]
+    }
+  ],
+  "interchanges": [
+    {
+      "stationId": "sadat",
+      "lineIds": [
+        "metro-1",
+        "metro-2"
+      ],
+      "type": "rail_interchange",
+      "walkingMinutes": null,
+      "sourceIds": [
+        "cairo-governorate-metro"
+      ]
+    },
+    {
+      "stationId": "nasser",
+      "lineIds": [
+        "metro-1",
+        "metro-3"
+      ],
+      "type": "rail_interchange",
+      "walkingMinutes": null,
+      "sourceIds": [
+        "cairo-governorate-metro",
+        "mobility-line3"
+      ]
+    },
+    {
+      "stationId": "el-shohadaa",
+      "lineIds": [
+        "metro-1",
+        "metro-2"
+      ],
+      "type": "rail_interchange",
+      "walkingMinutes": null,
+      "sourceIds": [
+        "cairo-governorate-metro"
+      ]
+    },
+    {
+      "stationId": "attaba",
+      "lineIds": [
+        "metro-2",
+        "metro-3"
+      ],
+      "type": "rail_interchange",
+      "walkingMinutes": null,
+      "sourceIds": [
+        "cairo-governorate-metro",
+        "mobility-line3"
+      ]
+    },
+    {
+      "stationId": "cairo-university",
+      "lineIds": [
+        "metro-2",
+        "metro-3"
+      ],
+      "type": "rail_interchange",
+      "walkingMinutes": null,
+      "sourceIds": [
+        "cairo-governorate-metro",
+        "mobility-line3"
+      ]
+    },
+    {
+      "stationId": "adly-mansour",
+      "lineIds": [
+        "metro-3",
+        "lrt"
+      ],
+      "type": "rail_interchange",
+      "walkingMinutes": null,
+      "sourceIds": [
+        "mobility-line3",
+        "mobility-lrt"
+      ]
+    }
+  ],
+  "lastTrainConnections": [
+    {
+      "stationId": "sadat",
+      "lineIds": [
+        "metro-1",
+        "metro-2"
+      ],
+      "time": "00:25",
+      "dayOffset": 1,
+      "sourceId": "winter-2026",
+      "kind": "published_last_train_meeting",
+      "notGuaranteedLiveConnection": true
+    },
+    {
+      "stationId": "nasser",
+      "lineIds": [
+        "metro-1",
+        "metro-3"
+      ],
+      "time": "00:00",
+      "dayOffset": 1,
+      "sourceId": "winter-2026",
+      "kind": "published_last_train_meeting",
+      "notGuaranteedLiveConnection": true
+    },
+    {
+      "stationId": "attaba",
+      "lineIds": [
+        "metro-2",
+        "metro-3"
+      ],
+      "time": "00:00",
+      "dayOffset": 1,
+      "sourceId": "winter-2026",
+      "kind": "published_last_train_meeting",
+      "notGuaranteedLiveConnection": true
+    },
+    {
+      "stationId": "cairo-university",
+      "lineIds": [
+        "metro-2",
+        "metro-3"
+      ],
+      "time": "23:45",
+      "dayOffset": 0,
+      "sourceId": "winter-2026",
+      "kind": "published_last_train_meeting",
+      "notGuaranteedLiveConnection": true
+    }
+  ],
+  "limitations": [
+    "المواعيد بتوقيت القاهرة، من بيان الشتاء المعلن في 28 أكتوبر 2026 والساري بعد منتصف ليل 29 أكتوبر؛ يجب مراجعة تنبيه المشغّل في الإجازات والأعطال والمناسبات.",
+    "مواعيد الأطراف ليست مواعيد وصول لكل محطة؛ لا نحسب قطارًا قادمًا بالاستيفاء أو بزمن محطة مفترض.",
+    "ترتيب المحطات والتبادلات يصف شبكة قائمة، وليس ضمانًا للحاق بوصلة أو توفر مقعد أو خدمة مباشرة لكل زوج محطات.",
+    "إحداثيات المحطات من OpenStreetMap للموقع المرجعي، وليست مداخل مؤكدة أو مسارات مشي. لا أوقات وصول أو مدد مشي مصطنعة.",
+    "لا تندمج نافذة موقف بوابة 1 العام أو سيارة تغذية LRT مع جداول قطار LRT.",
+    "أسعار التذاكر والترددات غير موجودة هنا لأن أحدث بيان الشتاء الذي تحققنا منه لا يحددها."
+  ]
+}

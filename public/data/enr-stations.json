@@ -1,0 +1,256 @@
+{
+  "version": 1,
+  "source": {
+    "title": "محطات هيئة سكك حديد مصر في البحث الرسمي العام",
+    "url": "https://enr.gov.eg/api/v1/serviceTripPoints/stations?type=0&prefix=enr&project=enr",
+    "checkedAt": "2026-11-06T14:24:26.305Z"
+  },
+  "stations": [
+    {
+      "id": "606535390819516493",
+      "name": "المنيا",
+      "nameEn": "EL-MINIA",
+      "aliases": []
+    },
+    {
+      "id": "606535391364776027",
+      "name": "نجع حمادي",
+      "nameEn": "NAG HAMMADI",
+      "aliases": []
+    },
+    {
+      "id": "606535391364776008",
+      "name": "سوهاج",
+      "nameEn": "SOHAG",
+      "aliases": []
+    },
+    {
+      "id": "606535391364775989",
+      "name": "اسيوط",
+      "nameEn": "ASYUT",
+      "aliases": []
+    },
+    {
+      "id": "606535390819516470",
+      "name": "بني سويف",
+      "nameEn": "BENI SUEF",
+      "aliases": []
+    },
+    {
+      "id": "606535392467877956",
+      "name": "اسوان",
+      "nameEn": "ASWAN",
+      "aliases": []
+    },
+    {
+      "id": "606535386352582723",
+      "name": "الزقازيق",
+      "nameEn": "EL-ZQAZYQ",
+      "aliases": []
+    },
+    {
+      "id": "606535384603557938",
+      "name": "الاسكندريه",
+      "nameEn": "ALEXANDRIA",
+      "aliases": [
+        "الإسكندرية",
+        "الاسكندرية",
+        "اسكندرية",
+        "اسكندريه",
+        "الإسكندريه"
+      ]
+    },
+    {
+      "id": "606534187276566625",
+      "name": "القاهره",
+      "nameEn": "CAIRO",
+      "aliases": [
+        "القاهرة",
+        "القاهره",
+        "رمسيس",
+        "محطة رمسيس",
+        "محطة مصر رمسيس"
+      ]
+    },
+    {
+      "id": "606535390282645575",
+      "name": "الجيزه",
+      "nameEn": "EL-GIZA",
+      "aliases": []
+    },
+    {
+      "id": "985257658148595469",
+      "name": "صعيد مصر",
+      "nameEn": "UPPER EGYPT",
+      "aliases": []
+    },
+    {
+      "id": "606535391364776015",
+      "name": "جرجا",
+      "nameEn": "GIRGA",
+      "aliases": []
+    },
+    {
+      "id": "606535392467877944",
+      "name": "كوم امبو",
+      "nameEn": "KOM OMBO",
+      "aliases": []
+    },
+    {
+      "id": "606535391364775997",
+      "name": "طما",
+      "nameEn": "TEMA",
+      "aliases": []
+    },
+    {
+      "id": "606535391364776001",
+      "name": "طهطا",
+      "nameEn": "TAHTA",
+      "aliases": []
+    },
+    {
+      "id": "606535391914229822",
+      "name": "قوص",
+      "nameEn": "QUS",
+      "aliases": []
+    },
+    {
+      "id": "606535390819516502",
+      "name": "ملوي",
+      "nameEn": "MALLAWI",
+      "aliases": []
+    },
+    {
+      "id": "606535391364776023",
+      "name": "ابوتشت",
+      "nameEn": "ABU TISHT",
+      "aliases": []
+    },
+    {
+      "id": "606535383991189585",
+      "name": "كفر الزيات",
+      "nameEn": "KAFR EL-ZAIAT",
+      "aliases": []
+    },
+    {
+      "id": "606535383991189575",
+      "name": "قويسنا",
+      "nameEn": "QUESNA",
+      "aliases": []
+    },
+    {
+      "id": "606535383991189582",
+      "name": "طنطا",
+      "nameEn": "TANTA",
+      "aliases": []
+    },
+    {
+      "id": "606535383991189573",
+      "name": "بنها",
+      "nameEn": "BANHA",
+      "aliases": []
+    },
+    {
+      "id": "606535383991189592",
+      "name": "دمنهور",
+      "nameEn": "DAMNHOUR",
+      "aliases": []
+    },
+    {
+      "id": "606535386352582751",
+      "name": "بورسعيد",
+      "nameEn": "PORT SAID",
+      "aliases": []
+    },
+    {
+      "id": "606535386352582719",
+      "name": "منيه القمح",
+      "nameEn": "MNYH ALQMH",
+      "aliases": []
+    },
+    {
+      "id": "606535390819516484",
+      "name": "بني مزار",
+      "nameEn": "BANI MAZAR",
+      "aliases": []
+    },
+    {
+      "id": "606535391364776004",
+      "name": "المراغه",
+      "nameEn": "EL-MARAGHA",
+      "aliases": []
+    },
+    {
+      "id": "606535391364776019",
+      "name": "البلينا",
+      "nameEn": "EL-BALYANA",
+      "aliases": []
+    },
+    {
+      "id": "606535391914229854",
+      "name": "ادفو",
+      "nameEn": "IDFU",
+      "aliases": []
+    },
+    {
+      "id": "606535392467877941",
+      "name": "كلابشه",
+      "nameEn": "KLABSHA",
+      "aliases": []
+    },
+    {
+      "id": "606535392467877946",
+      "name": "دراو",
+      "nameEn": "DARAW",
+      "aliases": []
+    },
+    {
+      "id": "606535391914229829",
+      "name": "الاقصر",
+      "nameEn": "LUXOR",
+      "aliases": []
+    },
+    {
+      "id": "606535391914229842",
+      "name": "اسنا",
+      "nameEn": "ISNA",
+      "aliases": []
+    },
+    {
+      "id": "606535388638478397",
+      "name": "المنصوره",
+      "nameEn": "EL-MNSOURA",
+      "aliases": []
+    },
+    {
+      "id": "606535391914229815",
+      "name": "قنا",
+      "nameEn": "QENA",
+      "aliases": []
+    },
+    {
+      "id": "606535388638478418",
+      "name": "دمياط",
+      "nameEn": "DAMIETTA",
+      "aliases": []
+    },
+    {
+      "id": "606535383991189602",
+      "name": "سيدي جابر",
+      "nameEn": "SIDI GABER",
+      "aliases": []
+    },
+    {
+      "id": "606535383991189578",
+      "name": "بركه السبع",
+      "nameEn": "BIRKAT EL-SABA",
+      "aliases": []
+    },
+    {
+      "id": "606535383991189587",
+      "name": "ايتاي البارود",
+      "nameEn": "ITAI EL-BARUD",
+      "aliases": []
+    }
+  ]
+}
