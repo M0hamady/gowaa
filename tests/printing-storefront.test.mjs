@@ -14,6 +14,17 @@ const bundled = await build({
   platform: 'browser', target: 'es2022', logLevel: 'silent',
 });
 const controller = new vm.Script(bundled.outputFiles[0].text);
+// Keep the real global click gate, including its capture listener and selectors.
+// Only the environment config is replaced so no Supabase connection is created.
+const memberBundled = await build({
+  entryPoints: [fileURLToPath(new URL('../src/member-access.js', import.meta.url))],
+  bundle: true, write: false, format: 'iife', globalName: 'MemberAccess',
+  platform: 'browser', target: 'es2022', logLevel: 'silent',
+  plugins: [{ name: 'isolated-member-config', setup(builder) {
+    builder.onLoad({ filter: /\/public\/config\.js$/ }, () => ({ contents: 'export default {url:"",key:"",phoneAuth:false};', loader: 'js' }));
+  } }],
+});
+const memberController = new vm.Script(memberBundled.outputFiles[0].text);
 const seed = JSON.parse(await readFile(new URL('../public/data/printing-catalog.json', import.meta.url), 'utf8'));
 const CUSTOMER = '11111111-1111-4111-8111-111111111111';
 const ORDER = '33333333-3333-4333-8333-333333333333';
@@ -44,6 +55,18 @@ class Element {
   removeAttribute(name) { delete this.attributes[name]; }
   querySelector(selector) { return this.root.querySelector(selector); }
   querySelectorAll(selector) { return this.root.querySelectorAll(selector); }
+  matches(selector) {
+    return selector.split(',').some(part => {
+      const value = part.trim();
+      if (value.startsWith('#')) return this.attributes.id === value.slice(1);
+      if (value.startsWith('.')) return (this.attributes.class || '').split(' ').includes(value.slice(1));
+      const attr = value.match(/^(?:([a-z]+))?\[([\w-]+)(?:=["']?([^"'\]]+)["']?)?\]$/i);
+      if (attr) return (!attr[1] || this.tagName === attr[1].toUpperCase()) && attr[2] in this.attributes && (attr[3] === undefined || this.attributes[attr[2]] === attr[3]);
+      return this.tagName === value.toUpperCase();
+    });
+  }
+  closest(selector) { return this.matches(selector) ? this : this.parentElement?.closest(selector) || null; }
+  click() { return this.onclick?.({ preventDefault() {}, target: this, currentTarget: this }); }
   focus() {}
   scrollIntoView() {}
 }
@@ -91,8 +114,9 @@ const deferred = () => {
 const reply = data => ({ ok: true, status: 200, json: async () => ({ data }) });
 const catalogFixture = () => ({ ...structuredClone(seed), works: [] });
 
-function setup({ url = '/market?view=printing', catalog = catalogFixture(), handler, authenticated = true, isVisible = () => true } = {}) {
+function setup({ url = '/market?view=printing', catalog = catalogFixture(), handler, authenticated = true, isVisible = () => true, memberGate = false } = {}) {
   const root = new Root(), requests = [], messages = [], clipboard = [], uploads = [];
+  const documentListeners = [];
   let address = new URL(url, 'https://jowwa.example');
   let user = authenticated ? { id: CUSTOMER, user_metadata: { display_name: 'عميل الاختبار' }, email_confirmed_at: '2026-11-06' } : null;
   let created;
@@ -100,10 +124,16 @@ function setup({ url = '/market?view=printing', catalog = catalogFixture(), hand
   for (const key of Object.keys(location)) Object.defineProperty(location, key, { get: () => address[key] });
   const history = { pushState: (_state, _title, path) => { address = new URL(path, address); }, replaceState: (_state, _title, path) => { address = new URL(path, address); } };
   const context = vm.createContext({
-    URL, URLSearchParams, Intl, Date, AbortController, setTimeout, clearTimeout,
+    URL, URLSearchParams, Intl, Date, AbortController, AbortSignal, setTimeout, clearTimeout, Element,
     crypto: { randomUUID }, location, history,
+    window: {},
     navigator: { clipboard: { writeText: async value => { clipboard.push(value); } } },
-    document: { createElement: tag => new Element(root, tag, {}), querySelector: selector => root.querySelector(selector) },
+    document: {
+      createElement: tag => new Element(root, tag, {}), querySelector: selector => root.querySelector(selector), querySelectorAll: selector => root.querySelectorAll(selector),
+      addEventListener: (type, callback, capture) => documentListeners.push({ type, callback, capture }),
+      head: { append() {} }, body: { dataset: {}, hasAttribute: () => false },
+      documentElement: { classList: { add() {}, remove() {}, toggle() {} } },
+    },
     fetch: async (url, options = {}) => {
       const parsed = new URL(url, address);
       const request = { url: parsed, query: Object.fromEntries(parsed.searchParams), body: options.body ? JSON.parse(options.body) : null, options };
@@ -126,16 +156,27 @@ function setup({ url = '/market?view=printing', catalog = catalogFixture(), hand
     storage: { from: bucket => ({ upload: async (path, file, options) => { uploads.push({ bucket, path, file, options }); return { data: { path }, error: null }; } }) },
   };
   const ui = context.PrintingUi.createMarketPrinting({ root, db, getUser: () => user, requireUser: () => Boolean(user), toast: value => messages.push(value), isVisible });
+  if (memberGate) { memberController.runInContext(context); context.MemberAccess.mountMemberAccess(); }
+  const dispatchClick = async node => {
+    const event = { target: node, currentTarget: node, defaultPrevented: false, stopped: false, preventDefault() { this.defaultPrevented = true; }, stopImmediatePropagation() { this.stopped = true; } };
+    const captures = [];
+    for (const listener of documentListeners.filter(listener => listener.type === 'click' && listener.capture === true)) {
+      captures.push(listener.callback(event));
+      if (event.stopped) break;
+    }
+    if (!event.stopped) await node.onclick(event);
+    await tick();
+    return { event, captureFinished: Promise.all(captures) };
+  };
   return {
-    ui, root, requests, messages, clipboard, uploads, catalog, location,
+    ui, root, requests, messages, clipboard, uploads, catalog, location, dispatchClick,
     navigate: value => { address = new URL(value, address); },
     setUser: value => { user = value; },
     click: async selector => {
       const node = root.querySelector(selector);
       assert.ok(node, `Missing ${selector}`);
       assert.equal(typeof node.onclick, 'function', `No click handler for ${selector}`);
-      const result = node.onclick({ preventDefault() {}, target: node, currentTarget: node });
-      await result; await tick();
+      return dispatchClick(node);
     },
     answer: async value => {
       if (value !== undefined) {
@@ -195,11 +236,50 @@ test('paper direct link has its own four rates and starts a PDF-only order with 
   assert.match(app.root.innerHTML, /printing-rate-table/);
   for (const price of [1.5, 2, 3, 4]) assert.ok(app.root.innerHTML.includes(new Intl.NumberFormat('ar-EG', { maximumFractionDigits: 2 }).format(price) + ' ج.م'));
   const button = app.root.querySelector('[data-print-start="paper"]');
-  assert.equal(button.dataset.provider, paperId);
+  assert.equal(button.getAttribute('data-provider'), null);
+  assert.equal(new URL(app.location.href).searchParams.get('printProvider'), paperId);
   await app.click('[data-print-start="paper"]');
   assert.equal(app.root.querySelector('#printing-answer').getAttribute('accept'), 'application/pdf,.pdf');
   assert.deepEqual(providerLinks(app), [paperId]);
   assert.match(question(app), /PDF/);
+});
+
+test('PDF start passes the real member-access capture gate and requires a file before continuing', async () => {
+  const membership = deferred();
+  const app = setup({
+    url: `/market?view=printing&printProvider=${paperId}`, authenticated: false, memberGate: true,
+    handler: request => request.url.pathname === '/api/member' ? membership.promise : undefined,
+  });
+  await app.ui.show();
+  // A positive control proves the actual generic gate is mounted and still
+  // intercepts its own selector while the membership check is pending.
+  let genericClicks = 0;
+  const genericDetails = new Element(app.root, 'button', { 'data-provider': paperId });
+  genericDetails.onclick = () => { genericClicks++; };
+  const intercepted = await app.dispatchClick(genericDetails);
+  assert.equal(intercepted.event.defaultPrevented, true);
+  assert.equal(intercepted.event.stopped, true);
+  assert.equal(genericClicks, 0);
+
+  const started = await app.click('[data-print-start="paper"]');
+  assert.equal(started.event.defaultPrevented, false);
+  assert.equal(started.event.stopped, false);
+  await started.captureFinished;
+  assert.match(question(app), /PDF/);
+  assert.equal(app.root.querySelector('#printing-answer').getAttribute('accept'), 'application/pdf,.pdf');
+  assert.deepEqual(providerLinks(app), [paperId]);
+  const form = app.root.querySelector('#printing-question-form');
+  await form.onsubmit({ preventDefault() {} });
+  assert.match(app.root.querySelector('#printing-form-error').textContent, /اختار ملف واحد على الأقل/);
+  assert.match(question(app), /PDF/);
+  assert.equal(app.uploads.length, 0);
+  assert.equal(app.requests.some(request => request.body?.action === 'create'), false);
+
+  // Complete the existing member flow and retain its replay behaviour for
+  // genuine generic provider actions; printing does not weaken that gate.
+  membership.resolve({ ok: true, status: 200, json: async () => ({ member: true, user: { id: CUSTOMER } }) });
+  await intercepted.captureFinished;
+  assert.equal(genericClicks, 1);
 });
 
 test('unknown, directory-only, and paused providers never fall back to another provider', async () => {
@@ -312,7 +392,8 @@ test('the latest provider route wins when two opens share a pending catalogue re
   await Promise.all([first, second]);
   assert.match(app.root.innerHTML, /printing-rate-table/);
   assert.deepEqual(productsOnPage(app), []);
-  assert.equal(app.root.querySelector('[data-print-start]').dataset.provider, paperId);
+  assert.ok(app.root.querySelector('[data-print-start="paper"]'));
+  assert.equal(new URL(app.location.href).searchParams.get('printProvider'), paperId);
 });
 
 test('provider page share URL contains only the chosen provider route', async () => {
