@@ -10,14 +10,16 @@ export async function verifyPrintingClient(client,{log=console.log}={}){
  const ids={customer:randomUUID(),owner:randomUUID(),stranger:randomUUID()};
  const provider='printing-qa-'+randomUUID(),product='printing-qa-'+randomUUID(),draft=randomUUID();
  const proof=`${ids.owner}/${randomUUID()}/${randomUUID()}.png`;
+ const showcase=`${ids.owner}/${randomUUID()}/${randomUUID()}.webp`;
  let transaction=false,step='starting',passed=0;
  const pass=name=>{passed++;log('[printing-live] PASS '+name);};
  const check=(truth,name)=>{if(!truth)throw Object.assign(Error('Printing verification failed'),{verificationStep:name});pass(name);};
  const query=(sql,args=[])=>client.query(sql,args);
  const as=async(user,name,args)=>{
   await query('reset role');
-  await query("select set_config('request.jwt.claim.sub',$1,true),set_config('request.jwt.claims',$2,true)",[user,JSON.stringify({sub:user,role:'authenticated'})]);
-  await query('set local role authenticated');
+  const role=user?'authenticated':'anon';
+  await query("select set_config('request.jwt.claim.sub',$1,true),set_config('request.jwt.claims',$2,true)",[user||'',JSON.stringify({sub:user,role})]);
+  await query('set local role '+role);
   const names=Object.keys(args),result=await query(`select public.${name}(${names.map((key,i)=>key+'=>$'+(i+1)).join(',')}) result`,names.map(key=>args[key]!==null&&typeof args[key]==='object'?JSON.stringify(args[key]):args[key]));
   await query('reset role');return result.rows[0].result;
  };
@@ -76,8 +78,38 @@ export async function verifyPrintingClient(client,{log=console.log}={}){
   check(inbox.items.length===1&&inbox.items[0].id===order.id,'scoped merchant inbox');
   const alerts=await query('select count(*)::int n from jowwa_private.provider_order_alerts where source_id=$1',[order.id]);check(alerts.rows[0].n===0,'no outbound print notification');
 
+  step='public count and independent showcase';
+  let catalog=await as(null,'jowwa_printing_catalog',{});
+  const summary=catalog.providers.find(p=>p.id===provider);
+  check(summary.completedWorksCount===1&&!catalog.works.some(w=>w.providerId===provider)&&!JSON.stringify(catalog).includes(proof),'completed count without private order content');
+  await denied(()=>mutate(ids.owner,'showcase_save',{providerId:provider,version:0,fields:{title:'صورة طلب خاصة',imagePath:proof,published:true},consent:true}),'22023','order proof cannot become public work');
+  check(await as(ids.owner,'jowwa_printing_showcase_upload_allowed',{p_path:showcase})===true,'verified owner can upload independent image');
+  await query('insert into storage.objects(bucket_id,name,owner,metadata) values($1,$2,$3,$4)',['jowwa-print-showcase',showcase,ids.owner,JSON.stringify({mimetype:'image/webp',size:256})]);
+  let work=await mutate(ids.owner,'showcase_save',{providerId:provider,version:0,fields:{title:'عمل مستقل للاختبار',caption:'صورة اختارها النشاط',imagePath:showcase,published:false},consent:false});
+  const publicDrafts=await as(null,'jowwa_printing_catalog',{}),ownerDrafts=await as(ids.owner,'jowwa_printing_catalog',{});
+  check(!publicDrafts.works.some(w=>w.id===work.id)&&ownerDrafts.works.some(w=>w.id===work.id),'draft visible only to authorized owner');
+  check(await as(null,'jowwa_printing_showcase_file_allowed',{p_path:showcase})===false,'draft image remains private');
+  await denied(()=>mutate(ids.stranger,'showcase_save',{providerId:provider,id:work.id,version:work.version,fields:{published:true},consent:true}),'42501','unrelated account cannot publish work');
+  await denied(()=>mutate(ids.owner,'showcase_save',{providerId:provider,id:work.id,version:work.version,fields:{published:true},consent:false}),'22023','publication requires explicit sharing consent');
+  work=await mutate(ids.owner,'showcase_save',{providerId:provider,id:work.id,version:work.version,fields:{published:true},consent:true});
+  catalog=await as(null,'jowwa_printing_catalog',{});
+  check(catalog.works.some(w=>w.id===work.id&&w.published)&&await as(null,'jowwa_printing_showcase_file_allowed',{p_path:showcase})===true,'selected work becomes publicly visible');
+  work=await mutate(ids.owner,'showcase_save',{providerId:provider,id:work.id,version:work.version,fields:{published:false},consent:false});
+  catalog=await as(null,'jowwa_printing_catalog',{});
+  check(!catalog.works.some(w=>w.id===work.id)&&await as(null,'jowwa_printing_showcase_file_allowed',{p_path:showcase})===false,'hiding work removes public access');
+
+  step='provider public profile';
+  let profile=await mutate(ids.owner,'provider_save',{providerId:provider,version:summary.version,fields:{name:'اسم نشاط الاختبار',hours:'بالمواعيد المسبقة',mapUrl:'https://maps.google.com/?q=30,31',logoPath:showcase}});
+  check(profile.name==='اسم نشاط الاختبار'&&profile.hours==='بالمواعيد المسبقة'&&profile.logoPath===showcase&&profile.mapUrl==='https://maps.google.com/?q=30,31','owner controls name hours map and independent logo');
+  check(await as(null,'jowwa_printing_showcase_file_allowed',{p_path:showcase})===true,'explicit business logo is publicly readable');
+  await denied(()=>mutate(ids.owner,'provider_save',{providerId:provider,version:profile.version,fields:{logoPath:proof}}),'22023','private proof cannot become business logo');
+  profile=await mutate(ids.owner,'provider_save',{providerId:provider,version:profile.version,fields:{logoPath:null,hours:null,mapUrl:null}});
+  check(profile.logoPath===null&&profile.hours===null&&profile.mapUrl===null,'optional profile details can be cleared');
+  const removed=await mutate(ids.owner,'showcase_delete',{providerId:provider,id:work.id,version:work.version});check(removed.deleted===true,'owner can delete selected work');
+  const orderCount=await query('select count(*)::int n from jowwa_private.printing_orders where provider_id=$1',[provider]);check(orderCount.rows[0].n===1,'showcase edits never create extra orders');
+
   step='rollback';await query('rollback');transaction=false;
-  const remaining=await query('select (select count(*) from auth.users where id=any($1::uuid[]))+(select count(*) from jowwa_private.printing_providers where id=$2)+(select count(*) from jowwa_private.service_claim_registry where directory_id=$2)+(select count(*) from storage.objects where bucket_id=$3 and name=$4) n',[Object.values(ids),provider,'jowwa-print-files',proof]);
+  const remaining=await query('select (select count(*) from auth.users where id=any($1::uuid[]))+(select count(*) from jowwa_private.printing_providers where id=$2)+(select count(*) from jowwa_private.service_claim_registry where directory_id=$2)+(select count(*) from storage.objects where name=any($3::text[])) n',[Object.values(ids),provider,[proof,showcase]]);
   check(Number(remaining.rows[0].n)===0,'all verification fixtures rolled back');
   return {passed,rolledBack:true};
  }catch(error){

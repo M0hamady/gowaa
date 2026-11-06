@@ -19,3 +19,14 @@ test('directory displays batched authoritative availability, defaulting safely',
  const html=renderDirectory([place],'',{availability:new Map([[place.id,{canOrder:false,reason:'paused'}]])});
  assert.match(html,/استقبال الطلبات متوقف مؤقتًا/);
 });
+test('printing identity pages keep their own canonical and storefront without generic shop gates',()=>{
+ const gate={canOrder:true,reason:'open',sellerId:'11111111-1111-4111-8111-111111111111',listingCount:2};
+ for(const [id,name,printingType] of [['memorycraft','MemoryCraft | ميموري كرافت','personalized'],['printing-paper-kayan','خدمة طباعة الورق','paper']]){
+  const provider={id,name,category:'مكتبات وطباعة',specialization:'printing',printingType};
+  assert.equal(renderBusinessGate(provider), '');assert.equal(renderBusinessGate(provider,{gate}), '');assert.equal(renderBusinessGate(provider,{gate},true), '');
+  const html=renderPlace(provider,[provider],{gate});
+  assert.match(html,new RegExp('<link rel="canonical" href="https://[^"/]+/place/'+id+'">'));
+  assert.ok(html.includes('href="/market?view=printing&amp;printProvider='+id+'"'));
+  assert.doesNotMatch(html,/class="place-operation|href="\/seller\/|printType=|منتظرين تأكيد صاحب الخدمة/);
+ }
+});

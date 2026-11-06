@@ -6,7 +6,9 @@ const UUID=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
 const KEY=/^[a-z0-9-]{3,100}$/;
 export const PRINT_FILE_BUCKET='jowwa-print-files';
 export const PRINT_FILE_TTL=300;
+export const PRINT_SHOWCASE_BUCKET='jowwa-print-showcase';
 const FILE_PATH=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\.(?:pdf|jpg|jpeg|png)$/;
+const SHOWCASE_PATH=new RegExp(FILE_PATH.source.replace('pdf|jpg|jpeg|png','jpg|jpeg|png|webp'));
 const MAX_BODY=64000;
 const record=value=>value!==null&&typeof value==='object'&&!Array.isArray(value);
 const fail=(message,status=400,code='invalid_request',field)=>{throw Object.assign(Error(message),{status,code,field,public:true});};
@@ -18,6 +20,19 @@ function date(value){if(typeof value!=='string'||value.length>60||!/^\d{4}-\d{2}
 function key(value){if(typeof value!=='string'||!KEY.test(value))fail('اختار نشاطًا أو منتجًا صحيحًا.');return value;}
 function id(value){if(typeof value!=='string'||!UUID.test(value))fail('اختار طلبًا محفوظًا صحيحًا.');return value.toLowerCase();}
 export function validPrintFilePath(value){return typeof value==='string'&&FILE_PATH.test(value);}
+export function validPrintShowcasePath(value){return typeof value==='string'&&SHOWCASE_PATH.test(value);}
+function showcasePath(value){const path=text(value,200);if(!validPrintShowcasePath(path))fail('ارفع صورة مستقلة للشعار أو الأعمال من حسابك.');return path;}
+function mapLink(value){
+ const link=text(value,1500);if(!link)return null;
+ try{
+  const url=new URL(link),host=url.hostname,path=url.pathname;
+  const allowed=(['google.com','www.google.com'].includes(host)&&(path==='/maps'||path.startsWith('/maps/')))
+   ||(host==='maps.google.com'&&(path==='/'||path==='/maps'||path.startsWith('/maps/')))
+   ||(host==='maps.app.goo.gl'&&/^\/[a-zA-Z0-9_-]+\/?$/.test(path));
+  if(url.protocol==='https:'&&!url.username&&!url.password&&!url.port&&!link.includes('\\')&&allowed)return url.href;
+ }catch{}
+ fail('استخدم رابط Google Maps آمنًا للمكان.');
+}
 function proofPaths(value){if(value==null)return [];if(!Array.isArray(value)||value.length>10||value.some(path=>!validPrintFilePath(path)||/\.pdf$/.test(path))||new Set(value).size!==value.length)fail('ارفع حتى ١٠ صور JPG أو PNG لمعاينة التصميم.');return value;}
 function image(value){const path=text(value,1500);if(!path)return '';if(/^\/(?:assets\/market|media\/printing)\/[a-zA-Z0-9/_%.-]+\.(png|jpg|jpeg|webp)$/i.test(path)&&!path.includes('..'))return path;try{const url=new URL(path);if(url.protocol==='https:'&&!url.username&&!url.password)return url.href;}catch{}fail('استخدم صورة منشورة برابط HTTPS صحيح.');}
 
@@ -39,16 +54,34 @@ export function printingOperation(body,{catalog,user,order}={}){
   if(!['paper','personalized','ready'].includes(body.type)||!['pickup','delivery'].includes(body.fulfillment)||body.consent!==true)fail('اختار نوع الطلب والاستلام ووافق على مشاركة بياناته مع النشاط.');
   payload={providerId,type:body.type,spec:normalizedSpec(body.type,body.spec,providerId,catalog),customerName:text(body.customerName||user?.user_metadata?.display_name||'عميل جوه',60,2),fulfillment:body.fulfillment,address:text(body.address,500,body.fulfillment==='delivery'?5:0),preferredAt:text(body.preferredAt,120),notes:text(body.notes,1500),consent:true};
  }else if(action==='provider_save'){
-  keys(body,['action','requestId','providerId','version','fields']);keys(body.fields,['name','description','address','enabled','acceptingOrders','deliveryEnabled','rates']);
+  keys(body,['action','requestId','providerId','version','fields']);keys(body.fields,['name','description','address','enabled','acceptingOrders','deliveryEnabled','rates','hours','mapUrl','logoPath']);
   const fields={};
   for(const [name,value] of Object.entries(body.fields)){
    if(['enabled','acceptingOrders','deliveryEnabled'].includes(name)){if(typeof value!=='boolean')fail('راجع حالة استقبال الطلبات.');fields[name]=value;}
    else if(name==='rates'){
     keys(value,['bw','color']);if(!value.bw||!value.color)fail('كمّل أسعار الأبيض والأسود والألوان.');
     fields.rates={};for(const mode of ['bw','color']){keys(value[mode],['single','double']);fields.rates[mode]={single:money(value[mode].single,{positive:true}),double:money(value[mode].double,{positive:true})};}
-   }else fields[name]=text(value,name==='name'?120:name==='address'?500:2500,name==='name'?2:0);
+   }else if(name==='hours')fields.hours=text(value,500)||null;
+   else if(name==='mapUrl')fields.mapUrl=mapLink(value);
+   else if(name==='logoPath')fields.logoPath=value==null||value===''?null:showcasePath(value);
+   else fields[name]=text(value,name==='name'?120:name==='address'?500:2500,name==='name'?2:0);
   }
   payload={providerId:key(body.providerId),version:version(body.version),fields};
+ }else if(action==='showcase_save'){
+  keys(body,['action','requestId','providerId','id','version','fields','consent']);keys(body.fields,['title','caption','imagePath','published']);
+  const fields={};
+  for(const [name,value] of Object.entries(body.fields)){
+   if(name==='title')fields.title=text(value,120,2);
+   else if(name==='caption')fields.caption=text(value,1500);
+   else if(name==='imagePath')fields.imagePath=showcasePath(value);
+   else {if(typeof value!=='boolean')fail('اختار حالة نشر العمل.');fields.published=value;}
+  }
+  if(body.consent!==undefined&&typeof body.consent!=='boolean')fail('راجع موافقة نشر الصورة.');
+  if(fields.published===true&&body.consent!==true)fail('أكد اختيار نشر الصورة وامتلاك حق مشاركتها علنًا.');
+  payload={providerId:key(body.providerId),id:body.id?id(body.id):null,version:version(body.version??0,0),fields,consent:body.consent===true};
+ }else if(action==='showcase_delete'){
+  keys(body,['action','requestId','providerId','id','version']);
+  payload={providerId:key(body.providerId),id:id(body.id),version:version(body.version)};
  }else if(action==='product_save'){
   keys(body,['action','requestId','providerId','productId','version','fields']);keys(body.fields,['title','name','description','type','price','priceConfirmed','active','availability','image','imageUrl','optionGroups']);
   const fields={};
@@ -95,6 +128,28 @@ export function printingRead(query={}){
 }
 
 function sameOrigin(req){if(req.headers?.['sec-fetch-site']==='cross-site')return false;const origin=req.headers?.origin;if(!origin)return true;try{return new URL(origin).host===req.headers?.host;}catch{return false;}}
+async function withShowcaseImages(value,db){
+ if(!record(value))return value;
+ const cache=new Map(),jobs=[];
+ const sign=path=>{
+  if(!validPrintShowcasePath(path))return Promise.resolve(null);
+  if(!cache.has(path))cache.set(path,new Promise(resolve=>jobs.push(async()=>{
+   try{const result=await db.storage.from(PRINT_SHOWCASE_BUCKET).createSignedUrl(path,PRINT_FILE_TTL);resolve(result.error?null:result.data?.signedUrl||null);}catch{resolve(null);}
+  })));
+  return cache.get(path);
+ };
+ const provider=p=>{const result={...p,logoUrl:null};const done=sign(p.logoPath).then(url=>{result.logoUrl=url;});return {result,done};};
+ const work=w=>{const result={...w,imageUrl:null};const done=sign(w.imagePath).then(url=>{result.imageUrl=url;});return {result,done};};
+ let result,waiting=[];
+ if(Array.isArray(value.providers)){
+  const providers=value.providers.map(provider),works=(value.works||[]).map(work);
+  result={...value,providers:providers.map(x=>x.result),works:works.map(x=>x.result)};waiting=[...providers,...works].map(x=>x.done);
+ }else if(value.directoryId){const item=provider(value);result=item.result;waiting=[item.done];}
+ else if(value.imagePath&&!value.deleted){const item=work(value);result=item.result;waiting=[item.done];}
+ else return value;
+ let cursor=0;await Promise.all(Array.from({length:Math.min(6,jobs.length)},async()=>{while(cursor<jobs.length)await jobs[cursor++]();}));
+ await Promise.all(waiting);return result;
+}
 function errorResponse(error){
  if(error?.public)return {status:error.status||400,body:{error:error.message,code:error.code,...(error.field?{field:error.field}:{})}};
  const code=error?.code,arabic=typeof error?.message==='string'&&/^[\u0600-\u06ff]/.test(error.message);
@@ -131,13 +186,13 @@ export function createPrintingHandler({env=process.env,clientFactory=createClien
    let operation;
    if(req.method==='GET')operation=printingRead(req.query||{});
    else{
-    const replayable=record(body)&&UUID.test(body.requestId||'')&&['create','quote','approve','changes','status','cancel','provider_save','product_save'].includes(body.action);
+    const replayable=record(body)&&UUID.test(body.requestId||'')&&['create','quote','approve','changes','status','cancel','provider_save','product_save','showcase_save','showcase_delete'].includes(body.action);
     const replay=async()=>{if(!replayable)return null;const prior=await db.rpc('jowwa_printing_replay',{p_action:body.action,p_request_id:body.requestId.toLowerCase(),p_input_payload:body});if(prior.error)throw prior.error;return prior.data;};
-    const prior=await replay();if(prior)return reply(200,{data:prior});
+    const prior=await replay();if(prior)return reply(200,{data:await withShowcaseImages(prior,db)});
     let catalog,order;
     if(body?.action==='create'||body?.action==='changes'&&body.spec!==undefined){const r=await db.rpc('jowwa_printing_catalog',{});if(r.error)throw r.error;catalog=r.data;}
     if(body?.action==='changes'&&body.spec!==undefined){const r=await db.rpc('jowwa_printing_get',{p_id:id(body.id)});if(r.error)throw r.error;order=r.data;}
-    try{operation=printingOperation(body,{catalog,user:member.user,order});}catch(error){const recovered=await replay();if(recovered)return reply(200,{data:recovered});throw error;}
+    try{operation=printingOperation(body,{catalog,user:member.user,order});}catch(error){const recovered=await replay();if(recovered)return reply(200,{data:await withShowcaseImages(recovered,db)});throw error;}
    }
    const result=await db.rpc(operation.name,operation.args);if(result.error)throw result.error;
    if(operation.name==='jowwa_printing_file'){
@@ -145,7 +200,7 @@ export function createPrintingHandler({env=process.env,clientFactory=createClien
     if(signed.error||!signed.data?.signedUrl)throw signed.error||Error('File signing failed');
     return reply(200,{data:{...result.data,url:signed.data.signedUrl,expiresIn:PRINT_FILE_TTL}});
    }
-   return reply(200,{data:result.data});
+   return reply(200,{data:await withShowcaseImages(result.data,db)});
   }catch(error){const r=errorResponse(error);return reply(r.status,r.body);}
  };
 }

@@ -209,3 +209,97 @@ test('deployment verification exercises the real RPC boundary and rolls back all
  assert.ok(lines.every(line=>/^\[printing-live\] PASS [a-z ]+$/.test(line)));
  assert.equal((await w.db.query('select (select count(*) from auth.users)+(select count(*) from jowwa_private.printing_orders)+(select count(*) from storage.objects) n')).rows[0].n,before);
 });
+
+test('completed work contributes only an aggregate count and never publishes customer details or files',async()=>{
+ const before=await w.rpc(null,'jowwa_printing_catalog'),count=before.providers.find(p=>p.id==='memorycraft').completedWorksCount;
+ const privateFile=await w.upload(w.ids.emailOnly,{mime:'image/png'});
+ let order=await w.request(w.ids.emailOnly,{customerName:'عميل مستند خاص جدًا',notes:'لا تنشر هذا المستند',spec:{providerId:'memorycraft',productId:'memorycraft-puzzle',quantity:1,pieceSource:'merchant',designMode:'upload',designFiles:[privateFile],designText:'',options:{}}});
+ order=await w.quote(w.ids.owner,order);const proof=order.quote.proofPaths[0];order=await w.approve(w.ids.emailOnly,order);
+ for(const status of ['producing','ready','completed'])order=await w.mutate(w.ids.owner,'status',{id:order.id,version:order.version,status,note:''});
+ const catalog=await w.rpc(null,'jowwa_printing_catalog');assert.equal(catalog.providers.find(p=>p.id==='memorycraft').completedWorksCount,count+1);assert.deepEqual(catalog.works,before.works);
+ for(const secret of [order.id,privateFile.path,proof,order.customerName,'لا تنشر هذا المستند'])assert.ok(!JSON.stringify(catalog).includes(secret));
+ assert.equal(await w.rpc(null,'jowwa_printing_showcase_file_allowed',{p_path:privateFile.path}),false);
+});
+
+test('showcase publication is an explicit owner choice with scoped drafts, consent, versions and deletion',async()=>{
+ const image=await w.showcaseUpload(w.ids.owner),fields={title:'عمل اختاره صاحب المتجر',caption:'نموذج مسموح عرضه',imagePath:image.path};
+ let work=await w.mutate(w.ids.owner,'showcase_save',{providerId:'memorycraft',version:0,fields,consent:false});
+ assert.equal(work.published,false);assert.equal(work.version,1);
+ assert.ok(!(await w.rpc(null,'jowwa_printing_catalog')).works.some(x=>x.id===work.id));
+ assert.ok((await w.rpc(w.ids.owner,'jowwa_printing_catalog')).works.some(x=>x.id===work.id));
+ assert.ok(!(await w.rpc(w.ids.paperOwner,'jowwa_printing_catalog')).works.some(x=>x.id===work.id));
+ assert.equal(await w.rpc(null,'jowwa_printing_showcase_file_allowed',{p_path:image.path}),false);
+ const visible=await w.as(null,'select name from storage.objects where bucket_id=$1 and name=$2',['jowwa-print-showcase',image.path],'anon');assert.equal(visible.rows.length,0);
+ await assert.rejects(w.mutate(w.ids.customer,'showcase_save',{providerId:'memorycraft',id:work.id,version:work.version,fields:{published:true},consent:true}),code('42501'));
+ await assert.rejects(w.mutate(w.ids.paperOwner,'showcase_delete',{providerId:'printing-paper-kayan',id:work.id,version:work.version}),code('42501'));
+ await assert.rejects(w.mutate(w.ids.owner,'showcase_save',{providerId:'memorycraft',id:work.id,version:work.version,fields:{published:true},consent:false}),code('22023'));
+ work=await w.mutate(w.ids.owner,'showcase_save',{providerId:'memorycraft',id:work.id,version:work.version,fields:{published:true},consent:true});
+ const publicWork=(await w.rpc(null,'jowwa_printing_catalog')).works.find(x=>x.id===work.id);assert.equal(publicWork.published,true);assert.equal(publicWork.canManage,false);assert.equal(publicWork.createdBy,undefined);
+ assert.equal(await w.rpc(null,'jowwa_printing_showcase_file_allowed',{p_path:image.path}),true);
+ assert.equal((await w.as(w.ids.owner,'delete from storage.objects where bucket_id=$1 and name=$2 returning name',['jowwa-print-showcase',image.path])).rows.length,0);
+ assert.equal((await w.as(w.ids.owner,'update storage.objects set metadata=$1 where bucket_id=$2 and name=$3 returning name',[JSON.stringify({mimetype:'image/png',size:1}),'jowwa-print-showcase',image.path])).rows.length,0);
+ const stale=work,requestId=randomUUID(),payload={providerId:'memorycraft',id:work.id,version:work.version,fields:{published:false},consent:false};
+ work=await w.mutate(w.ids.owner,'showcase_save',payload,requestId);assert.equal(work.published,false);
+ assert.equal((await w.mutate(w.ids.owner,'showcase_save',payload,requestId)).replayed,true);
+ await assert.rejects(w.mutate(w.ids.owner,'showcase_save',{...payload,fields:{title:'تفاصيل مختلفة'}},requestId),code('40001'));
+ await assert.rejects(w.mutate(w.ids.owner,'showcase_save',{providerId:'memorycraft',id:work.id,version:stale.version,fields:{published:true},consent:true}),code('40001'));
+ assert.equal(await w.rpc(null,'jowwa_printing_showcase_file_allowed',{p_path:image.path}),false);
+ const deletePayload={providerId:'memorycraft',id:work.id,version:work.version},deleteId=randomUUID();
+ const deleted=await w.mutate(w.ids.owner,'showcase_delete',deletePayload,deleteId);assert.equal(deleted.deleted,true);
+ assert.equal((await w.mutate(w.ids.owner,'showcase_delete',deletePayload,deleteId)).replayed,true);
+ assert.ok(!(await w.rpc(w.ids.owner,'jowwa_printing_catalog')).works.some(x=>x.id===work.id));
+ assert.equal(await w.rpc(w.ids.owner,'jowwa_printing_showcase_file_deletable',{p_path:image.path}),true);
+});
+
+test('showcase images cannot reuse order assets, foreign uploads, invalid metadata or client-picked provider ownership',async()=>{
+ await assert.rejects(w.showcaseUpload(w.ids.customer),code('42501'));
+ const save=(imagePath,extra={})=>w.mutate(w.ids.owner,'showcase_save',{providerId:'memorycraft',version:0,fields:{title:'صورة مستقلة',caption:'',imagePath,...extra},consent:true});
+ const orderImage=await w.upload(w.ids.owner,{mime:'image/png'});
+ await assert.rejects(save(orderImage.path),code('22023'));
+ await w.showcaseUpload(w.ids.owner,{path:orderImage.path});
+ await assert.rejects(save(orderImage.path),code('22023'));
+ const foreign=await w.showcaseUpload(w.ids.paperOwner);await assert.rejects(save(foreign.path),code('22023'));
+ const tooLarge=await w.showcaseUpload(w.ids.owner,{size:20971521});await assert.rejects(save(tooLarge.path),code('22023'));
+ const wrongMime=await w.showcaseUpload(w.ids.owner,{mime:'application/pdf',path:`${w.ids.owner}/${randomUUID()}/${randomUUID()}.png`});await assert.rejects(save(wrongMime.path),code('22023'));
+ const image=await w.showcaseUpload(w.ids.owner,{mime:'image/webp'});const work=await save(image.path);assert.equal(work.published,false);
+ await assert.rejects(w.mutate(w.ids.owner,'showcase_save',{providerId:'memorycraft',id:work.id,version:work.version,fields:{providerId:'printing-paper-kayan'},consent:true}),code('22023'));
+ const published=await w.mutate(w.ids.admin,'showcase_save',{providerId:'memorycraft',id:work.id,version:work.version,fields:{published:true},consent:true});assert.equal(published.published,true);
+ await assert.rejects(w.as(w.ids.owner,'select jowwa_private.printing_mutate_v042($1,$2,$3::jsonb)',['provider_save',randomUUID(),JSON.stringify({providerId:'memorycraft',version:1,fields:{}})]),code('42501'));
+});
+
+test('provider profile edits are owner-controlled, preserve null unknowns and validate maps and independent logos',async()=>{
+ let provider=(await w.rpc(w.ids.owner,'jowwa_printing_catalog')).providers.find(p=>p.id==='memorycraft');
+ assert.equal(provider.hours,null);assert.equal(provider.mapUrl,null);assert.equal(provider.logoPath,null);
+ const logo=await w.showcaseUpload(w.ids.owner,{mime:'image/webp'}),requestId=randomUUID();
+ const payload={providerId:provider.id,version:provider.version,fields:{name:'MemoryCraft | ميموري كرافت',hours:'السبت إلى الخميس من ١٠ صباحًا إلى ٨ مساءً',mapUrl:'https://www.google.com/maps?q=30,31',logoPath:logo.path}};
+ const priorVersion=provider.version;provider=await w.mutate(w.ids.owner,'provider_save',payload,requestId);assert.equal(provider.version,priorVersion+1);assert.equal(provider.logoPath,logo.path);
+ assert.equal((await w.mutate(w.ids.owner,'provider_save',payload,requestId)).version,provider.version);
+ assert.equal(await w.rpc(null,'jowwa_printing_showcase_file_allowed',{p_path:logo.path}),true);
+ assert.ok((await w.rpc(null,'jowwa_printing_catalog')).providers.find(p=>p.id===provider.id).hours.includes('الخميس'));
+ for(const mapUrl of ['https://evil.test/maps','http://www.google.com/maps','https://www.google.com.evil.test/maps','https://user:pass@google.com/maps','https://www.google.com/url?q=evil','https://maps.app.goo.gl/../evil','javascript:alert(1)'])await assert.rejects(w.mutate(w.ids.owner,'provider_save',{providerId:provider.id,version:provider.version,fields:{mapUrl}}),code('22023'));
+ const foreign=await w.showcaseUpload(w.ids.paperOwner);await assert.rejects(w.mutate(w.ids.owner,'provider_save',{providerId:provider.id,version:provider.version,fields:{logoPath:foreign.path}}),code('22023'));
+ await assert.rejects(w.mutate(w.ids.customer,'provider_save',{providerId:provider.id,version:provider.version,fields:{hours:'غير مسموح'}}),code('42501'));
+ provider=await w.mutate(w.ids.owner,'provider_save',{providerId:provider.id,version:provider.version,fields:{hours:null,mapUrl:null,logoPath:null}});
+ assert.equal(provider.hours,null);assert.equal(provider.mapUrl,null);assert.equal(provider.logoPath,null);assert.equal(await w.rpc(null,'jowwa_printing_showcase_file_allowed',{p_path:logo.path}),false);
+});
+
+test('paused printing providers and directory libraries keep authorized profile management',async()=>{
+ let printer=(await w.rpc(w.ids.owner,'jowwa_printing_catalog')).providers.find(p=>p.id==='memorycraft');
+ printer=await w.mutate(w.ids.owner,'provider_save',{providerId:printer.id,version:printer.version,fields:{acceptingOrders:false}});
+ assert.equal(printer.catalogOnly,false);assert.equal(printer.canManage,true);assert.equal(printer.directoryId,'memorycraft');
+ printer=await w.mutate(w.ids.owner,'provider_save',{providerId:printer.id,version:printer.version,fields:{hours:'بالمواعيد المسبقة'}});assert.equal(printer.hours,'بالمواعيد المسبقة');
+ printer=await w.mutate(w.ids.owner,'provider_save',{providerId:printer.id,version:printer.version,fields:{acceptingOrders:true}});assert.equal(printer.acceptingOrders,true);
+ let library=(await w.rpc(w.ids.admin,'jowwa_printing_catalog')).providers.find(p=>p.id==='community-kayan-library');assert.equal(library.catalogOnly,true);assert.equal(library.canManage,true);
+ library=await w.mutate(w.ids.admin,'provider_save',{providerId:library.id,version:library.version,fields:{hours:'تتأكد مع المكتبة',mapUrl:'https://maps.google.com/?q=30,31'}});
+ assert.equal(library.acceptingOrders,false);assert.equal(library.hours,'تتأكد مع المكتبة');assert.equal(library.canManage,true);
+});
+
+test('showcase mutation enforces exact input replay even if concurrent requests bypass API preflight',async()=>{
+ const image=await w.showcaseUpload(w.ids.owner),requestId=randomUUID();
+ const payload={providerId:'memorycraft',id:null,version:0,fields:{title:'نموذج متفق عليه',imagePath:image.path,published:false},consent:false};
+ const input={action:'showcase_save',requestId,...payload,fields:{...payload.fields,title:payload.fields.title+' '}};
+ const args={p_action:'showcase_save',p_request_id:requestId,p_payload:payload,p_input_payload:input};
+ const work=await w.rpc(w.ids.owner,'jowwa_printing_mutate',args);
+ await assert.rejects(w.rpc(w.ids.owner,'jowwa_printing_mutate',{...args,p_input_payload:{...input,fields:payload.fields}}),code('40001'));
+ const retry=await w.rpc(w.ids.owner,'jowwa_printing_mutate',args);assert.equal(retry.replayed,true);assert.equal(retry.id,work.id);assert.equal(retry.version,1);
+});

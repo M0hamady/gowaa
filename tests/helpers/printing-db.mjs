@@ -2,7 +2,7 @@ import {randomUUID} from 'node:crypto';
 import {freshDb,actor} from './ops-db.mjs';
 
 export async function printingWorld({claims=true}={}){
- const {db}=await freshDb({upTo:'042'}),as=actor(db);
+ const {db}=await freshDb({upTo:'043'}),as=actor(db);
  const ids={admin:randomUUID(),customer:randomUUID(),stranger:randomUUID(),owner:randomUUID(),paperOwner:randomUUID(),emailOnly:randomUUID(),unverified:randomUUID()};
  const users=new Map([
   [ids.admin,{id:ids.admin,phone:'201555099233',phone_confirmed_at:new Date().toISOString(),user_metadata:{display_name:'إدارة تجربة'}}],
@@ -32,6 +32,11 @@ export async function printingWorld({claims=true}={}){
   await as(user,'insert into storage.objects(bucket_id,name,owner,metadata) values($1,$2,$3,$4)',['jowwa-print-files',path,user,JSON.stringify({mimetype:mime,size})]);
   return {path,uploadId:path,name:mime==='application/pdf'?'ملف تجربة.pdf':mime==='image/png'?'صورة تجربة.png':'صورة تجربة.jpg',type:declaredType||mime,size:declaredSize??size};
  };
+ const showcaseUpload=async(user,{mime='image/png',size=1024,requestId=randomUUID(),path}={})=>{
+  path||=`${user}/${requestId}/${randomUUID()}.${mime==='image/png'?'png':mime==='image/webp'?'webp':mime==='application/pdf'?'pdf':'jpg'}`;
+  await as(user,'insert into storage.objects(bucket_id,name,owner,metadata) values($1,$2,$3,$4)',['jowwa-print-showcase',path,user,JSON.stringify({mimetype:mime,size})]);
+  return {path,imagePath:path,type:mime,size};
+ };
  const request=async(user,{type='personalized',providerId=type==='paper'?'printing-paper-kayan':'memorycraft',spec,requestId=randomUUID(),...extra}={})=>{
   if(!spec)spec=type==='paper'?{providerId,files:[{...await upload(user,{requestId}),pageCount:5,range:'all',copies:2}],color:'bw',sides:'double',paperSize:'A4',paperWeight:'standard',finishing:'none'}:{providerId,productId:'memorycraft-puzzle',quantity:1,pieceSource:'merchant',designMode:'text',designText:'اسم جديد',designFiles:[],options:{},notes:''};
   return mutate(user,'create',{providerId,type,spec,customerName:'عميل الاختبار',fulfillment:'pickup',address:'',preferredAt:'بعد المراجعة',notes:'',consent:true,...extra},requestId);
@@ -41,7 +46,7 @@ export async function printingWorld({claims=true}={}){
   return mutate(user,'quote',{id:order.id,version:order.version,amount:100,deliveryFee:order.fulfillment==='delivery'?20:0,deposit:20,readyAt:new Date(Date.now()+172800000).toISOString(),expiresAt:new Date(Date.now()+86400000).toISOString(),note:'سعر شامل التنفيذ بالمواصفات الموضحة.',proofPaths,...extra},requestId);
  };
  const approve=(user,order,extra={})=>mutate(user,'approve',{id:order.id,version:order.version,quoteRevision:order.quote.revision,consent:true,...extra});
- return {db,as,ids,users,rpc,mutate,upload,request,quote,approve,close:()=>db.close()};
+ return {db,as,ids,users,rpc,mutate,upload,showcaseUpload,request,quote,approve,close:()=>db.close()};
 }
 
 export function printingApiBridge(world,{signed=[]}={}){
@@ -52,7 +57,10 @@ export function printingApiBridge(world,{signed=[]}={}){
   return {
    auth:{getUser:async value=>({data:{user:world.users.get(userId(value))||null},error:null})},
    rpc:async(name,args)=>{try{return {data:await world.rpc(current,name,args),error:null};}catch(error){return {data:null,error};}},
-   storage:{from:bucket=>({createSignedUrl:async(path,ttl,options)=>{signed.push({bucket,path,ttl,options,user:current});return {data:{signedUrl:'https://storage.example.test/'+path+'?token=fixture'},error:null};}})}
+   storage:{from:bucket=>({createSignedUrl:async(path,ttl,options)=>{
+    if(bucket==='jowwa-print-showcase'&&!await world.rpc(current,'jowwa_printing_showcase_file_allowed',{p_path:path}))return {data:null,error:{code:'42501'}};
+    signed.push({bucket,path,ttl,options,user:current});return {data:{signedUrl:'https://storage.example.test/'+bucket+'/'+path+'?token=fixture'},error:null};
+   }})}
   };
  };
  const env={NEXT_PUBLIC_SUPABASE_URL:'https://supabase.example.test',NEXT_PUBLIC_SUPABASE_ANON_KEY:'local-fixture'};

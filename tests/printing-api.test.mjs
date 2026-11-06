@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {randomUUID} from 'node:crypto';
-import {createPrintingHandler,printingOperation,printingRead,PRINT_FILE_TTL,PRINT_FILE_BUCKET} from '../src/server-printing.mjs';
+import {createPrintingHandler,printingOperation,printingRead,PRINT_FILE_TTL,PRINT_FILE_BUCKET,PRINT_SHOWCASE_BUCKET} from '../src/server-printing.mjs';
 import {printingWorld,printingApiBridge} from './helpers/printing-db.mjs';
 
 let w,bridge,handler;
@@ -97,4 +97,33 @@ test('management API adds confirmed ready goods, exposes availability and guards
  assert.equal(changed.deliveryEnabled,false);
  assert.equal((await call(w.ids.customer,createBody({fulfillment:'delivery',address:'عنوان تجربة واضح'}))).statusCode,400);
  assert.equal((await call(w.ids.stranger,{action:'product_save',requestId:randomUUID(),providerId:'memorycraft',productId:product.id,version:product.version,fields:{price:1}})).statusCode,403);
+});
+
+test('public showcase signs only deliberate published works while owner drafts and order files stay private',async()=>{
+ const image=await w.showcaseUpload(w.ids.owner),create={action:'showcase_save',requestId:randomUUID(),providerId:'memorycraft',version:0,fields:{title:'نموذج من اختيار المتجر',caption:'مسموح عرضه',imagePath:image.path,published:false},consent:false};
+ let work=success(await call(w.ids.owner,create));assert.equal(work.published,false);assert.match(work.imageUrl,/jowwa-print-showcase/);
+ assert.equal(bridge.signed.at(-1).bucket,PRINT_SHOWCASE_BUCKET);assert.equal(bridge.signed.at(-1).ttl,300);
+ const before=bridge.signed.length,anonymous=success(await call(null,{action:'catalog'},'GET'));assert.deepEqual(anonymous.works,[]);assert.equal(bridge.signed.length,before);
+ assert.ok(success(await call(w.ids.owner,{action:'catalog'},'GET')).works.some(x=>x.id===work.id&&x.imageUrl));
+ const publish={action:'showcase_save',requestId:randomUUID(),providerId:'memorycraft',id:work.id,version:work.version,fields:{published:true},consent:false};
+ assert.equal((await call(w.ids.owner,publish)).statusCode,400);
+ work=success(await call(w.ids.owner,{...publish,consent:true}));
+ const visible=success(await call(null,{action:'catalog'},'GET')).works.find(x=>x.id===work.id);assert.ok(visible.imageUrl);assert.equal(visible.published,true);assert.equal(visible.canManage,false);
+ assert.equal(success(await call(w.ids.owner,{...publish,consent:true})).replayed,true);
+ const orderImage=await w.upload(w.ids.owner,{mime:'image/png'});
+ assert.equal((await call(w.ids.owner,{...create,requestId:randomUUID(),fields:{...create.fields,imagePath:orderImage.path,published:true},consent:true})).statusCode,400);
+ assert.equal((await call(w.ids.paperOwner,{action:'showcase_delete',requestId:randomUUID(),providerId:'printing-paper-kayan',id:work.id,version:work.version})).statusCode,403);
+ work=success(await call(w.ids.owner,{action:'showcase_save',requestId:randomUUID(),providerId:'memorycraft',id:work.id,version:work.version,fields:{published:false},consent:false}));
+ assert.deepEqual(success(await call(null,{action:'catalog'},'GET')).works,[]);
+ const removed=success(await call(w.ids.owner,{action:'showcase_delete',requestId:randomUUID(),providerId:'memorycraft',id:work.id,version:work.version}));assert.equal(removed.deleted,true);
+});
+
+test('profile API validates owner media and Google Maps links, signs logos, and clears optional unknowns',async()=>{
+ let provider=success(await call(w.ids.owner,{action:'catalog'},'GET')).providers.find(p=>p.id==='memorycraft');
+ const image=await w.showcaseUpload(w.ids.owner,{mime:'image/webp'});
+ provider=success(await call(w.ids.owner,{action:'provider_save',requestId:randomUUID(),providerId:provider.id,version:provider.version,fields:{name:provider.name,hours:'يوميًا حسب الموعد',mapUrl:'https://maps.app.goo.gl/AbC123',logoPath:image.path}}));
+ assert.ok(provider.logoUrl);assert.equal(provider.hours,'يوميًا حسب الموعد');assert.equal(provider.completedWorksCount,1);
+ const publicProvider=success(await call(null,{action:'catalog'},'GET')).providers.find(p=>p.id===provider.id);assert.ok(publicProvider.logoUrl);assert.equal(publicProvider.logoPath,image.path);
+ for(const mapUrl of ['https://google.com@evil.test/maps','https://www.google.com/search?q=test','https://maps.google.com:444/maps','data:text/html,abc'])assert.equal((await call(w.ids.owner,{action:'provider_save',requestId:randomUUID(),providerId:provider.id,version:provider.version,fields:{mapUrl}})).statusCode,400);
+ provider=success(await call(w.ids.owner,{action:'provider_save',requestId:randomUUID(),providerId:provider.id,version:provider.version,fields:{hours:'',mapUrl:null,logoPath:null}}));assert.equal(provider.logoUrl,null);assert.equal(provider.hours,null);assert.equal(provider.mapUrl,null);
 });

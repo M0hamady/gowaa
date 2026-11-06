@@ -26,7 +26,7 @@ const curatedMenu=p=>{
  return '<section class="place-menu" id="source-menu"><div class="place-menu-head"><div><h2>منيو '+esc(p.name)+'</h2><p>دي أصناف منيو مرجعية من المصدر؛ زر «أضف للسلة» يظهر فقط بعد ما يفعّل المحل استقبال الطلبات ويضيف المنتجات المُدارة داخل جوه.</p></div><a class="secondary" href="/market?source=managed&seller='+encodeURIComponent(p.id)+'">تصفح المنتجات القابلة للطلب</a></div><nav class="place-menu-sections" aria-label="أقسام المنيو">'+sections.map(section=>'<a href="#menu-'+encodeURIComponent(section)+'">'+esc(section)+'</a>').join('')+'</nav>'+sections.map(section=>'<section class="place-menu-section" id="menu-'+encodeURIComponent(section)+'"><h3>'+esc(section)+'</h3><div class="place-menu-grid">'+menu.filter(item=>item.section===section).map(item=>'<article class="place-menu-item"><img src="'+esc(item.imageUrl||'/icon.svg')+'" alt="'+esc(item.imageAlt||item.title)+'" loading="lazy"><div><h4>'+esc(item.title)+'</h4><p>'+esc(item.description)+'</p><strong>'+new Intl.NumberFormat('ar-EG').format(item.price)+' جنيه</strong><small>منيو مرجعي • السعر والتوفر يتأكدوا من المحل قبل الطلب</small></div></article>').join('')+'</div></section>').join('')+'</section>';
 };
 export function renderBusinessGate(p,{gate={canOrder:false,reason:'unclaimed'},referenceHours}={},compact=false){
- if(!providerRequestUrl(p))return '';
+ if(p.specialization==='printing'||!providerRequestUrl(p))return '';
  const label=orderGateLabel(gate),lines=gate.hoursConfirmedAt?hoursLines(gate.hours):[];
  const reference=!lines.length&&referenceHours?.status==='published_reference'?referenceHours:null;
  const seller=typeof gate.sellerId==='string'&&/^[a-f0-9-]{36}$/i.test(gate.sellerId)?gate.sellerId:null;

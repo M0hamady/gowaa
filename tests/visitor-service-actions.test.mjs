@@ -39,11 +39,12 @@ test('all user shared map points are routable and preserve the original service 
  assert.equal(get('directory-fuel-near-sunmall').externalMapUrl,'https://maps.app.goo.gl/8DNNUzi6uMg6ceDR7');
 });
 
-test('printing providers route to their own order flow and remain outside shop menus',()=>{
+test('printing providers open their own storefront without starting an order or entering shop menus',()=>{
  for(const id of ['printing-paper-kayan','memorycraft']){
   const p=get(id),html=visitorActions(p);assert.equal(p.specialization,'printing');
   assert.equal(isMarketBusiness(p,5),false);assert.match(html,/view=printing/);
-  assert.ok(html.includes('printProvider='+id));assert.doesNotMatch(html,/data-provider-request=/);
+  assert.ok(html.includes('href="/market?view=printing&amp;printProvider='+id+'"'));assert.doesNotMatch(html,/data-provider-request=|printType=/);
+  assert.match(html,/صفحة/);assert.ok(html.includes('aria-label="افتح صفحة '+p.name));
  }
  assert.equal(isMarketBusiness(get('directory-koshary'),1),true);
  assert.match(visitorActions(get('directory-koshary')),/data-provider-request=/);
