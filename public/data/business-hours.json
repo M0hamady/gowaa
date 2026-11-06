@@ -17,5 +17,16 @@
   "checkedAt":"2026-11-05",
   "notes":["المواعيد دي قالها صاحب المحل لجوه في ٥ نوفمبر ٢٠٢٦.","السينابون والإنجلش كيك والتورت بالحجز المسبق؛ اتفق على الميعاد مع المحل."],
   "canDeriveOpenNow":false
+ },
+ {
+  "placeId": "directory-kheir-ardna",
+  "status": "published_reference",
+  "publicLabel": "بالتنسيق — مفيش مواعيد ثابتة",
+  "source": "https://jowwa-kayan.vercel.app/place/directory-kheir-ardna",
+  "checkedAt": "2026-11-06",
+  "notes": [
+   "المواعيد بحسب البيانات المؤكدة من إدارة جوه؛ يتم الاتفاق على الميعاد داخل الطلب."
+  ],
+  "canDeriveOpenNow": false
  }]
 }

@@ -2284,5 +2284,55 @@
     "checkedAt": "2026-11-05",
     "businessOwnerVerified": false,
     "providerManaged": false
+  },
+  {
+    "id": "directory-kheir-ardna",
+    "name": "خير أرضنا — زيت زيتون العريش",
+    "aliases": [
+      "خير أرضنا",
+      "خير ارضنا",
+      "من خير أرضنا",
+      "زيت زيتون العريش",
+      "Kheir Ardna"
+    ],
+    "category": "بقالة",
+    "schemaType": "GroceryStore",
+    "mapCategory": "shopping",
+    "district": "narges",
+    "address": "كيان سيتي — النرجس، عمارة ١٢٦",
+    "phone": "01063819675",
+    "description": "زيت زيتون من العريش بشمال سيناء. مقاس واحد: ١ كيلو بسعر ٤٠٠ جنيه. المواعيد بالتنسيق من خلال جوه.",
+    "keywords": [
+      "زيت زيتون",
+      "زيت الزيتون",
+      "العريش",
+      "شمال سيناء",
+      "بقالة",
+      "زيوت",
+      "النرجس",
+      "عمارة 126"
+    ],
+    "mapId": "narges-126",
+    "coordinate": [
+      31.6367669,
+      29.919363
+    ],
+    "precision": "approximate_plan_alignment",
+    "mapLabel": "موقع عمارة ١٢٦ في النرجس على الخريطة",
+    "visitorNote": "المواعيد بالتنسيق — مفيش وقت ثابت. الطلب وتأكيد الميعاد من خلال جوه.",
+    "status": "بيانات النشاط والعنوان ورقم التواصل والمنتج والسعر مؤكدة من إدارة جوه في ٦ نوفمبر ٢٠٢٦.",
+    "source": "https://jowwa-kayan.vercel.app/menus/kheir-ardna/photo-1.jpg",
+    "sourceType": "admin_confirmed_business",
+    "checkedAt": "2026-11-06",
+    "sourceDate": null,
+    "menuStatus": "owner_provided",
+    "menuCheckedAt": "2026-11-06",
+    "menuNote": "منتج واحد بمقاس ١ كيلو بسعر ٤٠٠ جنيه. الكمية والتوفر والميعاد بيتأكدوا مع الطلب من خلال جوه.",
+    "image": "/menus/kheir-ardna/photo-1.jpg",
+    "cardPhotos": [
+      "/menus/kheir-ardna/photo-1.jpg"
+    ],
+    "logo": "/logos/directory-kheir-ardna.png",
+    "businessOwnerVerified": false
   }
 ]
