@@ -23,10 +23,14 @@ The official route fields were `steps[0].train.name`, `fromDate`, `finishDate`, 
 
 The assistant asks for one missing value at a time: origin station, destination station, travel date. It validates station IDs against the observed catalog and dates against the real calendar and a 90-day future window. Only a complete choice can make an external request. The service sends only canonical station IDs and date to a fixed official HTTPS endpoint, using GET. It sends no caller URL, contact details, account token, cookie or chat transcript.
 
-The lookup has a 12-second deadline, a 4 MiB response limit, at most eight concurrent unique lookups, a maximum of 48 cached public routes/dates, a five-minute TTL and coalescing for identical requests. Failure is not cached. Timeout aborts the request and falls back to an honest message plus the dated official booking link. It does not convert unavailable data into a claim that no trains exist.
+The lookup has an 18-second deadline, a 4 MiB response limit, at most eight concurrent unique lookups, a maximum of 48 cached public routes/dates, a five-minute TTL and coalescing for identical requests. Failure is not cached. Timeout aborts the request and falls back to an honest message plus the dated official booking link. It does not convert unavailable data into a claim that no trains exist.
 
 Returned rows contain train number, departure and arrival instants, Cairo display times, arrival calendar date/day offset and duration. `Intl.DateTimeFormat` with `Africa/Cairo` handles daylight saving time. Direct segment endpoints and departure date must match the requested journey. Seats, fares, reservation templates and purchase actions are not exposed. The first 12 future departures are shown with a total/hasMore indicator and the official link. These schedules do not create a saved bus journey or claim a reserved seat.
 
 ## Verification
 
 `tests/assistant-intercity.test.mjs` covers the observed station catalog, actual dated fixture, Egyptian multi-turn questions, no lookup before all three choices exist, local-station and metro separation, explicit route reversal wording, exact date validation, canonical ID allowlisting, fixed-host read-only requests, daylight saving time, overnight arrivals, current-day elapsed departures, safe output fields, cache/inflight isolation and bounds, timeout, oversized/invalid response and honest failure handling. The combined conversational browser QA uses an injected official-response fixture so it never makes live ENR, account, booking or SMS writes.
+
+## Production latency adjustment
+
+The first production query on6November hit the12-second deadline and correctly preserved the official dated link. One direct Node reference request then completed with HTTP200 in10,180ms, showing that valid responses can approach that deadline. The lookup budget was increased to18seconds, below the assistant function’s30-second limit; caching, coalescing, body/concurrency bounds and cancellation remain unchanged. This is a latency allowance, not a guarantee that the external provider is reachable.

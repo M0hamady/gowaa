@@ -77,7 +77,7 @@ async function boundedJson(response){
  try{for(;;){const {done,value}=await reader.read();if(done)break;size+=value.byteLength;if(size>4*1024*1024)throw Error('Official response too large');chunks.push(value);}}catch(error){await reader.cancel().catch(()=>{});throw error;}
  const bytes=new Uint8Array(size);let at=0;for(const chunk of chunks){bytes.set(chunk,at);at+=chunk.byteLength;}return JSON.parse(new TextDecoder().decode(bytes));
 }
-export function createEnrLookup({fetcher=globalThis.fetch,clock=Date.now,timeoutMs=12000,ttlMs=300000,maxEntries=48,maxInflight=8}={}){
+export function createEnrLookup({fetcher=globalThis.fetch,clock=Date.now,timeoutMs=18000,ttlMs=300000,maxEntries=48,maxInflight=8}={}){
  const cache=new Map(),inflight=new Map();
  return async function lookup({originStationId,destinationStationId,date}){
   if(!ID.test(originStationId||'')||!ID.test(destinationStationId||'')||originStationId===destinationStationId||!validDate(date))throw Error('Invalid train lookup');
@@ -90,7 +90,7 @@ export function createEnrLookup({fetcher=globalThis.fetch,clock=Date.now,timeout
    const controller=new AbortController();let timer;
    try{
     const url=new URL(ENDPOINT);for(const [name,value] of Object.entries({from:originStationId,to:destinationStationId,transfers:'false',with_reservations:'true',without_reservations:'false',skip_places_information:'true',departureDate:date,project:'enr'}))url.searchParams.set(name,value);
-    const timeout=new Promise((_,reject)=>{timer=setTimeout(()=>{controller.abort();reject(Error('Official lookup timeout'));},Math.min(12000,Math.max(10,timeoutMs)));});
+    const timeout=new Promise((_,reject)=>{timer=setTimeout(()=>{controller.abort();reject(Error('Official lookup timeout'));},Math.min(18000,Math.max(10,timeoutMs)));});
     const request=Promise.resolve().then(()=>fetcher(url.href,{method:'GET',signal:controller.signal,redirect:'error',headers:{Accept:'application/json'}})).then(boundedJson);
     const data=await Promise.race([request,timeout]);
     const value={journeys:normalizeEnrJourneys(data,{originStationId,destinationStationId,date}),queriedAt:new Date(clock()).toISOString(),sourceUrl:url.href};

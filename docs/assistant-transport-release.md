@@ -48,7 +48,7 @@ The client clears private state on account changes, refuses stale account respon
 
 - Station data loads on first opening the map and reuses one coalesced request. Results paginate20 at a time; viewport clusters cap map markers at140. Closing during a request does not reopen the panel later.
 - Assistant public grounding shares a45-second coalesced cache. Deterministic transport and ordinary conversational flows do not consume the model quota.
-- ENR uses a12-second deadline, bounded concurrency/body size and a five-minute cache; Superjet uses an eight-second deadline, six-request concurrency bound and60-second cache. Identical lookups share work, failures are not cached as empty timetables, and already departed rows are filtered against the current Cairo clock.
+- ENR uses an18-second deadline, bounded concurrency/body size and a five-minute cache; Superjet uses an eight-second deadline, six-request concurrency bound and60-second cache. Identical lookups share work, failures are not cached as empty timetables, and already departed rows are filtered against the current Cairo clock.
 - Only fixed operator hosts and verified station identifiers are used. No private account data, phone number, raw GPS location or chat history is sent to transport operators.
 - Final source probes found Superjet's connections endpoint returned403 to Node while a public Python read returned dated results. The app retains the exact official dated link and reports that the lookup could not be completed. Production acceptance must be observed before claiming the integrated source works there.
 - East Delta's incomplete certificate chain is rejected by Node. TLS validation was not disabled; the user's normal browser opens the verified official query instead.
