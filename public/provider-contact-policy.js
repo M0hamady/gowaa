@@ -18,11 +18,23 @@ export function providerRequestUrl(place){
  return '/place/'+encodeURIComponent(place.id)+'?request=1';
 }
 const digits=value=>value.replace(/[٠-٩۰-۹]/g,char=>String((char.charCodeAt(0)>=0x6f0?char.charCodeAt(0)-0x6f0:char.charCodeAt(0)-0x660)));
+const shortNumber='[0-9٠-٩۰-۹]{3,7}',numberBoundary='(?![\\p{L}\\p{N}])',contactSeparator='[\\s:：،–—()\\-]*';
+const hotlineLabel='(?:(?:ال)?خط\\s+(?:ال)?ساخن|hot[\\s-]*line(?:\\s+number)?|هوت\\s+لاين)';
+const hotlineBefore=new RegExp('(?<![\\p{L}\\p{N}])(?:رقم\\s+)?'+hotlineLabel+contactSeparator+shortNumber+numberBoundary,'giu');
+const hotlineAfter=new RegExp('(?<![\\p{L}\\p{N}])'+shortNumber+contactSeparator+hotlineLabel+numberBoundary,'giu');
+const inquiryNumber=new RegExp('(?<![\\p{L}\\p{N}])رقم\\s+('+shortNumber+')'+numberBoundary+'\\s+(?:للاستفسار|للحجز(?: والاستفسار)?|للطلبات|للتواصل)(?:\\s+لدى\\s+[^0-9٠-٩۰-۹،؛.\\n]{1,40})?','gu');
+const supportNumber=new RegExp('(?<![\\p{L}\\p{N}])(?:الدعم الفني|خدمة العملاء)[^0-9٠-٩۰-۹،؛.:：\\n]{0,80}[:：]\\s*('+shortNumber+')'+numberBoundary+'(?:\\s*\\(ليس رقمًا مباشرًا لهذا الفرع\\))?','gu');
 // Published descriptions sometimes contain alternate phones in prose. Keep
 // prices, building numbers and the original source record, but not those phones
 // in customer copy or structured data.
 export function customerContactText(place,value){
  let text=String(value??'');if(isPublicContactPlace(place))return text;
+ // A short number is not a phone by length alone. Hotlines need an explicit
+ // label; less specific inquiry/support prose must also match the source phone.
+ const sourcePhone=digits(String(place?.phone||'')).replace(/[\s().-]/g,'');
+ text=text.replace(hotlineBefore,'الطلبات والمتابعة من جوه').replace(hotlineAfter,'الطلبات والمتابعة من جوه');
+ const knownShortContact=(match,number)=>/^\d{3,7}$/.test(sourcePhone)&&digits(number)===sourcePhone?'الطلبات والمتابعة من جوه':match;
+ text=text.replace(inquiryNumber,knownShortContact).replace(supportNumber,knownShortContact);
  text=text.replace(/(?:https?:\/\/[^\s<>"']+|(?:tel|sms|mailto|whatsapp):[^\s<>"']+)/gi,match=>isDirectContactUrl(match)?'الطلبات والمتابعة من جوه':match);
  text=text.replace(/(?:\+|00)?[0-9٠-٩۰-۹](?:[ \t().-]*[0-9٠-٩۰-۹]){7,14}/g,match=>{
   const phone=digits(match).replace(/[\s().-]/g,'');

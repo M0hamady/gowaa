@@ -45,8 +45,8 @@ export async function ensureMember({kind='details',next=null}={}){
 }
 // Booking replies are delivered to a verified phone, just like the existing market
 // booking flow. Keep that prerequisite when the form is opened on a provider page.
-export async function ensureBookingMember(){
- if(!await ensureMember({kind:'booking'}))return false;
+export async function ensureBookingMember({kind='booking'}={}){
+ if(!await ensureMember({kind}))return false;
  const {data}=memberDb?await memberDb.auth.getSession():{data:{}};actualUser=data?.session?.user||null;
  if(actualUser?.phone_confirmed_at)return true;
  if(promptPromise)return promptPromise;

@@ -53,6 +53,41 @@ test('published alternate phones and contact links are withheld without changing
  assert.equal(isDirectContactUrl('https://example.test/evidence'),false);
 });
 
+test('short business hotlines are removed only with contact context, including Arabic digits and both label positions',()=>{
+ const p={id:'merchant',phone:'16999'};
+ for(const value of ['16999 خط ساخن.','الخط الساخن: 16999.','رقم الخط الساخن ١٦٩٩٩.','١٦٩٩٩ — الخط الساخن.','Hotline: 16999.','16999 HOTLINE.','Hot line number: ۱۶۹۹۹.','هوت لاين: ١٦٩٩٩.']){
+  const result=customerContactText(p,value);
+  assert.doesNotMatch(result,/16999|١٦٩٩٩|۱۶۹۹۹/,value);assert.match(result,/من جوه/,value);
+ }
+ const ordinary='السعر 16999 جنيه. عمارة 194، محطة 3، القطار 17333 الساعة 06:30، وبوابة ١١١. كود المنتج 16999.';
+ assert.equal(customerContactText(p,ordinary),ordinary);
+ assert.equal(customerContactText(p,'خط ساخن: 16999. السعر 16999 جنيه، عمارة 194 ومحطة 3.'),'الطلبات والمتابعة من جوه. السعر 16999 جنيه، عمارة 194 ومحطة 3.');
+ assert.equal(customerContactText({id:'merchant',phone:'111'},'الدعم الفني يتاح من عمارة 111 الساعة 6.'),'الدعم الفني يتاح من عمارة 111 الساعة 6.');
+ assert.equal(customerContactText({id:'merchant',phone:'111'},'خدمة العملاء: 250'),'خدمة العملاء: 250');
+ for(const id of ['contact-ambulance','contact-police','contact-fire','contact-electricity','contact-gas']){
+  const value='الخط الساخن: 123. رقم 16999 للاستفسار.';
+  assert.equal(customerContactText({id,phone:'123'},value),value);
+ }
+});
+
+test('current Cook Door, Kayan Plaza and WE projections withhold their contextual short contacts without altering the sources',()=>{
+ const expected=[['community-cook-door','16999'],['directory-kayan-plaza','17333'],['directory-we','111']];
+ for(const [id,phone] of expected){
+  const source=places.find(p=>p.id===id);assert.ok(source,id);assert.ok(source.description.includes(phone),id);
+  const projected=customerProviderRecord(source);
+  assert.equal(projected.phone,undefined);assert.ok(!projected.description.includes(phone),id);assert.match(projected.description,/من جوه/,id);
+  assert.ok(source.description.includes(phone),'source retained: '+id);
+  assert.doesNotMatch(renderPlace(source,[source]),new RegExp('(?:خط ساخن|الخط الساخن|الدعم الفني[^<]*)[:\\s]*'+phone+'|'+phone+'\\s+خط ساخن'),id);
+ }
+ const cookDoor=places.find(p=>p.id==='community-cook-door');
+ assert.equal(customerProviderRecord(cookDoor).description,'سندوتشات ووجبات سريعة. الطلبات والمتابعة من جوه.');
+ const plaza=customerProviderRecord(places.find(p=>p.id==='directory-kayan-plaza'));
+ for(const value of ['149','4','31'])assert.ok(plaza.description.includes(value));
+ const arabicSupport={id:'merchant',phone:'111'};
+ assert.equal(customerContactText(arabicSupport,'الدعم الفني العام للشركة: ١١١.'),'الطلبات والمتابعة من جوه.');
+ assert.equal(customerContactText({id:'merchant',phone:'17333'},'رقم ١٧٣٣٣ للاستفسار لدى المطور.'),'الطلبات والمتابعة من جوه.');
+});
+
 test('all current business detail pages remove callable contact and alternate phone prose',()=>{
  for(const p of places.filter(p=>!isPublicContactPlace(p))){
   assert.deepEqual(Object.keys(customerProviderRecord(p)).filter(key=>/phone|whatsapp/i.test(key)),[],p.id);
