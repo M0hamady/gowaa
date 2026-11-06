@@ -195,24 +195,25 @@ test('public HTML rejects unsupported methods, supports HEAD and reports upstrea
   assert.doesNotMatch(unavailable.body, /MemoryCraft|مج باسمك الآن/);
 });
 
-test('anonymous source loading removes disabled, archived and missing directory providers plus their products and drafts', async () => {
+test('anonymous source uses live publication and archive overrides without introducing unrelated directory records', async () => {
   const data = catalog();
-  data.providers.push({id: 'missing-directory', directoryId: 'missing-directory', name: 'MISSING_DIRECTORY', enabled: true});
-  data.products.push({id: 'missing-directory-product', providerId: 'missing-directory', title: 'MISSING_DIRECTORY_PRODUCT', active: true});
+  data.providers.push({id: 'live-only-provider', directoryId: 'live-only-provider', name: 'LIVE_PUBLISHED_PROVIDER', enabled: true});
+  data.products.push({id: 'live-only-product', providerId: 'live-only-provider', title: 'LIVE_PUBLISHED_PRODUCT', active: true});
   const calls = [];
   const fetchImpl = async (input, init = {}) => {
     const url = new URL(input); calls.push({url, init});
     if (url.pathname.endsWith('/rpc/jowwa_printing_catalog')) return Response.json(data);
     if (url.pathname.endsWith('/site_content')) return Response.json([
-      {id: 'memorycraft', archived: false}, {id: 'printing-paper-kayan', archived: true}, {id: 'hidden-provider', archived: false}
+      {id: 'memorycraft', archived: false}, {id: 'printing-paper-kayan', archived: true}, {id: 'hidden-provider', archived: false},
+      {id: 'directory-not-in-live-catalog', archived: false}
     ]);
     throw Error('Unexpected endpoint ' + url.pathname);
   };
   const result = await loadPublicPrintingCatalog({env, fetchImpl});
-  assert.deepEqual(result.providers.map(provider => provider.id), ['memorycraft']);
-  assert.deepEqual(result.products.map(product => product.id).sort(), ['memorycraft-mug', 'memorycraft-notebook-ready']);
-  assert.equal((result.works || []).some(work => !work.published || work.providerId !== 'memorycraft'), false);
-  assert.doesNotMatch(JSON.stringify(result), /PRIVATE_DRAFT_MARKER|PRIVATE_CAPTION|PRIVATE_STORAGE_MARKER/);
+  assert.deepEqual(result.providers.map(provider => provider.id), ['memorycraft', 'live-only-provider']);
+  assert.deepEqual(result.products.map(product => product.id).sort(), ['live-only-product', 'memorycraft-mug', 'memorycraft-notebook-ready']);
+  assert.equal((result.works || []).some(work => !work.published), false);
+  assert.doesNotMatch(JSON.stringify(result), /PRIVATE_DRAFT_MARKER|PRIVATE_CAPTION|PRIVATE_STORAGE_MARKER|directory-not-in-live-catalog|FOREIGN_PRODUCT_ONLY|HIDDEN_PROVIDER/);
   assert.equal(calls.length, 2);
   const rpc = calls.find(call => call.url.pathname.endsWith('/rpc/jowwa_printing_catalog'));
   assert.equal(rpc.init.method, 'POST');
@@ -225,6 +226,48 @@ test('anonymous source loading removes disabled, archived and missing directory 
   const directories = calls.find(call => call.url.pathname.endsWith('/site_content')).url;
   assert.equal(directories.searchParams.get('select'), 'id,archived');
   assert.equal(directories.searchParams.get('kind'), 'eq.places');
+});
+
+test('live provider and product pages plus sitemap work without site_content overrides and disappear after explicit archival', async () => {
+  let overrides = [];
+  const fetchImpl = async input => {
+    const url = new URL(input);
+    if (url.pathname.endsWith('/rpc/jowwa_printing_catalog')) return Response.json(catalog());
+    if (url.pathname.endsWith('/site_content')) return Response.json(overrides);
+    throw Error('Unexpected endpoint ' + url.pathname);
+  };
+  const handler = createPrintingPageHandler({env, fetchImpl, template});
+  const sitemap = createSitemapHandler({env, loadCatalog: options => loadPublicPrintingCatalog({...options, fetchImpl})});
+  const queries = [
+    {view: 'printing', printProvider: 'memorycraft'},
+    {view: 'printing', printProvider: 'memorycraft', printProduct: 'memorycraft-mug'}
+  ];
+  for (const query of queries) {
+    const res = response();
+    await handler({method: 'GET', query, headers: {}}, res);
+    assert.equal(res.statusCode, 200, 'an untouched live provider needs no directory override row');
+    assert.equal(canonicalOf(res.body), origin + (query.printProduct ? productPath : providerPath));
+    assert.match(res.body, /MemoryCraft الاسم الحالي/);
+  }
+  const published = response();
+  await sitemap({method: 'GET', query: {}}, published);
+  assert.equal(published.statusCode, 200);
+  assert.ok(published.body.includes((origin + productPath).replaceAll('&', '&amp;')));
+  assert.ok(published.body.includes((origin + providerPath).replaceAll('&', '&amp;')));
+  assert.doesNotMatch(published.body, /hidden-provider|hidden-product/);
+
+  overrides = [{id: 'memorycraft', archived: true}];
+  for (const query of queries) {
+    const res = response();
+    await handler({method: 'GET', query, headers: {}}, res);
+    assert.equal(res.statusCode, 404, 'an archive tombstone wins over live printing records');
+    assert.match(res.headers['x-robots-tag'], /noindex/);
+    assert.doesNotMatch(res.body, /MemoryCraft الاسم الحالي|مج باسمك الآن/);
+  }
+  const archived = response();
+  await sitemap({method: 'GET', query: {}}, archived);
+  assert.equal(archived.statusCode, 200);
+  assert.doesNotMatch(archived.body, /printProvider=memorycraft|printProduct=memorycraft-mug/);
 });
 
 test('anonymous source loading fails closed on RPC or directory lookup errors and missing configuration', async () => {

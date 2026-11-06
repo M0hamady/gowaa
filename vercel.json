@@ -12,6 +12,7 @@
  ],
  "buildCommand":"node scripts/build-live.mjs","installCommand":"npm ci",
  "redirects":[
+  {"source":"/market.html","destination":"/market","permanent":true},
   {"source":"/market","has":[{"type":"query","key":"book","value":"(?<provider>[a-z0-9-]{3,100})"}],"destination":"/place/:provider?book=1","permanent":false},
   {"source":"/market","has":[{"type":"query","key":"menu","value":"(?<product>[a-zA-Z0-9_-]{1,100})"}],"destination":"/menu/:product","permanent":false}
  ],
@@ -20,6 +21,7 @@
   {"source":"/market","has":[{"type":"query","key":"printProvider"}],"destination":"/api/page?type=printing"},
   {"source":"/market","has":[{"type":"query","key":"printProduct"}],"destination":"/api/page?type=printing"},
   {"source":"/market","has":[{"type":"query","key":"view","value":"printing"}],"destination":"/api/page?type=printing"},
+  {"source":"/market","destination":"/market-shell"},
   {"source":"/api/printing","destination":"/api/service-claims?__serviceRoute=printing"},
   {"source":"/api/member","destination":"/api/service-claims?__serviceRoute=member"},
   {"source":"/api/provider-catalog","destination":"/api/service-claims?__serviceRoute=provider-catalog"},
@@ -35,7 +37,7 @@
   {"source":"/api/bookings","destination":"/api/service-claims?__serviceRoute=bookings"},
   {"source":"/api/assistant-journeys","destination":"/api/service-claims?__serviceRoute=assistant-journeys"},
   {"source":"/api/assistant-requests","destination":"/api/service-claims?__serviceRoute=assistant-requests"},
-  {"source":"/market/category/:category","destination":"/market"},
+  {"source":"/market/category/:category","destination":"/market-shell"},
   {"source":"/seller/:id","destination":"/api/page?type=seller&id=:id"},
   {"source":"/item/:id","destination":"/api/page?type=item&id=:id"},
   {"source":"/sitemap.xml","destination":"/api/sitemap"},

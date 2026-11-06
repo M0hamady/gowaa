@@ -27,8 +27,12 @@ export async function loadPublicPrintingCatalog({env=process.env,fetchImpl=fetch
   const response=await fetchImpl(base.replace(/\/$/,'')+'/rest/v1/site_content?'+query,{headers,credentials:'omit',signal:AbortSignal.timeout(5000)});
   if(!response.ok)throw Error('Provider visibility is unavailable');
   const rows=await response.json();if(!Array.isArray(rows))throw Error('Invalid provider visibility');
-  const visible=new Set(rows.filter(p=>p.archived!==true).map(p=>p.id));
-  catalog=visiblePrintingCatalog({...catalog,providers:catalog.providers.filter(p=>!p.directoryId||visible.has(p.directoryId))});
+  // site_content contains optional directory overrides and archive tombstones,
+  // not one row for every published place. The live anonymous printing catalog
+  // establishes publication; only an explicit archive override removes it.
+  // A failed override lookup still fails the request instead of using seeds.
+  const archived=new Set(rows.filter(p=>p.archived===true).map(p=>p.id));
+  catalog=visiblePrintingCatalog({...catalog,providers:catalog.providers.filter(p=>!archived.has(p.directoryId))});
  }
  return catalog;
 }

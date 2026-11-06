@@ -1,5 +1,6 @@
 import {build} from 'esbuild';
 import {readFile,writeFile} from 'node:fs/promises';
+import {prepareMarketRouting} from './prepare-market-routing.mjs';
 
 // Production/preview build for the existing marketplace. The isolated
 // operations workspace is intentionally not mounted here: it uses fixture
@@ -38,6 +39,7 @@ if (process.env.VERCEL_ENV === 'production') {
 }
 
 await import('./build.mjs');
+await prepareMarketRouting();
 await writeFile('public/operations-build.json', JSON.stringify({
   mode: 'live-marketplace',
   liveBackend: true,
