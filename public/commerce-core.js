@@ -9,6 +9,14 @@ export function basketLine(item,quantity,variantId=''){
  if(!variants.length&&(variantId||item.track_stock&&Number(item.quantity)<quantity))throw Error('الكمية المطلوبة غير متاحة.');
  return {id:item.id,quantity,variant:variant?.id||'',price:variant?Number(variant.price):activePrice(item)};
 }
+// Limits apply to the resulting cart line, not to each press of Add. A minimum
+// order of two must still let a customer add one more to an existing two.
+export function basketAdditionRange(item,basket,variantId=''){
+ const variants=Array.isArray(item.variants)?item.variants:[],variant=variants.find(row=>row.id===variantId);
+ const existing=basket.find(row=>row.id===item.id&&(row.variant||'')===variantId)?.quantity||0;
+ const stock=variants.length?variant?.available?Number(variant.quantity):0:item.track_stock?Number(item.quantity):Infinity;
+ return {min:Math.max(1,(item.min_quantity||1)-existing),max:Math.max(0,Math.min(item.max_quantity||99,Number.isNaN(stock)?0:stock)-existing)};
+}
 const messageText=value=>String(value??'').replace(/[\u0000-\u001f\u007f-\u009f\u200e\u200f\u202a-\u202e\u2066-\u2069]/g,' ').replace(/\s+/g,' ').trim();
 const messageMoney=value=>Number(value).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
 export function orderMessage(order){

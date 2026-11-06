@@ -6,12 +6,19 @@ import {validKey,validateProviderFields,validateProduct,catalogForProvider,baske
 import {linkedProviderCatalog} from './provider-linked-products.mjs';
 const fail=(message,status=400)=>{throw Object.assign(Error(message),{status});};
 export function catalogOverrideKey(providerId,productId){return 'provider-product-'+createHash('sha256').update(providerId+':'+productId).digest('hex').slice(0,40);}
-export async function readProviderState(db,{read=readFile}={}){
- const [placeText,menuText,places,products]=await Promise.all([read(process.cwd()+'/public/data/places.json','utf8'),read(process.cwd()+'/public/data/market-directory.json','utf8'),db.from('site_content').select('id,data,archived,updated_at').eq('kind','places'),db.from('site_content').select('id,data,archived,updated_at').eq('kind','settings').like('id','provider-product-%').limit(2000)]);
+export async function readProviderState(db,{read=readFile,providerId=null}={}){
+ if(providerId!==null&&!validKey(providerId))fail('مقدم الخدمة غير صحيح.');
+ let placeQuery=db.from('site_content').select('id,data,archived,updated_at').eq('kind','places');
+ let productQuery=db.from('site_content').select('id,data,archived,updated_at').eq('kind','settings').like('id','provider-product-%');
+ // A basket needs this provider's latest prices, not every catalog in the city.
+ // Keep these reads fresh; availability and prices are still checked on each quote.
+ if(providerId){placeQuery=placeQuery.eq('id',providerId);productQuery=productQuery.eq('data->>providerId',providerId);}
+ const [placeText,menuText,places,products]=await Promise.all([read(process.cwd()+'/public/data/places.json','utf8'),read(process.cwd()+'/public/data/market-directory.json','utf8'),placeQuery,productQuery.limit(2000)]);
  if(places.error||products.error)fail('تعذر تحميل آخر تحديثات مقدم الخدمة.',503);
- const base=JSON.parse(placeText),map=new Map(base.map(p=>[p.id,{...p,_archived:false,_updatedAt:null}]));
- for(const row of places.data||[])map.set(row.id,{...map.get(row.id),...row.data,id:row.id,_archived:row.archived,_updatedAt:row.updated_at});
- const parsed=JSON.parse(menuText);return {providers:[...map.values()],menus:Array.isArray(parsed)?parsed:parsed.items||[],overrides:products.data||[]};
+ const base=JSON.parse(placeText),map=new Map(base.filter(p=>!providerId||p.id===providerId).map(p=>[p.id,{...p,_archived:false,_updatedAt:null}]));
+ for(const row of places.data||[])if(!providerId||row.id===providerId)map.set(row.id,{...map.get(row.id),...row.data,id:row.id,_archived:row.archived,_updatedAt:row.updated_at});
+ const parsed=JSON.parse(menuText),menus=Array.isArray(parsed)?parsed:parsed.items||[];
+ return {providers:[...map.values()],menus:providerId?menus.filter(p=>p.placeId===providerId):menus,overrides:(products.data||[]).filter(row=>!providerId||row.data?.providerId===providerId)};
 }
 export function createProviderHandler({admin=false,...options}={}){return async(req,res)=>{
  noStore(res);res.setHeader('Content-Type','application/json; charset=utf-8');const reply=(status,data)=>{res.statusCode=status;res.end(JSON.stringify(data));};
@@ -19,7 +26,17 @@ export function createProviderHandler({admin=false,...options}={}){return async(
  if(req.method==='POST'&&req.headers?.origin){try{if(new URL(req.headers.origin).host!==req.headers.host)return reply(403,{error:'طلب غير مسموح.'});}catch{return reply(403,{error:'طلب غير مسموح.'});}}
  const member=await authenticatedMember(req,{...options,admin});if(!member.ok)return reply(member.status,{error:member.status===403?'لوحة التحكم للأدمن فقط.':member.status===503?'تعذر التحقق من الحساب.':'سجّل دخولك عشان تكمل.'});
  try{
-  const state=await readProviderState(member.db,options);
+  let body;
+  if(req.method==='POST'){
+   try{body=typeof req.body==='string'?JSON.parse(req.body):req.body;}catch{fail('بيانات غير صحيحة.');}
+   if(!body||typeof body!=='object'||Array.isArray(body)||JSON.stringify(body).length>24000)fail('حجم البيانات أكبر من المسموح.');
+  }
+  const providerId=req.method==='GET'?req.query?.provider:body.providerId;
+  if(!admin){
+   if(req.method==='GET'&&!providerId)fail('اختار مقدم الخدمة.');
+   if(!validKey(providerId)||req.method==='POST'&&!['quote','concierge_order'].includes(body.action))fail('طلب غير صحيح.');
+  }
+  const state=await readProviderState(member.db,{...options,providerId:admin?null:providerId});
   let analyticsByTarget=new Map();
   if(admin){try{const report=await member.db.rpc('jowwa_admin_item_analytics',{p_days:30,p_event:null,p_query:null});for(const row of report.data?.items||[])analyticsByTarget.set(row.target,row);}catch{}}
   const metricsFor=(provider,products)=>{const targets=new Set(['/place/'+provider.id,...products.map(x=>'/item/'+x.id),...state.menus.filter(x=>x.placeId===provider.id).map(x=>'/menu/'+x.id)]),sum=key=>[...targets].reduce((n,target)=>n+Number(analyticsByTarget.get(target)?.[key]||0),0),items=Object.fromEntries(products.map(x=>[x.id,analyticsByTarget.get('/item/'+x.id)||analyticsByTarget.get('/menu/'+x.id)||{}]));return {views:sum('views'),details:sum('details'),basket_adds:sum('basket_adds'),checkouts:sum('checkouts'),visitors:sum('visitors'),items};};
@@ -54,8 +71,6 @@ export function createProviderHandler({admin=false,...options}={}){return async(
    let concierge=false;if(!admin&&!orderGate?.canOrder){try{const c=await member.db.rpc('jowwa_concierge_availability',{p_ids:[provider.id]});concierge=c.data?.[provider.id]===true;}catch{}}
    return reply(200,{provider,products,orderGate,orderSettings,readiness,admin,concierge,analytics:metricsFor(provider,products),versions:admin?Object.fromEntries(state.overrides.filter(x=>x.data?.providerId===id).map(x=>[x.data.productId,x.updated_at])):undefined});
   }
-  let body;try{body=typeof req.body==='string'?JSON.parse(req.body):req.body;}catch{fail('بيانات غير صحيحة.');}
-  if(!body||typeof body!=='object'||Array.isArray(body)||JSON.stringify(body).length>24000)fail('حجم البيانات أكبر من المسموح.');
   if(!admin){
    if(body.action==='concierge_order')return reply(200,await conciergeOrder(body,state,member,options));
    if(body.action!=='quote'||!validKey(body.providerId))fail('طلب غير صحيح.');const provider=state.providers.find(p=>p.id===body.providerId&&!p._archived);if(!provider)fail('المكان لم يعد متاحًا.',404);

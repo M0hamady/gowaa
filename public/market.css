@@ -53,3 +53,13 @@
 .concierge-form{border-top:1px solid #eee;margin-top:14px;padding-top:12px}.concierge-fulfillment{display:flex;gap:16px;border:0;padding:0}.concierge-fulfillment legend{font-weight:600}
 .cart-qty{display:flex;align-items:center;gap:4px}.cart-qty input{width:56px;text-align:center;min-height:40px}
 .qty-step{min-width:40px;min-height:40px;border-radius:10px;border:1px solid #cfd8d2;background:#fff;font-size:1.2rem;line-height:1}
+
+/* Detail URLs render their own SSR content from the first paint. The marketplace
+   remains a separate destination, even before JavaScript has downloaded. */
+.market-detail-page .market-hero,.market-detail-page .market-tabs,.market-detail-page #market-assistant,.market-detail-page #browse-view,.market-detail-page #directory-view,.market-detail-page #businesses-view,.market-detail-page #leisure-view,.market-detail-page #mine-view,.market-detail-page #admin-view,.market-detail-page .market-values{display:none!important}
+#market-page-detail{max-width:900px;margin:24px auto 40px;min-width:0;overflow-wrap:anywhere}
+#market-page-detail:not([data-ssr]){background:#fff;border:1px solid var(--line);border-radius:20px;padding:24px}
+#market-page-detail .seo-content{margin:0}
+#market-page-detail .profile-hero h2{font-size:28px}
+#market-page-detail>.dialog-title{margin-top:0}
+@media(max-width:600px){#market-page-detail{margin:18px auto 28px}#market-page-detail:not([data-ssr]){padding:18px 14px}#market-page-detail .profile-hero h2{font-size:23px}}

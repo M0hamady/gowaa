@@ -7,3 +7,41 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
  .endpoint label{min-width:0}.endpoint .suggestions{top:76px}
  .swap{top:65px}.form-row,.form-pair{min-width:0}
 }
+
+/* The same one-question layout is used on place pages, in the market and in work. */
+.single-question-form [hidden]{display:none!important}
+.single-question-form .question-hero{display:flex;align-items:flex-start;gap:13px;margin:8px 0 22px}
+.single-question-form .question-hero-icon{display:grid;place-items:center;flex:none;width:48px;height:48px;border-radius:16px;background:#edf4df;color:#24533e}
+.single-question-form .question-hero-icon .ui-icon{width:26px;height:26px}
+.single-question-form .question-hero h3{margin:0 0 5px;font-size:22px;line-height:1.6}
+.single-question-form .question-hint{margin:0;font-size:13px;line-height:1.8;color:#617568}
+.single-question-form .question-choice-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.single-question-form .question-choice,.single-question-form .question-toggle{display:flex;align-items:center;gap:10px;min-height:58px;padding:13px 15px;border:1px solid #d6e3ce;border-radius:15px;background:#fff;color:#234c39;text-align:start;font-size:15px;font-weight:700;line-height:1.6;transition:background-color .15s,border-color .15s}
+.single-question-form .question-choice .ui-icon,.single-question-form .question-toggle .ui-icon{flex:none;width:22px;height:22px}
+.single-question-form .question-choice.selected,.single-question-form .question-toggle.selected{background:#eaf3df;border-color:#426f49;box-shadow:0 0 0 1px #426f49}
+.single-question-form .question-choice:focus-visible,.single-question-form .question-toggle:focus-visible,.single-question-form .question-edit:focus-visible{outline:3px solid #a5c977;outline-offset:3px}
+.single-question-form .question-choice:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
+.single-question-form .question-choice-grid-compact{grid-template-columns:repeat(3,minmax(0,1fr))}
+.single-question-form .question-choice-grid-compact .question-choice{justify-content:center;min-height:48px;padding:9px 6px;text-align:center;font-size:14px}
+.single-question-form .question-choice-grid-compact .ui-icon{display:none}
+.single-question-form .question-toggle{width:100%;justify-content:center}
+.single-question-form .question-consent{font-size:15px;line-height:1.9;margin:0 0 18px;color:#455d4d}
+.single-question-form .question-context{font-size:13px;line-height:1.85;color:#617568;margin-top:14px}
+.single-question-form .question-footer{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px 10px}
+.single-question-form .question-footer>[data-prev]{grid-column:1;grid-row:1;display:flex;align-items:center;justify-content:center;gap:7px;background:#f1f5ed;color:#456348;border:1px solid #dbe5d2;border-radius:12px;padding:10px 13px}
+.single-question-form .question-footer>[data-next],.single-question-form .question-footer>[type=submit]{grid-column:2;grid-row:1;border-radius:12px}
+.single-question-form .question-footer>[data-skip]{grid-column:2;grid-row:2;min-height:40px;padding:6px 12px;background:transparent;color:#5b725b;font-size:13px;text-decoration:underline;text-underline-offset:4px}
+.single-question-form .question-review dd{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.single-question-form .question-review dd>span{min-width:0;overflow-wrap:anywhere;white-space:pre-wrap}
+.single-question-form .question-edit{flex:none;min-height:32px;padding:4px 8px;border:1px solid #d7e1d0;border-radius:8px;background:#fff;color:#355b3c;font-size:12px}
+.single-question-form .form-error{min-height:0;font-size:13px;line-height:1.8}
+.single-question-form .form-error:empty{display:none}
+.single-question-form[aria-busy=true] .question-footer{opacity:.75;pointer-events:none}
+@media(max-width:600px){
+ .single-question-form .question-hero{gap:11px;margin-bottom:18px}
+ .single-question-form .question-hero h3{font-size:20px}
+ .single-question-form .question-hero-icon{width:43px;height:43px;border-radius:14px}
+ .single-question-form .question-choice-grid:not(.question-choice-grid-compact){grid-template-columns:1fr}
+ .single-question-form .question-review dd{gap:7px;font-size:14px}
+}
+@media(prefers-reduced-motion:reduce){.single-question-form .question-choice,.single-question-form .question-toggle{transition:none}}

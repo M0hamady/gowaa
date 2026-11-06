@@ -3,6 +3,8 @@ node_modules/
 .vercel/
 test-results/
 public/market.js
+public/customer.js
+public/assets/customer/
 outputs/
 work/
 artifacts/

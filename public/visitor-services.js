@@ -32,10 +32,10 @@ function removeSourceActions(root){
   else if(text.includes('التفاصيل والمصدر'))a.textContent='تفاصيل المكان';
  }
 }
+const visitorCardSelector='.market-card[data-analytics-target^="/place/"],.place-detail[data-analytics-target^="/place/"],.journey-provider-detail,.assistant-card';
 export function enhanceVisitorCards(root,records){
  const byId=new Map(records.map(p=>[p.id,p])),byName=new Map(records.map(p=>[p.name,p]));
- const selector='.market-card[data-analytics-target^="/place/"],.place-detail[data-analytics-target^="/place/"],.journey-provider-detail,.assistant-card';
- for(const card of root.querySelectorAll(selector)){
+ for(const card of root.querySelectorAll(visitorCardSelector)){
   if(card.dataset.visitorEnhanced==='1')continue;
   const target=card.dataset.analyticsTarget||card.querySelector('a[href^="/place/"]')?.getAttribute('href')||'',id=target.split('/place/')[1];
   const p=byId.get(id)||(card.classList.contains('journey-provider-detail')?byName.get(card.querySelector('h3')?.textContent.trim()):null);if(!p)continue;
@@ -60,19 +60,28 @@ export function enhanceVisitorCards(root,records){
  }
 }
 async function mountVisitorServices(){
- let records=[];
+ let records=[],requested=false;
+ const params=new URLSearchParams(location.search),destination=params.get('service');
+ const needsDestination=!!(destination&&params.get('to')&&document.getElementById('trip-panel'));
  const observer=new MutationObserver(()=>schedule());let queued=false;
- function schedule(){if(queued)return;queued=true;queueMicrotask(()=>{queued=false;enhanceVisitorCards(document,records);});}
+ function needsRecords(){
+  if(needsDestination)return true;
+  return [...document.querySelectorAll(visitorCardSelector)].some(card=>card.dataset.visitorEnhanced!=='1'&&(card.classList.contains('journey-provider-detail')||card.dataset.analyticsTarget?.startsWith('/place/')||card.querySelector('a[href^="/place/"]')));
+ }
+ function showDestination(){
+  const p=records.find(p=>p.id===destination),panel=document.getElementById('trip-panel');
+  if(!needsDestination||!p||!panel||document.getElementById('visitor-route-destination'))return;
+  const note=document.createElement('div');note.id='visitor-route-destination';note.className='visitor-route-destination';note.innerHTML=icon('map')+'<div><strong>'+esc(p.name)+'</strong><small>'+esc(p.visitorNote||'الوصول لنقطة المكان أو محيطه؛ راجع المدخل عند الوصول.')+'</small></div>';panel.prepend(note);
+ }
+ async function loadRecords(){
+  requested=true;
+  try{const response=await fetch('/data/places.json');if(!response.ok)return;const base=await response.json();const {loadContent}=await import('./content.js');records=await loadContent('places',base);}catch{return;}
+  schedule();
+ }
+ function schedule(){if(queued)return;queued=true;queueMicrotask(()=>{queued=false;enhanceVisitorCards(document,records);showDestination();if(!requested&&needsRecords())void loadRecords();});}
  observer.observe(document.body,{childList:true,subtree:true});schedule();
- try{const response=await fetch('/data/places.json');if(!response.ok)return;const base=await response.json();const {loadContent}=await import('./content.js');records=await loadContent('places',base);}catch{return;}
- schedule();
- const params=new URLSearchParams(location.search);
  if(params.get('view')==='directory'&&params.get('group')==='banks'){
   let attempts=0;const apply=()=>{const select=document.getElementById('directory-category');if(select&&[...select.options].some(o=>o.value==='صراف آلي')){select.value='صراف آلي';select.dispatchEvent(new Event('change'));return;}if(++attempts<30)setTimeout(apply,200);};apply();
- }
- const id=params.get('service'),p=records.find(p=>p.id===id);
- if(p&&params.get('to')){
-  const panel=document.getElementById('trip-panel');if(panel&&!document.getElementById('visitor-route-destination')){const note=document.createElement('div');note.id='visitor-route-destination';note.className='visitor-route-destination';note.innerHTML=icon('map')+'<div><strong>'+esc(p.name)+'</strong><small>'+esc(p.visitorNote||'الوصول لنقطة المكان أو محيطه؛ راجع المدخل عند الوصول.')+'</small></div>';panel.prepend(note);}
  }
 }
 if(typeof document!=='undefined'){
