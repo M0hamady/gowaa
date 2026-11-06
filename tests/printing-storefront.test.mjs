@@ -67,6 +67,7 @@ class Element {
   }
   closest(selector) { return this.matches(selector) ? this : this.parentElement?.closest(selector) || null; }
   click() { return this.onclick?.({ preventDefault() {}, target: this, currentTarget: this }); }
+  remove() { this.parentElement?.removeChild?.(this); this.isConnected = false; }
   focus() {}
   scrollIntoView() {}
 }
@@ -114,9 +115,18 @@ const deferred = () => {
 const reply = data => ({ ok: true, status: 200, json: async () => ({ data }) });
 const catalogFixture = () => ({ ...structuredClone(seed), works: [] });
 
-function setup({ url = '/market?view=printing', catalog = catalogFixture(), handler, authenticated = true, isVisible = () => true, memberGate = false } = {}) {
+function setup({ url = '/market?view=printing', catalog = catalogFixture(), handler, authenticated = true, isVisible = () => true, memberGate = false, withMetadata = false } = {}) {
   const root = new Root(), requests = [], messages = [], clipboard = [], uploads = [];
   const documentListeners = [];
+  const head = withMetadata ? {
+    nodes: [],
+    querySelector(selector) { return this.querySelectorAll(selector)[0] || null; },
+    querySelectorAll(selector) { return this.nodes.filter(node => node.matches(selector)); },
+    appendChild(node) { this.nodes.push(node); node.parentElement = this; },
+    append(node) { this.appendChild(node); },
+    removeChild(node) { this.nodes = this.nodes.filter(value => value !== node); },
+  } : { append() {} };
+  const heading = new Element(root, 'h1', {});
   let address = new URL(url, 'https://jowwa.example');
   let user = authenticated ? { id: CUSTOMER, user_metadata: { display_name: 'عميل الاختبار' }, email_confirmed_at: '2026-11-06' } : null;
   let created;
@@ -129,9 +139,9 @@ function setup({ url = '/market?view=printing', catalog = catalogFixture(), hand
     window: {},
     navigator: { clipboard: { writeText: async value => { clipboard.push(value); } } },
     document: {
-      createElement: tag => new Element(root, tag, {}), querySelector: selector => root.querySelector(selector), querySelectorAll: selector => root.querySelectorAll(selector),
+      createElement: tag => new Element(root, tag, {}), querySelector: selector => withMetadata && selector === '.market-hero h1' ? heading : root.querySelector(selector), querySelectorAll: selector => root.querySelectorAll(selector),
       addEventListener: (type, callback, capture) => documentListeners.push({ type, callback, capture }),
-      head: { append() {} }, body: { dataset: {}, hasAttribute: () => false },
+      head, body: { dataset: {}, hasAttribute: () => false },
       documentElement: { classList: { add() {}, remove() {}, toggle() {} } },
     },
     fetch: async (url, options = {}) => {
@@ -169,7 +179,7 @@ function setup({ url = '/market?view=printing', catalog = catalogFixture(), hand
     return { event, captureFinished: Promise.all(captures) };
   };
   return {
-    ui, root, requests, messages, clipboard, uploads, catalog, location, dispatchClick,
+    ui, root, requests, messages, clipboard, uploads, catalog, location, dispatchClick, head, heading, document: context.document,
     navigate: value => { address = new URL(value, address); },
     setUser: value => { user = value; },
     click: async selector => {
@@ -227,6 +237,213 @@ test('MemoryCraft direct link shows its nine products and ignores an incompatibl
   assert.match(app.root.innerHTML, /MemoryCraft/);
   assert.doesNotMatch(app.root.innerHTML, /data-print-start="paper"|printing-rate-table|أسعار المكتبة الأساسية للورقة/);
   noWizard(app);
+});
+
+test('a direct product link opens public details and an inquiry price without starting an order', async () => {
+  const app = setup({ url: '/market?view=printing&printProvider=memorycraft&printProduct=memorycraft-mug', authenticated: false });
+  await app.ui.show();
+  assert.equal(app.root.querySelector('#printing-product-title').textContent, 'مج بتصميمك');
+  assert.match(app.root.innerHTML, /صورتك أو اسمك أو تصميم تختاره على مج/);
+  assert.ok(app.root.querySelectorAll('img').some(image => image.getAttribute('src') === '/media/printing/memorycraft-mug.webp'));
+  assert.equal(app.root.querySelector('[data-print-price-kind]').getAttribute('data-print-price-kind'), 'inquiry');
+  assert.match(app.root.innerHTML, /السعر بعد مراجعة المواصفات/);
+  assert.ok(app.root.querySelector('#printing-product-order'));
+  assert.ok(app.root.querySelector('#printing-share-product'));
+  assert.deepEqual(providerLinks(app), [giftId]);
+  noWizard(app);
+  assert.equal(app.requests.some(request => request.body?.action === 'create'), false);
+  assert.equal(app.uploads.length, 0);
+});
+
+test('product detail links remain public through the actual member gate and customization is an explicit next action', async () => {
+  const app = setup({
+    url: '/market?view=printing&printProvider=memorycraft', authenticated: false, memberGate: true,
+    handler: request => request.url.pathname === '/api/member' ? { ok: true, status: 200, json: async () => ({ member: false, user: null }) } : undefined,
+  });
+  await app.ui.show();
+  const link = app.root.querySelector('[data-print-product-detail="memorycraft-mug"]');
+  assert.equal(link.tagName, 'A');
+  assert.equal(link.getAttribute('href'), '/market?view=printing&printProvider=memorycraft&printProduct=memorycraft-mug');
+  const result = await app.click('[data-print-product-detail="memorycraft-mug"]');
+  assert.equal(result.event.stopped, false);
+  await result.captureFinished;
+  assert.equal(app.root.querySelector('#printing-product-title').textContent, 'مج بتصميمك');
+  noWizard(app);
+  await app.click('#printing-product-order');
+  assert.match(question(app), /لون المج/);
+  assertGiftContext(app);
+  assert.equal(new URL(app.location.href).searchParams.get('printProduct'), 'memorycraft-mug');
+  await app.click('#printing-draft-close');
+  assert.equal(app.root.querySelector('#printing-product-title').textContent, 'مج بتصميمك');
+  noWizard(app);
+});
+
+test('unknown, inactive, or mismatched product links never reveal another provider product or start a fallback order', async () => {
+  for (const query of [
+    'printProvider=memorycraft&printProduct=unknown-product',
+    `printProvider=${paperId}&printProduct=memorycraft-mug`,
+    'printProvider=unknown-provider&printProduct=memorycraft-mug',
+    'printProduct=memorycraft-mug',
+    'printProvider=memorycraft&printProduct=memorycraft-inactive',
+  ]) {
+    const catalog = catalogFixture();
+    catalog.products.push({ ...catalog.products[0], id: 'memorycraft-inactive', name: 'INACTIVE_PRIVATE_NAME', active: false });
+    const app = setup({ url: `/market?view=printing&${query}`, catalog });
+    await app.ui.show();
+    assert.match(app.root.innerHTML, /المنتج ده مش متاح على صفحة المكتبة/);
+    assert.doesNotMatch(app.root.innerHTML, /مج بتصميمك|INACTIVE_PRIVATE_NAME|memorycraft-mug.webp/);
+    assert.equal(app.root.querySelector('#printing-product-order'), null);
+    assert.equal(app.root.querySelector('#printing-share-product'), null);
+    noWizard(app);
+    assert.equal(app.requests.some(request => request.body?.action === 'create'), false);
+  }
+});
+
+test('product sharing strips order IDs, customer data, attachments and fragments', async () => {
+  const app = setup({ url: '/market?view=printing&printProvider=memorycraft&printProduct=memorycraft-frame&customer=secret&asset=private.pdf&printType=paper#attachment' });
+  await app.ui.show();
+  app.navigate(app.location.href.replace('#attachment', `&printOrder=${ORDER}#attachment`));
+  await app.click('#printing-share-product');
+  assert.deepEqual(app.clipboard, ['https://jowwa.example/market?view=printing&printProvider=memorycraft&printProduct=memorycraft-frame']);
+  noWizard(app);
+});
+
+test('product route changes refresh details and provider or home navigation clears the product selection', async () => {
+  const app = setup({ url: '/market?view=printing&printProvider=memorycraft&printProduct=memorycraft-mug' });
+  await app.ui.show();
+  app.navigate('/market?view=printing&printProvider=memorycraft&printProduct=memorycraft-frame');
+  await app.ui.show();
+  assert.equal(app.root.querySelector('#printing-product-title').textContent, 'برواز بصورة مخصصة');
+  assert.doesNotMatch(app.root.innerHTML, /memorycraft-mug.webp/);
+  await app.click('[data-print-provider="memorycraft"]');
+  assert.equal(new URL(app.location.href).searchParams.has('printProduct'), false);
+  assert.equal(productsOnPage(app).length, 9);
+  await app.ui.productPage(giftId, 'memorycraft-mug');
+  await app.click('[data-print-home]');
+  assert.equal(new URL(app.location.href).searchParams.has('printProduct'), false);
+  assert.equal(new URL(app.location.href).searchParams.has('printProvider'), false);
+  assert.equal(app.root.querySelector('#printing-product-order'), null);
+});
+
+test('the latest product route wins when direct links share a pending catalogue response', async () => {
+  const pending = deferred();
+  const app = setup({ url: '/market?view=printing&printProvider=memorycraft&printProduct=memorycraft-mug', handler: request => request.query.action === 'catalog' ? pending.promise : undefined });
+  const first = app.ui.show();
+  await tick();
+  app.navigate('/market?view=printing&printProvider=memorycraft&printProduct=memorycraft-frame');
+  const second = app.ui.show();
+  pending.resolve(reply(catalogFixture()));
+  await Promise.all([first, second]);
+  assert.equal(app.root.querySelector('#printing-product-title').textContent, 'برواز بصورة مخصصة');
+  assert.equal(new URL(app.location.href).searchParams.get('printProduct'), 'memorycraft-frame');
+  assert.doesNotMatch(app.root.innerHTML, /memorycraft-mug.webp/);
+  noWizard(app);
+});
+
+test('paused product pages stay readable and only a confirmed positive ready price is displayed as priced', async () => {
+  const catalog = catalogFixture();
+  Object.assign(catalog.providers.find(provider => provider.id === giftId), { acceptingOrders: false });
+  const paused = setup({ url: '/market?view=printing&printProvider=memorycraft&printProduct=memorycraft-mug', catalog });
+  await paused.ui.show();
+  assert.equal(paused.root.querySelector('#printing-product-title').textContent, 'مج بتصميمك');
+  assert.equal(paused.root.querySelector('#printing-product-order').disabled, true);
+  assert.ok(paused.root.querySelector('#printing-share-product'));
+  noWizard(paused);
+  for (const price of [null, 0, 15]) {
+    const readyCatalog = catalogFixture();
+    readyCatalog.providers.find(provider => provider.id === giftId).orderTypes.push('ready');
+    readyCatalog.products.push({ id: 'memorycraft-ready', providerId: giftId, type: 'ready', name: 'منتج مكتبة جاهز', price, priceConfirmed: true, availability: 'available', active: true });
+    const app = setup({ url: '/market?view=printing&printProvider=memorycraft&printProduct=memorycraft-ready', catalog: readyCatalog });
+    await app.ui.show();
+    assert.equal(app.root.querySelector('[data-print-price-kind]').getAttribute('data-print-price-kind'), price === 15 ? 'confirmed' : 'inquiry');
+    assert.equal(app.root.querySelector('#printing-product-order').disabled, false);
+    assert.doesNotMatch(app.root.innerHTML, /٠ ج\.م/);
+    noWizard(app);
+  }
+});
+
+test('product images use the shared safe source and visibly identify illustration fallbacks', async () => {
+  const illustration = setup({ url: '/market?view=printing&printProvider=memorycraft&printProduct=memorycraft-tshirt' });
+  await illustration.ui.show();
+  assert.ok(illustration.root.querySelectorAll('img').some(image => image.getAttribute('src') === '/media/printing/memorycraft-tshirt-illustration.webp'));
+  assert.match(illustration.root.innerHTML, /رسم توضيحي للتخصيص؛ تفاصيل القطعة/);
+  for (const [imageUrl, expected] of [
+    ['https://catalog.example/owner-mug.webp', 'https://catalog.example/owner-mug.webp'],
+    ['https://files.example/storage/v1/object/sign/jowwa-print-files/private.png?token=secret', null],
+  ]) {
+    const catalog = catalogFixture();
+    Object.assign(catalog.products.find(product => product.id === 'memorycraft-mug'), { image: null, imageUrl, version: 2 });
+    const app = setup({ url: '/market?view=printing&printProvider=memorycraft', catalog });
+    await app.ui.show();
+    const sources = app.root.querySelectorAll('img').map(image => image.getAttribute('src'));
+    assert.equal(sources.includes(imageUrl), Boolean(expected));
+    await app.ui.productPage(giftId, 'memorycraft-mug');
+    assert.equal(app.root.querySelectorAll('img').some(image => image.getAttribute('src') === imageUrl), Boolean(expected));
+    assert.doesNotMatch(app.root.innerHTML, /jowwa-print-files|token=secret/);
+  }
+});
+
+test('product metadata is replaced with private noindex metadata during wizard and order views', async () => {
+  const catalog = catalogFixture();
+  Object.assign(catalog.products.find(product => product.id === 'memorycraft-notebook'), { image: 'https://catalog.example/current-notebook.webp', imageUrl: 'https://catalog.example/current-notebook.webp', version: 2 });
+  const app = setup({
+    url: '/market?view=printing&printProvider=memorycraft&printProduct=memorycraft-mug', withMetadata: true, catalog,
+    handler: request => request.query.action === 'get' ? reply({
+      id: ORDER, providerId: giftId, type: 'personalized', status: 'submitted', viewer: 'customer', version: 1,
+      spec: { providerId: giftId, productId: 'memorycraft-mug', quantity: 1, options: {}, designText: 'PRIVATE_CUSTOMER_NAME', designFiles: [] },
+    }) : undefined,
+  });
+  const previousSchema = new Element(app.root, 'script', { 'data-printing-schema': '' });
+  previousSchema.textContent = '{"@type":"Product","name":"STALE_PRODUCT"}';
+  app.head.appendChild(previousSchema);
+  await app.ui.show();
+  assert.match(app.document.title, /مج بتصميمك/);
+  assert.equal(app.heading.textContent, 'مج بتصميمك');
+  assert.match(app.head.querySelector('meta[name="robots"]').getAttribute('content'), /^index/);
+  assert.match(app.head.querySelector('link[rel="canonical"]').getAttribute('href'), /printProduct=memorycraft-mug$/);
+  assert.match(app.head.querySelector('meta[property="og:image:secure_url"]').getAttribute('content'), /printing-product-memorycraft-mug-card\.png$/);
+  assert.equal(app.head.querySelector('meta[property="og:image:type"]').getAttribute('content'), 'image/png');
+  assert.equal(app.head.querySelectorAll('script[data-printing-schema]').some(script => script.textContent.includes('STALE_PRODUCT')), false);
+  await app.click('#printing-product-order');
+  assert.equal(app.head.querySelector('meta[name="robots"]').getAttribute('content'), 'noindex, nofollow');
+  assert.equal(app.head.querySelectorAll('script[data-printing-schema]').length, 0);
+  assert.doesNotMatch(app.head.querySelector('link[rel="canonical"]').getAttribute('href'), /printProduct|printOrder/);
+  await app.ui.openOrder(ORDER);
+  assert.equal(app.document.title, 'طلب الطباعة الخاص بك | جوّه');
+  assert.equal(app.head.querySelector('meta[name="robots"]').getAttribute('content'), 'noindex, nofollow');
+  const metadata = app.head.nodes.map(node => JSON.stringify(node.attributes) + node.textContent).join('\n');
+  assert.doesNotMatch(metadata, /PRIVATE_CUSTOMER_NAME|printOrder|STALE_PRODUCT/);
+  app.ui.home();
+  assert.match(app.head.querySelector('meta[name="robots"]').getAttribute('content'), /^index/);
+  assert.equal(app.heading.textContent, 'مكتبات وطباعة في كيان سيتي');
+  await app.ui.productPage(giftId, 'memorycraft-notebook');
+  for (const property of ['og:image', 'og:image:secure_url']) assert.equal(app.head.querySelector('meta[property="' + property + '"]').getAttribute('content'), 'https://catalog.example/current-notebook.webp');
+  assert.equal(app.head.querySelector('meta[property="og:image:type"]'), null);
+  assert.equal(app.head.querySelector('meta[property="og:image:width"]'), null);
+});
+
+test('guest direct order links keep private metadata during hydration and when login is required, including an empty marker', async () => {
+  for (const orderId of [ORDER, '']) {
+    const app = setup({
+      url: `/market?view=printing&printProvider=memorycraft&printOrder=${orderId}`,
+      authenticated: false, withMetadata: true,
+    });
+    const showing = app.ui.show();
+    const assertPrivate = () => {
+      assert.equal(app.head.querySelector('meta[name="robots"]').getAttribute('content'), 'noindex, nofollow');
+      assert.equal(app.head.querySelector('link[rel="canonical"]').getAttribute('href'), 'https://jowwa-kayan.vercel.app/market?view=printing');
+      assert.equal(app.document.title, 'طلب الطباعة الخاص بك | جوّه');
+      assert.equal(app.head.querySelectorAll('script[data-printing-schema]').length, 0);
+    };
+    assertPrivate(); // The first loading render must preserve the private SSR contract.
+    await showing;
+    assertPrivate(); // A guest cannot load the order; metadata must stay private.
+    assert.equal(app.requests.some(request => request.query.action === 'get'), false);
+    assert.equal(app.requests.some(request => request.body?.action === 'create'), false);
+    app.ui.home();
+    assert.equal(new URL(app.location.href).searchParams.has('printOrder'), false);
+    assert.match(app.head.querySelector('meta[name="robots"]').getAttribute('content'), /^index/);
+  }
 });
 
 test('paper direct link has its own four rates and starts a PDF-only order with its identity', async () => {

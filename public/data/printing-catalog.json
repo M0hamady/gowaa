@@ -104,7 +104,7 @@
     {
       "id": "memorycraft-tshirt", "providerId": "memorycraft", "type": "personalized", "name": "تيشيرت بتصميمك",
       "description": "اطلب المقاس واللون والتصميم، والمتجر يؤكد الخامة والمقاس وإمكانية التنفيذ.",
-      "price": null, "pricingMode": "quote", "availability": "made_to_order", "image": null, "proofRequired": true,
+      "price": null, "pricingMode": "quote", "availability": "made_to_order", "image": "/media/printing/memorycraft-tshirt-illustration.webp", "imageNote": "رسم توضيحي للتخصيص.", "proofRequired": true,
       "optionGroups": [
         { "id": "size", "label": "المقاس المطلوب", "input": "text", "required": true, "maxLength": 80, "placeholder": "اكتب المقاس أو القياسات المطلوبة", "confirmationRequired": true },
         { "id": "color", "label": "لون التيشيرت المطلوب", "input": "text", "required": false, "maxLength": 80, "confirmationRequired": true },
@@ -114,7 +114,7 @@
     {
       "id": "memorycraft-puzzle", "providerId": "memorycraft", "type": "personalized", "name": "بازل بصورتك",
       "description": "حوّل صورة تختارها لبازل. المقاس وعدد القطع يتأكدوا في عرض السعر.",
-      "price": null, "pricingMode": "quote", "availability": "made_to_order", "image": null, "proofRequired": true,
+      "price": null, "pricingMode": "quote", "availability": "made_to_order", "image": "/media/printing/memorycraft-puzzle-illustration.webp", "imageNote": "رسم توضيحي للتخصيص.", "proofRequired": true,
       "optionGroups": [
         { "id": "size", "label": "في مقاس معين للبازل؟", "input": "text", "required": false, "maxLength": 80, "confirmationRequired": true },
         { "id": "pieceCount", "label": "عدد القطع المطلوب، لو محدد", "input": "text", "required": false, "maxLength": 80, "confirmationRequired": true }
@@ -132,7 +132,7 @@
     {
       "id": "memorycraft-notebook", "providerId": "memorycraft", "type": "personalized", "name": "نوت بوك بتصميمك",
       "description": "غلاف مخصص باسم أو صورة أو تصميم. مقاس النوت بوك ونوعه يتأكدوا قبل التنفيذ.",
-      "price": null, "pricingMode": "quote", "availability": "made_to_order", "image": null, "proofRequired": true,
+      "price": null, "pricingMode": "quote", "availability": "made_to_order", "image": "/media/printing/memorycraft-notebook.webp", "imageNote": "تحسين عرض نموذج من أعمال المتجر.", "proofRequired": true,
       "optionGroups": [
         { "id": "size", "label": "مقاس النوت بوك المطلوب", "input": "text", "required": false, "maxLength": 80, "confirmationRequired": true },
         { "id": "printArea", "label": "مكان التصميم على الغلاف", "input": "select", "required": true, "values": [{ "value": "front", "label": "الغلاف الأمامي" }, { "value": "front-back", "label": "الغلاف الأمامي والخلفي" }], "confirmationRequired": true }
@@ -141,7 +141,7 @@
     {
       "id": "memorycraft-keychain", "providerId": "memorycraft", "type": "personalized", "name": "ميدالية مخصصة",
       "description": "ميدالية بصورة أو اسم أو شعار. الشكل والمقاس حسب المتاح لدى المتجر.",
-      "price": null, "pricingMode": "quote", "availability": "made_to_order", "image": null, "proofRequired": true,
+      "price": null, "pricingMode": "quote", "availability": "made_to_order", "image": "/media/printing/memorycraft-keychain.webp", "imageNote": "تحسين عرض نموذج من أعمال المتجر.", "proofRequired": true,
       "optionGroups": [
         { "id": "shape", "label": "الشكل أو المقاس المطلوب", "input": "text", "required": false, "maxLength": 100, "confirmationRequired": true },
         { "id": "printArea", "label": "الطباعة على الميدالية", "input": "select", "required": true, "values": [{ "value": "one-side", "label": "وجه واحد" }, { "value": "two-sides", "label": "الوجهين" }], "confirmationRequired": true }

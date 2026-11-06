@@ -12,6 +12,7 @@ import {createMarketData} from './market-data.js';
 import {createMarketPlaces} from './market-places-ui.js';
 import {createMarketServices} from './market-services-ui.js';
 import {createMarketPrinting} from './market-printing-ui.js';
+import {restoreMarketPageMeta} from '../public/printing-page-core.js';
 import {icon} from '../public/ui-icons.js';
 import {listingFacts,categoryIcons} from '../public/market-discovery.js';
 import {createCommerce} from './commerce.js';
@@ -94,7 +95,7 @@ function ensureLeisureView(){
  const section=document.createElement('section');section.id='leisure-view';section.hidden=true;section.setAttribute('aria-label','ترفيه ورياضة');section.innerHTML='<style>'+BOOKING_CSS+'</style><div id="leisure-content"></div>';
  $('businesses-view')?.after(section);button.onclick=()=>setView('leisure');
 }
-function marketViewFromUrl(){const params=new URLSearchParams(location.search),target=params.get('view');return target==='bookings'?'mine':['admin','directory','mine','businesses','leisure','services','printing'].includes(target)?target:!target&&params.get('business')==='directory-guide-food-location'?'businesses':'browse';}
+function marketViewFromUrl(){const params=new URLSearchParams(location.search),target=params.get('view');if(['printProvider','printProduct','printOrder'].some(key=>params.has(key)))return 'printing';return target==='bookings'?'mine':['admin','directory','mine','businesses','leisure','services','printing'].includes(target)?target:!target&&params.get('business')==='directory-guide-food-location'?'businesses':'browse';}
 function setView(next,{historyMode='push'}={}){
  if(directRoute){location.assign('/market'+(next==='browse'?'':'?view='+encodeURIComponent(next)));return;}
  if(!['browse','directory','businesses','leisure','services','printing','mine','admin'].includes(next))next='browse';
@@ -108,10 +109,11 @@ function setView(next,{historyMode='push'}={}){
    if(categoryPath)url.searchParams.set('category',categoryPath[1]);url.pathname='/market';url.searchParams.set('view',next);
   }
   if(next!=='businesses')url.searchParams.delete('business');
-  if(next!=='printing'){url.searchParams.delete('printOrder');url.searchParams.delete('printProvider');url.searchParams.delete('printType');}
+  if(next!=='printing'){url.searchParams.delete('printOrder');url.searchParams.delete('printProvider');url.searchParams.delete('printProduct');url.searchParams.delete('printType');}
   if(url.pathname+url.search!==location.pathname+location.search)history[historyMode==='replace'?'replaceState':'pushState']({},'',url.pathname+url.search);
  }
  view=next;document.querySelectorAll('[data-view]').forEach(button=>{const active=button.dataset.view===next;button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active));});
+ if(next!=='printing')restoreMarketPageMeta();
  for(const kind of ['browse','directory','businesses','leisure','services','printing','mine','admin'])$(kind+'-view').hidden=kind!==next;
  document.querySelector('.market-hero').classList.toggle('compact',['mine','admin','businesses','leisure','services','printing'].includes(next));
  if(next==='browse')return browse();
