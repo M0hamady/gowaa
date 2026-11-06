@@ -84,7 +84,11 @@ async function mountVisitorServices(){
   let attempts=0;const apply=()=>{const select=document.getElementById('directory-category');if(select&&[...select.options].some(o=>o.value==='صراف آلي')){select.value='صراف آلي';select.dispatchEvent(new Event('change'));return;}if(++attempts<30)setTimeout(apply,200);};apply();
  }
 }
-if(typeof document!=='undefined'){
+// The market bundle also imports the card enhancer to reuse its loaded records.
+// Its bundled copy and the shared controls entry must mount one observer only.
+const visitorMount=Symbol.for('jowwa.visitorServicesMounted');
+if(typeof document!=='undefined'&&!document[visitorMount]){
+ document[visitorMount]=true;
  if(!document.querySelector('link[href="/visitor-services.css"]')){const css=document.createElement('link');css.rel='stylesheet';css.href='/visitor-services.css';document.head.append(css);}
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mountVisitorServices,{once:true});else mountVisitorServices();
 }

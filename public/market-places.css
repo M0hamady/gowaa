@@ -1,0 +1,18 @@
+.business-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(280px,100%),1fr));gap:16px;align-items:stretch}
+.business-card{display:flex;flex-direction:column;min-width:0;background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 8px 24px #163d3110;overflow:hidden}
+.business-card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:56px}
+.business-logo{width:56px;height:56px;object-fit:contain;border-radius:12px;background:#f4f6ef}
+.business-card h3{font-size:18px;margin:14px 0 8px;line-height:1.5}
+.business-card>p{font-size:12px;color:var(--muted);line-height:1.8;margin:5px 0;overflow-wrap:anywhere}
+.business-card>p:nth-of-type(2){display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.business-stats{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.business-stats span{background:#f5f8ef;border:1px solid var(--line);border-radius:8px;padding:7px;font-size:11px}
+.business-products{display:flex;gap:8px;overflow:hidden;margin:12px 0}
+.business-products a{flex:0 0 72px}.business-products img{display:block;width:72px;height:72px;object-fit:cover;border-radius:12px;border:1px solid var(--line);background:#f4f6ef}
+.business-category-list{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0}
+.business-category-list a{background:#f5f8ef;border:1px solid var(--line);border-radius:10px;padding:8px;font-size:12px}
+.business-card .data-note{line-height:1.7}.business-card .note{margin-top:10px;line-height:1.8}
+.business-card .card-actions{margin-top:auto;padding-top:16px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.business-card .card-actions a,.business-card .card-actions button{display:inline-flex;align-items:center;justify-content:center;min-height:44px}
+.market-detail-page #services-view{display:none!important}
+#directory-list>.warning{grid-column:1/-1}#directory-list:focus,#businesses-content:focus,#leisure-content:focus{outline:none}

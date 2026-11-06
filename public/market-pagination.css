@@ -1,0 +1,13 @@
+/* Keep the final controls above the floating cart, including pages without a footer. */
+.market-pagination{margin:26px 0 18px;padding-block-end:calc(88px + env(safe-area-inset-bottom));display:grid;gap:12px;justify-items:center;min-width:0;scroll-margin-block-end:calc(88px + env(safe-area-inset-bottom))}
+.pagination-summary{margin:0;color:#516b5c;font-size:13px;line-height:1.8;text-align:center;font-variant-numeric:tabular-nums}
+.pagination-controls{display:flex;align-items:center;justify-content:center;gap:7px;flex-wrap:wrap;max-width:100%}
+.pagination-controls[hidden]{display:none}
+.pagination-control{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:44px;min-height:44px;padding:8px 12px;border:1px solid #cbdcc7;border-radius:11px;background:#fff;color:#204b38;font:700 13px Cairo,Tahoma,sans-serif;text-decoration:none;cursor:pointer;touch-action:manipulation;font-variant-numeric:tabular-nums;scroll-margin-block-end:calc(100px + env(safe-area-inset-bottom))}
+.pagination-control:hover{background:#eef5e7;text-decoration:none}
+.pagination-control[aria-current=page]{background:#174c3b;color:#fff;border-color:#174c3b;box-shadow:0 3px 9px #174c3b20}
+.pagination-control:disabled{opacity:.4;cursor:default}
+.pagination-control:focus-visible{outline:3px solid #c78e26;outline-offset:3px}
+.pagination-glyph{font:23px/1 sans-serif}
+@media(max-width:600px){.market-pagination{margin-top:20px;gap:10px}.pagination-controls{gap:5px;flex-wrap:nowrap}.pagination-control{min-width:36px;min-height:44px;padding:8px;font-size:13px;border-radius:10px}.pagination-label,.pagination-wide-number{display:none}.pagination-summary{font-size:12px}}
+@media(prefers-reduced-motion:reduce){.pagination-control{scroll-behavior:auto}}
