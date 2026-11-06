@@ -17,6 +17,33 @@ export const assistantText = (value, max = 500) => {
  return text.slice(0,max);
 };
 const safeId = value => typeof value === 'string' && /^[A-Za-z0-9_-]{1,120}$/.test(value) ? value : null;
+const mapId = value => typeof value === 'string' && /^[A-Za-z0-9:_-]{1,160}$/.test(value) ? value : null;
+const mapModes = new Set(['all','train','metro','lrt','bus']);
+// Only a public catalog key and the explicit UI choice cross the map/chat
+// boundary. Names, coordinates and source URLs are resolved by the server.
+export function mapSelection(value) {
+ if(!value || typeof value!=='object' || Array.isArray(value))return null;
+ const stationId=mapId(value.stationId),mode=mapModes.has(value.mode)?value.mode:null;
+ if(!stationId&&!mode)return null;
+ return {stationId,mode:mode||'all',...(stationId&&['from','to','inspect'].includes(value.role)?{role:value.role}:{})};
+}
+export function mapContext(value) {
+ if(!value || typeof value!=='object' || Array.isArray(value) || value.version!==1)return null;
+ const out={version:1,stationId:mapId(value.stationId),mode:mapModes.has(value.mode)?value.mode:'all'};
+ for(const key of ['originStationId','destinationStationId','externalDestinationId'])out[key]=mapId(value[key]);
+ out.originPlaceId=safeId(value.originPlaceId);
+ out.pending=['origin','destination'].includes(value.pending)?value.pending:null;
+ return out;
+}
+export function assistantTransportLink(value,origin) {
+ try {
+  const url=new URL(value,origin);
+  if(url.origin!==origin||url.pathname!=='/'||url.searchParams.get('transport')!=='1')return null;
+  const stationId=url.searchParams.get('station'),mode=url.searchParams.get('transportMode')||'all';
+  if(stationId&&!mapId(stationId)||!mapModes.has(mode))return null;
+  return {...(stationId?{stationId}:{}),mode,query:assistantText(url.searchParams.get('transportQuery')||'',160)};
+ }catch{return null;}
+}
 export function travelContext(value) {
  if (!value || typeof value !== 'object' || value.version !== 1) return null;
  const out = {version: 1};

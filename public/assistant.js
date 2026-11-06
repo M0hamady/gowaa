@@ -1,6 +1,6 @@
 import {esc,categories} from './market-core.js';
 import {sanitizeSellerDraft,sellerDraftFacts} from './seller-draft.js';
-import {travelContext,requestContext,railContext,intercityContext,coachContext} from './assistant-context.js';
+import {travelContext,requestContext,railContext,intercityContext,coachContext,mapSelection,mapContext,assistantTransportLink} from './assistant-context.js';
 import {renderAssistantConversation} from './assistant-views.js';
 const MEMORY_KEY='jowwa-assistant-context',ACTION_KEY='jowwa-assistant-action',DAY=86400000;
 const types=['prepare_basket','prepare_route','prepare_round','add_product','add_service','manage_catalog'];
@@ -9,7 +9,7 @@ const privateClean=v=>String(v||'').replace(/[٠-٩]/g,c=>'٠١٢٣٤٥٦٧٨٩'
 const draftFields=v=>sanitizeSellerDraft(v);
 export function memoryContext(v){
  if(!v||typeof v!=='object')return null;
- return {intent:['find_place','navigate','bus','shop','service','unknown','help'].includes(v.intent)?v.intent:'unknown',placeIds:ids(v.placeIds),routeIds:ids(v.routeIds).slice(0,5),menuIds:ids(v.menuIds).slice(0,8),itemIds:ids(v.itemIds).slice(0,8),selectedItemIds:ids(v.selectedItemIds).slice(0,8),actionType:types.includes(v.actionType)?v.actionType:null,draft:draftFields(v.draft),travel:travelContext(v.travel?.version?v.travel:v.context?.travel),rail:railContext(v.rail?.version?v.rail:v.context?.rail),intercity:intercityContext(v.intercity?.version?v.intercity:v.context?.intercity),coach:coachContext(v.coach?.version?v.coach:v.context?.coach),request:requestContext(v.request),suggestedRequest:requestContext(v.suggestedRequest),history:Array.isArray(v.history)?v.history.slice(-6).map(h=>({intent:['find_place','navigate','bus','shop','service','unknown','help'].includes(h?.intent)?h.intent:'unknown',placeIds:ids(h?.placeIds).slice(0,3),itemIds:ids(h?.itemIds).slice(0,3),menuIds:ids(h?.menuIds).slice(0,3),actionType:types.includes(h?.actionType)?h.actionType:null})):[]};
+ return {intent:['find_place','navigate','bus','shop','service','unknown','help'].includes(v.intent)?v.intent:'unknown',placeIds:ids(v.placeIds),routeIds:ids(v.routeIds).slice(0,5),menuIds:ids(v.menuIds).slice(0,8),itemIds:ids(v.itemIds).slice(0,8),selectedItemIds:ids(v.selectedItemIds).slice(0,8),actionType:types.includes(v.actionType)?v.actionType:null,draft:draftFields(v.draft),travel:travelContext(v.travel?.version?v.travel:v.context?.travel),rail:railContext(v.rail?.version?v.rail:v.context?.rail),intercity:intercityContext(v.intercity?.version?v.intercity:v.context?.intercity),coach:coachContext(v.coach?.version?v.coach:v.context?.coach),map:mapContext(v.map?.version?v.map:v.context?.map),request:requestContext(v.request),suggestedRequest:requestContext(v.suggestedRequest),history:Array.isArray(v.history)?v.history.slice(-6).map(h=>({intent:['find_place','navigate','bus','shop','service','unknown','help'].includes(h?.intent)?h.intent:'unknown',placeIds:ids(h?.placeIds).slice(0,3),itemIds:ids(h?.itemIds).slice(0,3),menuIds:ids(h?.menuIds).slice(0,3),actionType:types.includes(h?.actionType)?h.actionType:null})):[]};
 }
 export function readAssistantMemory(storage,now=Date.now()){
  try{const v=JSON.parse(storage.getItem(MEMORY_KEY)||'null');if(!v||v.version!==1||!Number.isFinite(v.expiresAt)||v.expiresAt<=now||v.expiresAt>now+DAY){storage.removeItem(MEMORY_KEY);return null;}return {context:memoryContext(v.context),draftAction:types.includes(v.draftAction?.type)?{type:v.draftAction.type,itemIds:ids(v.draftAction.itemIds),mapIds:ids(v.draftAction.mapIds),quantity:Math.max(1,Math.min(99,Number(v.draftAction.quantity)||1)),draft:draftFields(v.draftAction.draft)}:null};}catch{return null;}
@@ -29,7 +29,7 @@ export function actionEnvelope(action,now=Date.now()){
 }
 const icons={spark:'✦',arrow:'←',pin:'⌖',bus:'▣',bag:'▧',reset:'↻'};
 const confidence=p=>!p.mapId?'الموقع يحتاج تأكيدًا':p.mapLabel?'موقع تقريبي • راجع التفاصيل':/يحتاج|تحتاج|غير مؤكد|تأكيد|تقريبي/.test(p.status||'')?'راجع التفاصيل قبل التحرك':'موجود في دليل جوه';
-export function mountAssistant({root,onPlace,onBus,onAskOrigin,onPrepareRound,onPrepareRoute,getCurrentOrigin=()=>null,toast,endpoint='/api/assistant',storage=globalThis.sessionStorage,openOnMount=false,servicesLoader=()=>import('./assistant-actions.js')}){
+export function mountAssistant({root,onPlace,onBus,onAskOrigin,onPrepareRound,onPrepareRoute,onTransportMap,getCurrentOrigin=()=>null,getMapContext=()=>null,toast,endpoint='/api/assistant',storage=globalThis.sessionStorage,openOnMount=false,servicesLoader=()=>import('./assistant-actions.js')}){
  if(!root)return {destroy(){}};
  const restored=readAssistantMemory(storage);
  let context=restored?.context||null,pendingAction=restored?.draftAction||null,answer=null,step='question',pending=false,controller=null,requestId=0;
@@ -37,6 +37,14 @@ export function mountAssistant({root,onPlace,onBus,onAskOrigin,onPrepareRound,on
  root.classList.add('jowwa-assistant');
  root.innerHTML=`<details class="assistant-drawer"><summary><span aria-hidden="true">${icons.spark}</span><span>اسأل جوه</span><small>مشوارك وخدماتك بالمصري</small></summary><div class="assistant-body" aria-live="polite"></div></details>`;
  const drawer=root.querySelector('details'),body=root.querySelector('.assistant-body');drawer.open=!!openOnMount;
+ const transportLinkClick=event=>{
+  if(!onTransportMap||event.defaultPrevented||event.button!==0||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;
+  const anchor=event.target.closest?.('a[href]');if(!anchor||!body.contains(anchor)||anchor.target==='_blank'||anchor.hasAttribute('download'))return;
+  const options=assistantTransportLink(anchor.getAttribute('href'),globalThis.location?.origin);if(!options)return;
+  event.preventDefault();drawer.open=false;
+  Promise.resolve().then(()=>onTransportMap(options)).catch(()=>toast?.('تعذر فتح اختيارك على الخريطة. جرّب تاني.'));
+ };
+ body.addEventListener('click',transportLinkClick);
  const reset=()=>{requestId++;controller?.abort();controller=null;pending=false;context=null;answer=null;pendingAction=null;clearAssistantMemory(storage);inputView();};
  const openJourneys=()=>servicesLoader().then(module=>module.openAssistantJourneys()).catch(()=>toast?.('تعذر فتح مشاويرك. جرّب تاني.'));
  const openRequests=()=>servicesLoader().then(module=>module.openAssistantRequests()).catch(()=>toast?.('تعذر فتح طلباتك. جرّب تاني.'));
@@ -109,6 +117,7 @@ export function mountAssistant({root,onPlace,onBus,onAskOrigin,onPrepareRound,on
  };
  async function ask(question,patch=null){
   if(pending||typeof question!=='string'||question.trim().length<1)return;
+  if(patch?.map?.version===1)context={...context,map:mapContext(patch.map)};
   if(patch?.travel)context={...context,travel:travelContext(patch.travel),rail:null};
   if(patch?.rail)context={...context,rail:railContext(patch.rail),travel:null,intercity:null};
   if(patch?.intercity)context={...context,intercity:intercityContext(patch.intercity),travel:null,rail:null,coach:null};
@@ -118,8 +127,8 @@ export function mountAssistant({root,onPlace,onBus,onAskOrigin,onPrepareRound,on
   const current=++requestId;pending=true;const activeController=new AbortController();controller=activeController;const timeout=setTimeout(()=>activeController.abort(),28000);
   for(const control of body.querySelectorAll('input,button'))control.disabled=true;form.querySelector('.assistant-feedback').textContent='بجهّز لك الاختيارات…';
   try{
-   const currentOrigin=getCurrentOrigin();
-   const response=await fetch(endpoint,{method:'POST',signal:activeController.signal,headers:{'Content-Type':'application/json'},body:JSON.stringify({query:question,context,...(typeof currentOrigin?.id==='string'?{currentOriginId:currentOrigin.id}:{})})});
+   const currentOrigin=getCurrentOrigin(),selectedMap=mapSelection(patch?.map||getMapContext());
+   const response=await fetch(endpoint,{method:'POST',signal:activeController.signal,headers:{'Content-Type':'application/json'},body:JSON.stringify({query:question,context,...(selectedMap?{mapContext:selectedMap}:{}),...(typeof currentOrigin?.id==='string'?{currentOriginId:currentOrigin.id}:{})})});
    const data=await response.json();if(!response.ok)throw Error(data.error||'جرّب تاني بعد شوية.');if(current!==requestId)return;
    answer=data;const prior=context;context=memoryContext({...data,selectedItemIds:data.selectedItemIds||prior?.selectedItemIds||[],history:[...(prior?.history||[]),{intent:data.intent,placeIds:data.placeIds,itemIds:data.itemIds,menuIds:data.menuIds,actionType:data.actionType}]});pendingAction=data.action||null;remember();resultView();
   }catch(error){if(current!==requestId)return;form.querySelector('.assistant-feedback').textContent=error.name==='AbortError'?'البحث اتأخر. جرّب تاني أو استخدم البحث العادي.':error.message;for(const control of body.querySelectorAll('input,button'))control.disabled=false;}
@@ -127,5 +136,5 @@ export function mountAssistant({root,onPlace,onBus,onAskOrigin,onPrepareRound,on
  }
  inputView();
  document.addEventListener('jowwa-assistant-reset',reset);
- return {destroy(){requestId++;controller?.abort();document.removeEventListener('jowwa-assistant-reset',reset);root.replaceChildren();},reset,ask(question){drawer.open=true;return ask(String(question||'').trim());},getState(){return {step,pending,hasContext:!!context};}};
+ return {destroy(){requestId++;controller?.abort();document.removeEventListener('jowwa-assistant-reset',reset);body.removeEventListener('click',transportLinkClick);root.replaceChildren();},reset,ask(question,patch=null){drawer.open=true;return ask(String(question||'').trim(),patch);},getState(){return {step,pending,hasContext:!!context};}};
 }

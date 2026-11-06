@@ -25,6 +25,9 @@ Turgoman is one canonical map record, `terminal-turgoman`. Nearby metro distance
 
 ## Conversation behavior
 
+- The map keeps its enabled station layer independently of the browsing panel. Closing the panel preserves the selected mode, search and highlighted canonical station; an explicit hide control turns the layer off. Only public selection preferences are stored on the device, and a fresh visit does not load the station catalog until requested.
+- A station marker offers an explicit origin or destination action. The assistant resolves the public station identifier against the server catalog, retains the chosen endpoint for follow-up questions and asks for the other endpoint. A map reference does not create an unverified bus route, railway connection or departure time.
+- Station and mode links in an assistant answer can open the existing map directly, preserving the conversation and the shared catalog load. Explicitly typed changes to the journey take precedence over an old map selection.
 - The exact example `عماره ١٩٤ وعايز اروح موقف محطه رمسيس قطر` asks Yasmin versus Narges, retains the selected building and railway-station destination, and distinguishes Ramses-area alighting from the unverified last leg to the station entrance.
 - Follow-ups can correct the origin, destination, date or time. Ambiguous bare hours ask morning/evening; a subsequent `09:00` retains the existing journey.
 - Explicit national train questions are released by the metro and coach handlers. The country Qatar and a local journey to Ramses railway station are not misclassified as national timetable requests.

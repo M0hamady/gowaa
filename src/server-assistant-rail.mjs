@@ -156,9 +156,10 @@ function feederInfo(hubs,data,originPlace){
 
 /** Conversation entry point for metro/LRT itself, before the local bus planner.
  * Ramses national-rail requests are deliberately left to the intercity handler. */
-export function answerRail({query,context={},railNetwork,clock=cairoParts(),hubs=null,places=[],currentOriginId=null}={}){
+export function answerRail({query,context={},railNetwork,clock=cairoParts(),hubs=null,places=[],currentOriginId=null,stationSelection=null}={}){
  query=text(query,500);const data=model(railNetwork);if(!query||!data||!data.lines.size)return null;
- const q=norm(query),locationQuery=withoutTiming(q),saved=railState(context,data,places),hint=lineMatch(q,data),parts=endpoints(locationQuery),named=namedStations(locationQuery,data),explicit=railWords.test(q)||!!hint,
+ const selected=stationSelection&&['from','to','inspect'].includes(stationSelection.role)&&data.stations.get(stationSelection.stationId),
+  q=norm(query),locationQuery=withoutTiming(q),saved=railState(context,data,places),hint=lineMatch(q,data),parts=selected?{origin:'',destination:'',pair:false}:endpoints(locationQuery),named=selected?[]:namedStations(locationQuery,data),explicit=!!selected||railWords.test(q)||!!hint,
   returnQuery=/^(?:(?:طيب|طب)\s+)?و?(?:الرجوع|العوده)(?:\s|$)/.test(q);
  if(privateRequest.test(q)||topicSwitch.test(q))return null;
  if(!explicit&&(context.intercity?.version===1||/(?:^|\s)(?:قطر|قطار|قطارات|سكه الحديد|الس[كك]+ه الحديد|enr)(?:\s|$)/.test(q)))return null;
@@ -167,12 +168,20 @@ export function answerRail({query,context={},railNetwork,clock=cairoParts(),hubs
  const hasContext=!!(saved.pending||saved.originStationId||saved.destinationStationId||saved.lineId),simpleReply=hasContext&&(saved.pending||resolveRailStation(q,railNetwork).length||/^(?:لا|من|طيب|والرجوع|والعوده)/.test(q));
  if(!explicit&&!simpleReply&&!(parts.pair&&named.length>=2))return null;
  let state={...saved},originChoices=[],destinationChoices=[];
+ if(selected&&stationSelection.role==='inspect'){
+  const rail=describeRail(data,{lineIds:selected.lines||[],date:clock.iso});
+  return respond({...state,pending:null},`المحطة المختارة هي ${selected.name}. دي الخطوط ومواعيد أول وآخر قطار المنشورة من المحطات الطرفية؛ ميعاد القطار الجاي للمحطة دي مش متاح عندي.`,rail);
+ }
  if(timingWords.test(q)){state.timingRequested=true;if(/(?:اكون|اوصل|الحق).*(?:الساعه|قبل)/.test(q))state.arrivalDeadline=true;}
- if(explicit&&(infoWords.test(q)||!rideWords.test(q)&&!named.length)&&!parts.origin){const ids=hint?[hint.id]:/المترو|مترو|metro/.test(q)?[...data.lines.values()].filter(line=>line.mode==='metro').map(line=>line.id):[];
+ if(!selected&&explicit&&(infoWords.test(q)||!rideWords.test(q)&&!named.length)&&!parts.origin){const ids=hint?[hint.id]:/المترو|مترو|metro/.test(q)?[...data.lines.values()].filter(line=>line.mode==='metro').map(line=>line.id):[];
   const rail=describeRail(data,{lineIds:ids,date:clock.iso}),options=[...data.lines.values()].filter(line=>!hint||line.id!==hint.id).map(line=>({label:line.name,query:'محطات '+line.name,context:{rail:{version:1,pending:null,lineId:line.id,originStationId:null,destinationStationId:null,originPlaceId:null}}}));
   return respond({...railState({},data,places),lineId:hint?.id||null},hint?`دي المحطات ومواعيد أول وآخر قطار المنشورة لـ${hint.name}. وقت القطار الجاي لمحطة وسطية مش متاح عندي.`:'أقدر أوضح لك الخطوط والمحطات والتبديلات. اختار خط أو اكتب محطة البداية والنهاية.',rail,options);
  }
- if(returnQuery&&state.originStationId&&state.destinationStationId){[state.originStationId,state.destinationStationId]=[state.destinationStationId,state.originStationId];state.originPlaceId=null;state.originAreaId=null;state.pending=null;}
+ if(selected){
+  state[stationSelection.role==='from'?'originStationId':'destinationStationId']=selected.id;state.pending=null;
+  if(stationSelection.role==='from'){state.originPlaceId=null;state.originAreaId=null;}
+ }
+ else if(returnQuery&&state.originStationId&&state.destinationStationId){[state.originStationId,state.destinationStationId]=[state.destinationStationId,state.originStationId];state.originPlaceId=null;state.originAreaId=null;state.pending=null;}
  else{
   const correction=q.match(/^(?:لا|قصدي|اقصد)\s+(.+)$/);
   if(parts.origin){originChoices=resolveRailStation(parts.origin,railNetwork);state.originStationId=originChoices.length===1?originChoices[0].id:null;state.originPlaceId=null;state.originAreaId=null;state.pending=null;}

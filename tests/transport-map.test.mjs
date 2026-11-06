@@ -1,12 +1,35 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {parseTransportMapData,loadTransportMapData,filterTransportStations,clusterTransportStations,transportCoordinate,transportMapLinks,transportStationLink} from '../public/transport-map.js';
+import {parseTransportMapData,loadTransportMapData,filterTransportStations,clusterTransportStations,transportCoordinate,transportMapLinks,transportStationLink,TRANSPORT_MAP_STORAGE_KEY,sanitizeTransportMapState,readTransportMapState} from '../public/transport-map.js';
 
 const raw=JSON.parse(await readFile(new URL('../public/data/transport-map.json',import.meta.url),'utf8'));
 const rail=JSON.parse(await readFile(new URL('../public/data/rail-network.json',import.meta.url),'utf8'));
 const catalog=parseTransportMapData(raw);
 const fixture=(id,overrides={})=>({id,name:'محطة '+id,coordinate:[31,30],mode:'metro',lineIds:['metro-1'],aliases:[],sourceUrl:'https://www.openstreetmap.org/node/1',locationStatus:'osm_reference',scheduleStatus:'unconfirmed',...overrides});
+
+test('remembered station choices contain only bounded public filters and a station identity',()=>{
+ const raw={version:1,enabled:true,mode:'metro',query:'  رمسيس\u0000  ',selected:'rail-el-shohadaa',coordinate:[31.4,30.1],origin:{coordinate:[31,30]},phone:'01000000000',role:'from'};
+ const state=sanitizeTransportMapState(raw);
+ assert.deepEqual(state,{version:1,enabled:true,mode:'metro',query:'رمسيس',selected:'rail-el-shohadaa'});
+ assert.equal(raw.query,'  رمسيس\u0000  ');
+ const invalid=sanitizeTransportMapState({version:1,enabled:false,mode:'__proto__',query:'ق'.repeat(180),selected:'bad&origin=private'});
+ assert.equal(invalid.enabled,false);assert.equal(invalid.mode,'all');assert.equal(invalid.query.length,160);assert.equal(invalid.selected,null);
+ for(const value of [null,[],{}, {version:2,enabled:true},{version:1,enabled:'false'},{version:1,enabled:1}])assert.equal(sanitizeTransportMapState(value),null);
+});
+test('browser preference reads fail closed for absent, corrupt, oversized or inaccessible storage',()=>{
+ for(const value of [null,undefined,42,'','{broken','[]',JSON.stringify({version:1,enabled:'yes'}),' '.repeat(1201)]){
+  assert.equal(readTransportMapState({getItem:key=>{assert.equal(key,TRANSPORT_MAP_STORAGE_KEY);return value;}}),null);
+ }
+ assert.equal(readTransportMapState({getItem(){throw Error('Storage disabled');}}),null);
+ assert.equal(readTransportMapState(null),null);
+});
+test('an explicitly hidden layer retains its last public station and type for the next deliberate opening',()=>{
+ const saved={version:1,enabled:false,mode:'lrt',query:'عدلي منصور',selected:'rail-adly-mansour'};
+ const result=readTransportMapState({getItem:()=>JSON.stringify(saved)});
+ assert.deepEqual(result,saved);assert.notEqual(result,saved);
+ assert.equal(readTransportMapState({getItem:()=>JSON.stringify({...saved,enabled:true})}).enabled,true);
+});
 
 test('all source records are renderable and every official rail station has a mapped point without losing shared Adly Mansour',()=>{
  assert.equal(catalog.discardedCount,0);assert.equal(catalog.stations.length,raw.stations.length);assert.ok(catalog.stations.length>1000);
