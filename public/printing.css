@@ -160,3 +160,49 @@
 .printing-product-photo{display:block;text-decoration:none;color:inherit}.printing-product h4 a,.printing-product h3 a{color:inherit;text-decoration:none}.printing-product h4 a:hover,.printing-product h3 a:hover{text-decoration:underline}.printing-product-detail{display:block;max-width:1100px;background:#fff;border:1px solid #dce4d7;border-radius:24px;padding:25px;margin:22px auto}.printing-product-detail-image{overflow:hidden;border-radius:18px;background:#f6f3eb}.printing-product-detail-image img{display:block;width:100%;max-height:580px;object-fit:contain}.printing-product-detail h3{font-size:30px;line-height:1.5;margin:10px 0}.printing-product-detail p{line-height:1.9;color:#64756a}.printing-product-detail .printing-actions{margin-top:24px}.printing-product-image-note{font-size:11px;color:#6b7d70;line-height:1.7;margin:8px 0}.printing-product-detail .printing-product-photo{height:auto;min-height:280px}.printing-product-detail .printing-product-photo img{height:auto;max-height:580px;object-fit:contain}.printing-product-detail .printing-product-footer{margin-top:22px}@media(max-width:650px){.printing-product-detail{grid-template-columns:1fr;padding:16px;gap:18px}.printing-product-detail h3{font-size:25px}.printing-product-detail-image img{max-height:420px}.printing-product-detail .printing-actions>*{flex:1}}
 
 .printing-product-detail>.printing-provider-context{margin:0 0 22px}.printing-product-detail>.printing-providers,.printing-product-static{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px;align-items:start}.printing-product-detail>.printing-providers>.printing-product-detail-image{padding:0}@media(max-width:650px){.printing-product-detail>.printing-providers,.printing-product-static{grid-template-columns:1fr;gap:18px}}
+
+/* A paper provider presents services; each action opens its own request flow. */
+.printing-store-header.is-service-store{background:linear-gradient(115deg,#fffaf0,#f4ead7);border-color:#e4d2b5;box-shadow:0 12px 30px #65442008}
+.printing-store-header.is-service-store .printing-store-title>.printing-provider-mark{width:104px;height:104px;border-radius:24px;background:#fffaf0;border-color:#e7d5b8}
+.printing-store-header.is-service-store .printing-provider-mark img{object-fit:contain;padding:5px}
+.printing-store-header.is-service-store .printing-store-title h3{color:#3e3022}
+.printing-store-header.is-service-store>.printing-store-badges{margin-inline-start:122px}
+.printing-store-header.is-service-store .printing-store-badges>span{color:#765d3c;background:#fffaf2;border-color:#e5d6bd}
+.printing-store-header.is-service-store>.printing-store-details{border-color:#e5d6bd}
+.printing-store-header.is-service-store .printing-store-details>div{background:#fffdf8;border-color:#e7dac7}
+.printing-service-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin:20px 0 24px}
+.printing-service-card{display:flex;flex-direction:column;align-items:flex-start;min-width:0;padding:24px;background:#fff;border:1px solid #e3e5da;border-radius:20px;box-shadow:0 5px 16px #3f513409}
+.printing-service-card.is-pdf{background:#fbf7ed;border-color:#d9c6a8}
+.printing-service-icon{display:grid;place-items:center;width:48px;height:48px;margin-bottom:16px;color:#756043;background:#f5f0e4;border:1px solid #e9dfcd;border-radius:14px}
+.printing-service-card.is-pdf .printing-service-icon{color:#fff;background:#345747;border-color:#345747}
+.printing-service-icon .ui-icon,.printing-service-card>.ui-icon{width:24px;height:24px}
+.printing-service-card>.printing-small-label{color:#8c7c61;font-size:10px;line-height:1.7}
+.printing-service-card h3,.printing-service-card h4{margin:7px 0 10px;color:#354d3c;font-size:19px;line-height:1.6}
+.printing-service-card>p{margin:0 0 22px;color:#72816b;font-size:12px;line-height:1.95;overflow-wrap:anywhere}
+.printing-service-card-footer{width:100%;margin-top:auto;padding-top:16px;border-top:1px solid #e8e9dd}
+.printing-service-card-footer>small{display:block;margin-bottom:12px;color:#8b806b;font-size:10px;line-height:1.8}
+.printing-service-card-footer>button,.printing-service-card-footer>a{width:100%;justify-content:space-between;min-height:44px}
+.printing-service-card button:disabled{cursor:not-allowed}
+.printing-service-followup{display:flex;justify-content:space-between;align-items:center;gap:22px;margin:24px 0 32px;padding:22px 24px;background:#f2f5ec;border:1px solid #dce5d1;border-radius:18px}
+.printing-service-followup h4{margin:0 0 7px;color:#3c5d43;font-size:16px}
+.printing-service-followup p{max-width:65ch;margin:0;color:#75856d;font-size:11px;line-height:1.95}
+.printing-service-followup>.printing-actions{flex-shrink:0;max-width:46%;justify-content:flex-end}
+.printing-service-followup .printing-actions>button{font-size:11px;white-space:normal}
+@media(max-width:850px){
+ .printing-service-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+ .printing-store-header.is-service-store>.printing-store-actions{margin-inline-start:122px}
+ .printing-service-followup{align-items:flex-start;flex-direction:column;gap:16px}
+ .printing-service-followup>.printing-actions{max-width:none;justify-content:flex-start}
+}
+@media(max-width:560px){
+ .printing-store-header.is-service-store .printing-store-title>.printing-provider-mark{width:76px;height:76px;border-radius:19px}
+ .printing-store-header.is-service-store>.printing-store-badges,.printing-store-header.is-service-store>.printing-store-actions{margin-inline-start:0}
+ .printing-store-header.is-service-store .printing-store-title h3{font-size:23px}
+ .printing-service-grid{grid-template-columns:minmax(0,1fr);gap:13px;margin:18px 0}
+ .printing-service-card{padding:21px;border-radius:17px}
+ .printing-service-card h3,.printing-service-card h4{font-size:18px}
+ .printing-service-card>p{font-size:12px;margin-bottom:18px}
+ .printing-service-followup{padding:19px 18px;border-radius:16px}
+ .printing-service-followup>.printing-actions{width:100%;display:grid;grid-template-columns:minmax(0,1fr)}
+ .printing-service-followup .printing-actions>button{width:100%;min-height:44px}
+}

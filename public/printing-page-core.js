@@ -36,6 +36,13 @@ export function printingProductImage(product={}){
  return {src:'',illustration:false};
 }
 const isPaper=provider=>(provider?.orderTypes||provider?.types||[]).includes('paper')||provider?.kind==='paper';
+export function printingProviderServices(provider){
+ const seen=new Set();
+ return (Array.isArray(provider?.services)?provider.services:[]).filter(service=>{
+  if(!service||!validPrintingKey(service.id)||!clean(service.title,120)||service.active===false||seen.has(service.id))return false;
+  seen.add(service.id);return true;
+ }).slice(0,20).map(service=>({id:service.id,title:clean(service.title,120),description:clean(service.description,500)}));
+}
 const absolute=value=>value?new URL(value,PRINTING_ORIGIN).href:'';
 export function printingPageMeta({provider=null,product=null,privateView=false,catalog=null}={}){
  const providerId=provider?.id||provider?.providerId,productId=product?.id||product?.productId;
@@ -46,7 +53,12 @@ export function printingPageMeta({provider=null,product=null,privateView=false,c
   description=clean((provider.description||'تعرّف على خدمات ومنتجات '+heading)+ (isPaper(provider)?' ارفع PDF واختار مواصفات الطباعة، والمكتبة تؤكد السعر والموعد.':' اختار منتجك وابعت تصميمك، وراجع السعر والمعاينة مع المكتبة قبل التنفيذ.'));
   if(providerId==='memorycraft'&&provider.name==='MemoryCraft | ميموري كرافت')image='/social/printing-memorycraft-card.png';
   else if(providerId==='printing-paper-kayan'&&provider.name==='خدمة طباعة الورق')image='/social/printing-paper-card.png';
-  imageAlt=heading+' — '+(isPaper(provider)?'طباعة ورق PDF':'خدمات ومنتجات المكتبة');
+  else if(providerId==='printing-paper-kayan'&&provider.name==='PS Kayan City | خدمات الطباعة والتصوير'&&provider.logoPath==='/media/printing/ps-kayan-city-logo.webp')image='/social/printing-ps-kayan-city-card.png';
+  if(isPaper(provider)&&printingProviderServices(provider).length){
+   title=heading+(heading.includes('الطباعة والتصوير')?'':' — خدمات الطباعة والتصوير')+' | جوّه';
+   description=clean((provider.description||'طباعة وتصوير وسكانر وصور وكروت واستيكرات وتشطيب مستندات.')+' ارفع PDF لطباعة الملفات أو ابعت تفاصيل الخدمة للمكان على جوّه.');
+  }
+  imageAlt=heading+' — '+(isPaper(provider)?printingProviderServices(provider).length?'خدمات الطباعة والتصوير':'طباعة ورق PDF':'خدمات ومنتجات المكتبة');
  }
  if(product&&provider&&product.providerId===providerId){
   heading=clean(product.title||product.name,120);title=heading+' | '+clean(provider.name,120)+' | جوّه';
@@ -68,13 +80,15 @@ export function printingPageSchema({provider=null,product=null,catalog=null}={})
  const page={'@context':'https://schema.org','@type':product?'ItemPage':'CollectionPage','@id':url+'#page',url,name:clean(product?.title||product?.name||provider?.name||'مكتبات وطباعة في كيان سيتي',120),description:clean(product?.description||provider?.description||'مكتبات وطباعة ملفات PDF وهدايا بتصميمك في كيان سيتي.',600),inLanguage:'ar-EG'};
  if(provider){
   const owner={'@type':'Organization','@id':PRINTING_ORIGIN+printingPagePath({providerId})+'#business',name:clean(provider.name,120),url:PRINTING_ORIGIN+printingPagePath({providerId})};
+  const logo=publicPrintingImage(provider.logoUrl||provider.logoPath);if(logo)owner.logo=absolute(logo);
   page.about=owner;
   if(product){
    const image=printingProductImage(product),entity={'@type':'Product',name:clean(product.title||product.name,120),description:clean(product.description,600),url,brand:owner};
    if(image.src)entity.image=absolute(image.src);
    if((product.type||product.kind)==='ready'&&product.priceConfirmed===true&&Number(product.price)>0)entity.offers={'@type':'Offer',price:Number(product.price).toFixed(2),priceCurrency:'EGP',url,seller:owner,...(product.availability==='available'?{availability:'https://schema.org/InStock'}:product.availability==='unavailable'?{availability:'https://schema.org/OutOfStock'}:{})};
    page.mainEntity=entity;
-  }else if(catalog){page.mainEntity={'@type':'ItemList',itemListElement:(catalog.products||[]).filter(p=>p.providerId===providerId&&p.active!==false).map((p,i)=>({'@type':'ListItem',position:i+1,name:clean(p.title||p.name,120),url:PRINTING_ORIGIN+printingPagePath({providerId,productId:p.id||p.productId})}))};}
+  }else if(isPaper(provider)&&printingProviderServices(provider).length){page.mainEntity={'@type':'ItemList',itemListElement:printingProviderServices(provider).map((service,i)=>({'@type':'ListItem',position:i+1,item:{'@type':'Service',name:service.title,description:service.description,provider:owner,url:url+'#printing-service-'+service.id}}))};}
+  else if(catalog){page.mainEntity={'@type':'ItemList',itemListElement:(catalog.products||[]).filter(p=>p.providerId===providerId&&p.active!==false).map((p,i)=>({'@type':'ListItem',position:i+1,name:clean(p.title||p.name,120),url:PRINTING_ORIGIN+printingPagePath({providerId,productId:p.id||p.productId})}))};}
  }else if(catalog){page.mainEntity={'@type':'ItemList',itemListElement:(catalog.providers||[]).filter(p=>p.enabled!==false).map((p,i)=>({'@type':'ListItem',position:i+1,name:clean(p.name,120),url:PRINTING_ORIGIN+printingPagePath({providerId:p.id||p.providerId})}))};}
  return page;
 }

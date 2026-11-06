@@ -1,8 +1,8 @@
 import {randomUUID} from 'node:crypto';
 import {freshDb,actor} from './ops-db.mjs';
 
-export async function printingWorld({claims=true}={}){
- const {db}=await freshDb({upTo:'043'}),as=actor(db);
+export async function printingWorld({claims=true,upTo='043'}={}){
+ const {db}=await freshDb({upTo}),as=actor(db);
  const ids={admin:randomUUID(),customer:randomUUID(),stranger:randomUUID(),owner:randomUUID(),paperOwner:randomUUID(),emailOnly:randomUUID(),unverified:randomUUID()};
  const users=new Map([
   [ids.admin,{id:ids.admin,phone:'201555099233',phone_confirmed_at:new Date().toISOString(),user_metadata:{display_name:'إدارة تجربة'}}],

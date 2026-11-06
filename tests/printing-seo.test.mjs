@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs';
 import {createPrintingPageHandler, loadPublicPrintingCatalog} from '../src/server-printing-pages.mjs';
 import {createSitemapHandler} from '../api/sitemap.mjs';
 import {createMarketPage} from '../api/page.mjs';
-import {printingPageMeta, printingPageSchema, publicPrintingImage} from '../public/printing-page-core.js';
+import {printingPageMeta, printingPageSchema, publicPrintingImage, printingProviderServices} from '../public/printing-page-core.js';
 
 const origin = 'https://jowwa-kayan.vercel.app';
 const env = {NEXT_PUBLIC_SUPABASE_URL: 'https://printing-seo.test', NEXT_PUBLIC_SUPABASE_ANON_KEY: 'public-anonymous-key'};
@@ -51,6 +51,53 @@ async function page(query, {data = catalog(), method = 'GET', loadCatalog, heade
   await createPrintingPageHandler({env, template, loadCatalog: loadCatalog || (async () => data)})({method, query, headers}, res);
   return res;
 }
+
+test('PS Kayan City initial HTML describes six services with its own logo and share card', async () => {
+  const data = JSON.parse(readFileSync(new URL('../public/data/printing-catalog.json', import.meta.url), 'utf8'));
+  const provider = data.providers.find(item => item.id === 'printing-paper-kayan');
+  const res = await page({view: 'printing', printProvider: provider.id}, {data});
+  assert.equal(res.statusCode, 200);
+  assert.match(res.body, /<title>PS Kayan City \| خدمات الطباعة والتصوير \| جوّه<\/title>/);
+  assert.equal(canonicalOf(res.body), origin + '/market?view=printing&printProvider=printing-paper-kayan');
+  assert.equal(metaOf(res.body, 'og:image'), origin + '/social/printing-ps-kayan-city-card.png');
+  assert.equal(metaOf(res.body, 'twitter:image'), metaOf(res.body, 'og:image'));
+  assert.match(res.body, /src="\/media\/printing\/ps-kayan-city-logo.webp"/);
+  for (const id of ['documents', 'photos', 'cards', 'stickers', 'copy-scan', 'finishing']) {
+    assert.ok(res.body.includes('id="printing-service-' + id + '"'), id);
+  }
+  const nodes = schemaNodes(schemasOf(res.body));
+  const services = nodes.filter(item => item['@type'] === 'Service');
+  assert.equal(services.length, 6);
+  assert.ok(services.every(service => service.provider.name === provider.name));
+  assert.ok(services.every(service => service.provider.logo === origin + provider.logoPath));
+  assert.ok(services.every(service => service.url.startsWith(origin + '/market?view=printing&printProvider=printing-paper-kayan#printing-service-')));
+  assert.equal(nodes.some(item => item['@type'] === 'Product' || item['@type'] === 'Offer'), false);
+  assert.doesNotMatch(res.body, /هدايا ومنتجات مخصصة|FOREIGN_PRODUCT_ONLY/);
+  // Clearing/replacing the business logo must also retire a card containing it.
+  assert.notEqual(printingPageMeta({provider: {...provider, logoPath: null}}).image, metaOf(res.body, 'og:image'));
+  assert.notEqual(printingPageMeta({provider: {...provider, logoPath: 'owner-upload/new-logo.webp'}}).image, metaOf(res.body, 'og:image'));
+});
+
+test('service metadata follows owner edits and excludes unpublished or malformed services', async () => {
+  const data = JSON.parse(readFileSync(new URL('../public/data/printing-catalog.json', import.meta.url), 'utf8'));
+  const provider = data.providers.find(item => item.id === 'printing-paper-kayan');
+  provider.name = 'مطبعة الاسم الجديد';
+  provider.logoPath = null;
+  provider.description = 'وصف عدله صاحب المكان.';
+  provider.services.push(
+    {...provider.services[0], title: 'DUPLICATE_SERVICE_MARKER'},
+    {id: 'hidden-service', title: 'HIDDEN_SERVICE_MARKER', active: false},
+    {id: '<script>', title: 'INVALID_SERVICE_MARKER'},
+    {id: 'blank-title', title: ' '}
+  );
+  assert.equal(printingProviderServices(provider).length, 6);
+  const res = await page({view: 'printing', printProvider: provider.id}, {data});
+  assert.match(res.body, /<title>مطبعة الاسم الجديد — خدمات الطباعة والتصوير \| جوّه<\/title>/);
+  assert.doesNotMatch(res.body, /DUPLICATE_SERVICE_MARKER|HIDDEN_SERVICE_MARKER|INVALID_SERVICE_MARKER|ps-kayan-city-logo/);
+  assert.equal(metaOf(res.body, 'og:image'), origin + '/social/printing-market-card.png');
+  assert.match(metaOf(res.body, 'description'), /وصف عدله صاحب المكان/);
+  assert.ok(schemaNodes(schemasOf(res.body)).filter(item => item['@type'] === 'Organization').every(item => !item.logo));
+});
 
 test('provider initial HTML has its live identity, one canonical and complete stable share tags', async () => {
   const res = await page({view: 'printing', printProvider: 'memorycraft', utm_source: 'shared'});

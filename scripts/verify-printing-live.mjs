@@ -7,7 +7,7 @@ import {randomUUID,randomInt} from 'node:crypto';
 import {fileURLToPath} from 'node:url';
 
 export async function verifyPrintingClient(client,{log=console.log}={}){
- const ids={customer:randomUUID(),owner:randomUUID(),stranger:randomUUID()};
+ const ids={customer:randomUUID(),owner:randomUUID(),stranger:randomUUID(),admin:randomUUID()};
  const provider='printing-qa-'+randomUUID(),product='printing-qa-'+randomUUID(),draft=randomUUID();
  const proof=`${ids.owner}/${randomUUID()}/${randomUUID()}.png`;
  const showcase=`${ids.owner}/${randomUUID()}/${randomUUID()}.webp`;
@@ -33,6 +33,13 @@ export async function verifyPrintingClient(client,{log=console.log}={}){
  try{
   await query('begin');transaction=true;
   await query("set local statement_timeout='15s'");await query("set local lock_timeout='5s'");
+  step='named owner reservation';
+  const reservation=(await query("select source='explicit_user_designation' and designated_phone='+201019374388' and allowed_phones=array['+201019374388']::text[] configured,case when owner_id is null then 'pending' when jowwa_private.printing_owner_id(provider_id)=owner_id then 'bound' else 'unverified' end state from jowwa_private.printing_provider_ownership where provider_id='memorycraft'")).rows[0];
+  check(reservation?.configured===true,'named owner reservation uses explicit private authority');
+  check(!(await query("select has_table_privilege('authenticated','jowwa_private.printing_provider_ownership','SELECT') permitted")).rows[0].permitted,'owner reservation is not publicly readable');
+  // Only the state label enters build output. Pending verification is valid;
+  // this gate neither binds nor changes a real owner's account or phone.
+  check(['pending','bound','unverified'].includes(reservation.state),({pending:'named owner reserved awaiting verification',bound:'named owner bound to current verified account',unverified:'named owner binding awaits reverification'})[reservation.state]||'named owner state');
   step='isolated fixtures';
   // The phone exists only inside this rollback transaction and is never sent to
   // a messaging service. Check uniqueness before choosing the test identity.
@@ -44,6 +51,7 @@ export async function verifyPrintingClient(client,{log=console.log}={}){
   }
   if(!phone)throw Object.assign(Error('No isolated identity available'),{verificationStep:step});
   for(const [role,id] of Object.entries(ids))await query('insert into auth.users(id,email,email_confirmed_at,phone,phone_confirmed_at,raw_user_meta_data,raw_app_meta_data) values($1,$2,now(),$3,$4,$5,$6)',[id,'printing-qa-'+id+'@example.invalid',role==='owner'?phone:null,role==='owner'?new Date().toISOString():null,JSON.stringify({display_name:'اختبار طباعة مؤقت'}),JSON.stringify({provider:'email',providers:['email']})]);
+  await query('insert into public.jowwa_admin_users(user_id) values($1)',[ids.admin]);
   await query("insert into public.sellers(id,name,district,status) values($1,'اختبار طباعة مؤقت','yasmin','approved')",[ids.owner]);
   await query('insert into jowwa_private.service_claim_registry(directory_id,snapshot,business_phones,evidence) values($1,$2,$3,$4)',[provider,JSON.stringify({id:provider,name:'اختبار طباعة مؤقت'}),['+'+phone],JSON.stringify([{phone:'+'+phone,sourceUrl:'https://example.invalid/printing-qa',sourceType:'reviewed_business_contact',checkedAt:new Date().toISOString().slice(0,10),note:'Fixture inside a rollback-only database verification; no business or customer record.'}])]);
   await query("insert into jowwa_private.service_claims(directory_id,owner_id,seller_id,matched_phone,draft,status,published_draft) values($1,$2,$2,$3,'{}','approved','{}')",[provider,ids.owner,'+'+phone]);
@@ -52,6 +60,8 @@ export async function verifyPrintingClient(client,{log=console.log}={}){
   await query('insert into storage.objects(bucket_id,name,owner,metadata) values($1,$2,$3,$4)',['jowwa-print-files',proof,ids.owner,JSON.stringify({mimetype:'image/png',size:256})]);
   pass('isolated rollback fixtures');
   check(await as(ids.owner,'jowwa_is_admin',{})===false,'claim owner has no admin privileges');
+  check(await as(ids.admin,'jowwa_is_admin',{})===true,'nonowner staff fixture has admin privileges');
+  await denied(()=>mutate(ids.admin,'provider_save',{providerId:provider,version:1,fields:{name:'تغيير غير مصرح'}}),'42501','nonowner admin cannot edit provider profile');
 
   step='create and replay';
   const input={providerId:provider,type:'personalized',spec:{providerId:provider,productId:product,quantity:1,pieceSource:'merchant',designMode:'text',designText:'اختبار',designFiles:[],options:{},notes:''},customerName:'عميل اختبار مؤقت',fulfillment:'delivery',address:'عنوان اختبار غير حقيقي',preferredAt:'',notes:'',consent:true};
@@ -59,6 +69,8 @@ export async function verifyPrintingClient(client,{log=console.log}={}){
   check(order.status==='submitted'&&order.version===1,'verified email customer create');
   const repeated=await mutate(ids.customer,'create',input,draft);check(repeated.id===order.id&&repeated.replayed===true,'idempotent create');
   await denied(()=>as(ids.stranger,'jowwa_printing_get',{p_id:order.id}),'42501','other customer cannot read order');
+  await denied(()=>as(ids.admin,'jowwa_printing_get',{p_id:order.id}),'42501','nonowner admin cannot read private order');
+  await denied(()=>as(ids.admin,'jowwa_printing_list',{p_scope:'inbox',p_provider_id:provider,p_limit:20}),'42501','nonowner admin cannot open merchant inbox');
   await denied(()=>mutate(ids.owner,'status',{id:order.id,version:order.version,status:'producing',note:''}),'40001','production blocked before approval');
 
   step='quote and proof';
@@ -66,6 +78,7 @@ export async function verifyPrintingClient(client,{log=console.log}={}){
   check(order.status==='quoted'&&order.quote.total===110&&order.quote.depositIsPayment===false,'merchant quote and disclosed deposit');
   const readable=await as(ids.customer,'jowwa_printing_file',{p_path:proof});check(readable.path===proof&&readable.type==='image/png','customer can read attached proof metadata');
   await denied(()=>as(ids.stranger,'jowwa_printing_file',{p_path:proof}),'42501','unrelated account cannot read proof');
+  await denied(()=>as(ids.admin,'jowwa_printing_file',{p_path:proof}),'42501','nonowner admin cannot read private proof');
   await denied(()=>mutate(ids.customer,'approve',{id:order.id,version:order.version,quoteRevision:order.quote.revision+1,consent:true}),'40001','stale proof revision rejected');
 
   step='approve and execute';
@@ -88,6 +101,8 @@ export async function verifyPrintingClient(client,{log=console.log}={}){
   let work=await mutate(ids.owner,'showcase_save',{providerId:provider,version:0,fields:{title:'عمل مستقل للاختبار',caption:'صورة اختارها النشاط',imagePath:showcase,published:false},consent:false});
   const publicDrafts=await as(null,'jowwa_printing_catalog',{}),ownerDrafts=await as(ids.owner,'jowwa_printing_catalog',{});
   check(!publicDrafts.works.some(w=>w.id===work.id)&&ownerDrafts.works.some(w=>w.id===work.id),'draft visible only to authorized owner');
+  const adminDrafts=await as(ids.admin,'jowwa_printing_catalog',{});
+  check(!adminDrafts.works.some(w=>w.id===work.id)&&adminDrafts.providers.every(p=>!p.canManage),'nonowner admin has no private catalog privileges');
   check(await as(null,'jowwa_printing_showcase_file_allowed',{p_path:showcase})===false,'draft image remains private');
   await denied(()=>mutate(ids.stranger,'showcase_save',{providerId:provider,id:work.id,version:work.version,fields:{published:true},consent:true}),'42501','unrelated account cannot publish work');
   await denied(()=>mutate(ids.owner,'showcase_save',{providerId:provider,id:work.id,version:work.version,fields:{published:true},consent:false}),'22023','publication requires explicit sharing consent');

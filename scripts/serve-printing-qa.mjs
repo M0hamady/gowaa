@@ -12,6 +12,7 @@ import { mkdtemp, readFile, stat, writeFile, rm } from 'node:fs/promises';
 import { build } from 'esbuild';
 import { printingWorld, printingApiBridge } from '../tests/helpers/printing-db.mjs';
 import { createPrintingHandler, validPrintFilePath, validPrintShowcasePath } from '../src/server-printing.mjs';
+import { createProviderRequestsHandler } from '../src/server-provider-requests.mjs';
 
 const repoRoot = fileURLToPath(new URL('../', import.meta.url));
 const publicRoot = path.join(repoRoot, 'public');
@@ -48,6 +49,7 @@ body{margin:0;background:#f5f6f2}.qa-controls{display:flex;flex-wrap:wrap;align-
 
 const clientCode = `
 import {createMarketPrinting} from './src/market-printing-ui.js';
+import {createProviderRequests,providerMemberFetch} from './src/provider-requests-ui.js';
 const boot=await (await fetch('/qa/bootstrap')).json();
 const select=document.querySelector('#qa-persona'),status=document.querySelector('#qa-status');
 const requested=new URLSearchParams(location.search).get('as');
@@ -58,9 +60,10 @@ const user=()=>persona()?.user||null;
 let toastTimer;
 function toast(message){const node=document.querySelector('#qa-toast');node.textContent=message;node.hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>node.hidden=true,6500);}
 function uploadFailure(httpStatus,error,code){const message=String(error?.message||error||'Upload failed');status.textContent='خطأ رفع محلي · '+httpStatus+' · '+message;status.className='qa-error';console.warn('PRINTING_QA_UPLOAD_FAILED',{status:httpStatus,code:code||null,error:message});}
-const db={auth:{getSession:async()=>({data:{session:persona().token?{access_token:persona().token}:null}})},storage:{from:bucket=>({upload:async(uploadId,file,options)=>{try{const response=await fetch('/qa/upload',{method:'POST',headers:{Authorization:'Bearer '+persona().token,'X-QA-Bucket':bucket,'X-QA-Path':uploadId,'Content-Type':options?.contentType||file.type},body:file});const result=await response.json();if(!response.ok){uploadFailure(response.status,result.error,result.code);return {data:null,error:result.error||'Upload failed'};}status.textContent='الرفع المحلي نجح · HTTP '+response.status;status.className='';return {data:result.data,error:null};}catch(error){uploadFailure('network',error);return {data:null,error};}}})}};
-const printing=createMarketPrinting({root:document.querySelector('#printing-root'),db,getUser:user,requireUser:()=>!!user(),toast,isAdmin:()=>role==='admin',isVisible:()=>true,showClaims:()=>toast('ملكية الأنشطة مربوطة لشخصيات الاختبار محليًا.')});
-async function show(){status.textContent=persona().label+' · API وPostgreSQL محليان';printing.reset();await printing.show();}
+const db={auth:{getSession:async()=>({data:{session:persona().token?{access_token:persona().token,user:user()}:null}})},storage:{from:bucket=>({upload:async(uploadId,file,options)=>{try{const response=await fetch('/qa/upload',{method:'POST',headers:{Authorization:'Bearer '+persona().token,'X-QA-Bucket':bucket,'X-QA-Path':uploadId,'Content-Type':options?.contentType||file.type},body:file});const result=await response.json();if(!response.ok){uploadFailure(response.status,result.error,result.code);return {data:null,error:result.error||'Upload failed'};}status.textContent='الرفع المحلي نجح · HTTP '+response.status;status.className='';return {data:result.data,error:null};}catch(error){uploadFailure('network',error);return {data:null,error};}}})}};
+const requests=createProviderRequests({fetcher:providerMemberFetch(db,user),getUser:user,ensure:async()=>!!user(),onClaim:()=>toast('ملكية الأنشطة مربوطة لشخصيات الاختبار محليًا.')});
+const printing=createMarketPrinting({root:document.querySelector('#printing-root'),db,getUser:user,requireUser:()=>!!user(),toast,isVisible:()=>true,showClaims:()=>toast('ملكية الأنشطة مربوطة لشخصيات الاختبار محليًا.'),requestService:(id,name,description,serviceId)=>requests.create(id,name,description,{draftKey:'printing-'+serviceId}),serviceRequests:()=>requests.mine(),serviceInbox:id=>requests.inbox(id)});
+async function show(){status.textContent=persona().label+' · API وPostgreSQL محليان';requests.reset();printing.reset();await printing.show();}
 select.addEventListener('change',async()=>{role=select.value;history.replaceState(null,'','/?as='+encodeURIComponent(role));await show();});
 document.querySelector('#qa-refresh').addEventListener('click',()=>location.reload());
 window.addEventListener('error',event=>{status.textContent='خطأ واجهة: '+event.message;status.className='qa-error';});
@@ -82,7 +85,7 @@ async function readBody(req, maxBytes) {
 const mime = file => ({ '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.svg': 'image/svg+xml', '.webp': 'image/webp', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.woff2': 'font/woff2', '.woff': 'font/woff', '.ttf': 'font/ttf' })[path.extname(file).toLowerCase()] || 'application/octet-stream';
 
 export async function createPrintingQaServer({ port = Number(process.env.PORT || 5190), host = '0.0.0.0' } = {}) {
-  const world = await printingWorld();
+  const world = await printingWorld({upTo:'046'});
   const bridge = printingApiBridge(world);
   const rawRpc = world.rpc, rawAs = world.as;
   let work = Promise.resolve();
@@ -114,6 +117,8 @@ export async function createPrintingQaServer({ port = Number(process.env.PORT ||
     } }) } };
   };
   const handler = createPrintingHandler({ env: bridge.env, clientFactory });
+  // Always stub dispatch: inquiry QA must never contact a provider or customer.
+  const inquiryHandler = createProviderRequestsHandler({ env: bridge.env, clientFactory, dispatch: async () => ({ status: 'local-only', sent: 0 }) });
   const tempDirectory = await mkdtemp(path.join(tmpdir(), 'jowwa-printing-qa-'));
   const pdf = samplePdf();
   let proof;
@@ -151,6 +156,11 @@ export async function createPrintingQaServer({ port = Number(process.env.PORT ||
         if (req.method === 'POST') req.body = (await readBody(req, 64000)).toString('utf8');
         return await handler(req, res);
       }
+      if (url.pathname === '/api/provider-requests') {
+        req.query = Object.fromEntries(url.searchParams);
+        if (req.method === 'POST') req.body = (await readBody(req, 12000)).toString('utf8');
+        return await inquiryHandler(req, res);
+      }
       if (req.method === 'POST' && url.pathname === '/qa/upload') {
         const userId = tokenUser(req.headers.authorization), filePath = String(req.headers['x-qa-path'] || ''),bucket=String(req.headers['x-qa-bucket']||'');
         const type = String(req.headers['content-type'] || '');
@@ -176,7 +186,7 @@ export async function createPrintingQaServer({ port = Number(process.env.PORT ||
         if (!upload) return send(res, 404, { error: 'محتوى الملف مش موجود في ذاكرة الاختبار.' });
         return send(res, 200, upload.bytes, upload.type);
       }
-      if (req.method === 'GET' && /^\/(?:market\.css|form-accessibility\.css|ui-controls\.css|printing\.css|icon\.svg|fonts\/|assets\/fonts\/|media\/printing\/)/.test(url.pathname)) {
+      if (req.method === 'GET' && /^\/(?:market\.css|form-accessibility\.css|ui-controls\.css|printing\.css|provider-requests\.css|icon\.svg|fonts\/|assets\/fonts\/|media\/printing\/)/.test(url.pathname)) {
         const relative = decodeURIComponent(url.pathname).replace(/^\/+/, '');
         const file = path.resolve(publicRoot, relative);
         if (!file.startsWith(publicRoot + path.sep) || !(await stat(file)).isFile()) return send(res, 404, { error: 'Not found' });

@@ -14,6 +14,17 @@ const bundled = await build({
   platform: 'browser', target: 'es2022', logLevel: 'silent',
 });
 const controller = new vm.Script(bundled.outputFiles[0].text);
+// Profile mutation tests exercise the real form and submit callback. Their DOM
+// adapter does not model the unrelated generic stepper's layout/animation.
+const profileBundled = await build({
+  entryPoints: [fileURLToPath(new URL('../src/market-printing-ui.js', import.meta.url))],
+  bundle: true, write: false, format: 'iife', globalName: 'PrintingUi',
+  platform: 'browser', target: 'es2022', logLevel: 'silent',
+  plugins: [{ name: 'profile-payload-layout', setup(builder) {
+    builder.onLoad({ filter: /\/public\/form-steps\.js$/ }, () => ({ contents: 'export function formSteps() {}', loader: 'js' }));
+  } }],
+});
+const profileController = new vm.Script(profileBundled.outputFiles[0].text);
 // Keep the real global click gate, including its capture listener and selectors.
 // Only the environment config is replaced so no Supabase connection is created.
 const memberBundled = await build({
@@ -115,7 +126,7 @@ const deferred = () => {
 const reply = data => ({ ok: true, status: 200, json: async () => ({ data }) });
 const catalogFixture = () => ({ ...structuredClone(seed), works: [] });
 
-function setup({ url = '/market?view=printing', catalog = catalogFixture(), handler, authenticated = true, isVisible = () => true, memberGate = false, withMetadata = false } = {}) {
+function setup({ url = '/market?view=printing', catalog = catalogFixture(), handler, authenticated = true, isVisible = () => true, memberGate = false, withMetadata = false, serviceCallbacks = {}, profilePayload = false } = {}) {
   const root = new Root(), requests = [], messages = [], clipboard = [], uploads = [];
   const documentListeners = [];
   const head = withMetadata ? {
@@ -135,6 +146,7 @@ function setup({ url = '/market?view=printing', catalog = catalogFixture(), hand
   const history = { pushState: (_state, _title, path) => { address = new URL(path, address); }, replaceState: (_state, _title, path) => { address = new URL(path, address); } };
   const context = vm.createContext({
     URL, URLSearchParams, Intl, Date, AbortController, AbortSignal, setTimeout, clearTimeout, Element,
+    FormData: class { constructor(form) { this.rows = Object.entries(form.elements).filter(([, field]) => field.type !== 'file').map(([name, field]) => [name, field.value]); } [Symbol.iterator]() { return this.rows[Symbol.iterator](); } },
     crypto: { randomUUID }, location, history,
     window: {},
     navigator: { clipboard: { writeText: async value => { clipboard.push(value); } } },
@@ -160,12 +172,12 @@ function setup({ url = '/market?view=printing', catalog = catalogFixture(), hand
       throw Error(`Unhandled test request: ${action}`);
     },
   });
-  controller.runInContext(context);
+  (profilePayload ? profileController : controller).runInContext(context);
   const db = {
     auth: { getSession: async () => ({ data: { session: user ? { user, access_token: `token-${user.id}` } : null } }) },
     storage: { from: bucket => ({ upload: async (path, file, options) => { uploads.push({ bucket, path, file, options }); return { data: { path }, error: null }; } }) },
   };
-  const ui = context.PrintingUi.createMarketPrinting({ root, db, getUser: () => user, requireUser: () => Boolean(user), toast: value => messages.push(value), isVisible });
+  const ui = context.PrintingUi.createMarketPrinting({ root, db, getUser: () => user, requireUser: () => Boolean(user), toast: value => messages.push(value), isVisible, ...serviceCallbacks });
   if (memberGate) { memberController.runInContext(context); context.MemberAccess.mountMemberAccess(); }
   const dispatchClick = async node => {
     const event = { target: node, currentTarget: node, defaultPrevented: false, stopped: false, preventDefault() { this.defaultPrevented = true; }, stopImmediatePropagation() { this.stopped = true; } };
@@ -443,6 +455,218 @@ test('guest direct order links keep private metadata during hydration and when l
     app.ui.home();
     assert.equal(new URL(app.location.href).searchParams.has('printOrder'), false);
     assert.match(app.head.querySelector('meta[name="robots"]').getAttribute('content'), /^index/);
+  }
+});
+
+test('PS paper storefront presents its six services, own logo and rates without a gift catalogue or empty product section', async () => {
+  const catalog = catalogFixture();
+  catalog.products.push({ ...catalog.products[0], id: 'unexpected-paper-gift', providerId: paperId });
+  const calls = [];
+  const app = setup({ url: `/market?view=printing&printProvider=${paperId}`, catalog, serviceCallbacks: { requestService: (...args) => calls.push(args) } });
+  await app.ui.show();
+  assert.match(app.root.innerHTML, /PS Kayan City/);
+  assert.deepEqual(app.root.querySelectorAll('.printing-service-card').map(node => node.getAttribute('id')), ['documents', 'photos', 'cards', 'stickers', 'copy-scan', 'finishing'].map(id => `printing-service-${id}`));
+  assert.ok(app.root.querySelectorAll('img').some(node => node.getAttribute('src') === '/media/printing/ps-kayan-city-logo.webp'));
+  assert.match(app.root.innerHTML, /printing-rate-table/);
+  for (const price of [1.5, 2, 3, 4]) assert.ok(app.root.innerHTML.includes(new Intl.NumberFormat('ar-EG', { maximumFractionDigits: 2 }).format(price) + ' ج.م'));
+  assert.deepEqual(productsOnPage(app), []);
+  assert.doesNotMatch(app.root.innerHTML, /printing-products|لسه بتجهز كتالوجها|unexpected-paper-gift|memorycraft-mug/);
+  assert.deepEqual(calls, []);
+  app.ui.storefront(giftId);
+  assert.equal(app.root.querySelectorAll('.printing-service-card').length, 0);
+  assert.equal(productsOnPage(app).length, 9);
+  assert.doesNotMatch(app.root.innerHTML, /ps-kayan-city-logo.webp|طلبات PDF الخاصة بي/);
+});
+
+test('non-PDF service cards open the chosen provider composer with separate stable draft keys and never submit automatically', async () => {
+  const catalog = catalogFixture(), place = catalog.providers.find(provider => provider.id === paperId), calls = [];
+  const app = setup({ url: `/market?view=printing&printProvider=${paperId}`, catalog, serviceCallbacks: { requestService: (...args) => calls.push(args) } });
+  await app.ui.show();
+  assert.equal(calls.length, 0);
+  for (const service of place.services.filter(service => service.requestMode === 'service')) {
+    await app.click(`[data-print-service="${service.id}"]`);
+    const [directoryId, name, brief, serviceId] = calls.at(-1);
+    assert.equal(directoryId, place.directoryId);
+    assert.equal(name, place.name);
+    assert.equal(serviceId, service.id);
+    assert.ok(brief.includes(service.title));
+    assert.match(brief, /المقاس المطلوب:/);
+    assert.match(brief, /الكمية المطلوبة:/);
+    assert.match(brief, /الموعد المفضل:/);
+    if (service.id === 'copy-scan') assert.match(brief, /رفع ملف ليس شرطًا/);
+    if (service.id === 'finishing') assert.match(brief, /تكعيب، تجهيز ملازم، تدبيس من المنتصف أم تغليف حراري/);
+    noWizard(app);
+  }
+  assert.equal(calls.length, 5);
+  assert.deepEqual(calls.map(call => call[3]), ['photos', 'cards', 'stickers', 'copy-scan', 'finishing']);
+  assert.equal(new Set(calls.map(call => `${call[0]}/${call[3]}`)).size, 5, 'services for the same provider must not share a composer draft key');
+  await app.click('[data-print-service="photos"]');
+  assert.deepEqual(calls.at(-1), calls[0], 'returning to the same service must retain its stable key and own initial brief');
+  assert.equal(app.uploads.length, 0);
+  assert.equal(app.requests.some(request => request.body), false);
+  const staleButton = app.root.querySelector('[data-print-service="photos"]');
+  app.ui.storefront(giftId);
+  await app.dispatchClick(staleButton);
+  assert.equal(calls.length, 6, 'a stale card must not open a request after switching provider');
+});
+
+test('the documents service retains mandatory PDF validation instead of opening the generic service composer', async () => {
+  const calls = [];
+  const app = setup({ url: `/market?view=printing&printProvider=${paperId}`, serviceCallbacks: { requestService: (...args) => calls.push(args) } });
+  await app.ui.show();
+  await app.click('[data-print-service="documents"]');
+  assert.match(question(app), /PDF/);
+  assert.equal(app.root.querySelector('#printing-answer').getAttribute('accept'), 'application/pdf,.pdf');
+  await app.root.querySelector('#printing-question-form').onsubmit({ preventDefault() {} });
+  assert.match(app.root.querySelector('#printing-form-error').textContent, /اختار ملف واحد على الأقل/);
+  await app.root.querySelector('#printing-answer').onchange({ target: { files: [{ name: 'photo.jpg', type: 'image/jpeg', size: 128 }] } });
+  assert.match(app.root.querySelector('#printing-form-error').textContent, /PDF فقط/);
+  await app.root.querySelector('#printing-answer').onchange({ target: { files: [{ name: 'document.pdf', type: 'application/pdf', size: 128 }] } });
+  await app.answer();
+  assert.match(question(app), /كام صفحة/);
+  assert.deepEqual(providerLinks(app), [paperId]);
+  assert.deepEqual(calls, []);
+  assert.equal(app.uploads.length, 0);
+});
+
+test('disabled services are hidden and paused providers cannot open service requests', async () => {
+  const catalog = catalogFixture(), place = catalog.providers.find(provider => provider.id === paperId), calls = [];
+  place.services.find(service => service.id === 'stickers').active = false;
+  place.acceptingOrders = false;
+  const app = setup({ url: `/market?view=printing&printProvider=${paperId}`, catalog, serviceCallbacks: { requestService: (...args) => calls.push(args) } });
+  await app.ui.show();
+  assert.equal(app.root.querySelector('#printing-service-stickers'), null);
+  assert.equal(app.root.querySelectorAll('.printing-service-card').length, 5);
+  assert.ok(app.root.querySelectorAll('[data-print-service]').every(button => button.disabled));
+  await app.click('[data-print-service="photos"]');
+  assert.deepEqual(calls, []);
+  noWizard(app);
+});
+
+test('service follow-up is distinct from PDF orders and the service inbox is exposed only to the provider owner', async () => {
+  for (const owner of [false, true]) {
+    const catalog = catalogFixture(), requests = [], inbox = [];
+    catalog.providers.find(provider => provider.id === paperId).canManage = owner;
+    const app = setup({
+      url: `/market?view=printing&printProvider=${paperId}`, catalog,
+      serviceCallbacks: { serviceRequests: () => requests.push('open'), serviceInbox: id => inbox.push(id), requestService: () => {} },
+    });
+    await app.ui.show();
+    assert.match(app.root.querySelector('[data-print-mine]').textContent, /طلبات PDF/);
+    assert.equal(Boolean(app.root.querySelector('[data-print-inbox]')), owner);
+    if (owner) assert.match(app.root.querySelector('[data-print-inbox]').textContent, /إدارة طلبات PDF/);
+    else assert.equal(app.root.querySelector('[data-print-claim]').textContent, 'أنا صاحب مكتبة');
+    await app.click('#printing-service-requests');
+    assert.deepEqual(requests, ['open']);
+    assert.equal(Boolean(app.root.querySelector('#printing-service-inbox')), owner);
+    if (owner) await app.click('#printing-service-inbox');
+    assert.deepEqual(inbox, owner ? [paperId] : []);
+    assert.equal(app.requests.some(request => ['mine', 'inbox'].includes(request.query.action)), false);
+  }
+});
+
+test('nonowners and admin-only accounts cannot expose management or query an inbox, and owner entry retains the provider', async () => {
+  for (const canManage of [false, 'true']) {
+    const catalog = catalogFixture(), claims = [], serviceInbox = [];
+    Object.assign(catalog.providers.find(provider => provider.id === paperId), { canManage, directoryId: 'ps-kayan-directory' });
+    const app = setup({
+      url: `/market?view=printing&printProvider=${paperId}`, catalog,
+      serviceCallbacks: { isAdmin: () => true, showClaims: id => claims.push(id), serviceInbox: id => serviceInbox.push(id) },
+    });
+    await app.ui.show();
+    for (const selector of ['[data-print-inbox]', '#printing-store-manage', '#printing-store-showcase', '#printing-service-inbox']) assert.equal(app.root.querySelector(selector), null);
+    assert.equal(app.root.querySelectorAll('.printing-service-card').length, 6, 'public services remain visible');
+    await app.click('[data-print-claim]');
+    assert.deepEqual(claims, ['ps-kayan-directory']);
+    assert.deepEqual(serviceInbox, []);
+    await app.ui.inbox();
+    assert.equal(app.requests.some(request => request.query.action === 'inbox'), false);
+    assert.match(app.root.innerHTML, /إدارة الطلبات لصاحب المكتبة المعتمد/);
+    assert.equal(app.root.querySelector('#printing-settings'), null);
+    assert.equal(app.root.querySelector('[data-print-inbox]'), null);
+    app.ui.home();
+    await app.click('[data-print-claim]');
+    assert.deepEqual(claims, ['ps-kayan-directory', undefined]);
+  }
+  const guest = setup({ authenticated: false });
+  await guest.ui.show();
+  assert.equal(guest.root.querySelector('[data-print-inbox]'), null);
+});
+
+test('owning MemoryCraft gives no controls or private inbox access for the paper provider', async () => {
+  const catalog = catalogFixture(), claims = [], calls = [];
+  catalog.providers.find(provider => provider.id === giftId).canManage = true;
+  const app = setup({
+    url: `/market?view=printing&printProvider=${giftId}`, catalog,
+    serviceCallbacks: { showClaims: id => claims.push(id), serviceInbox: id => calls.push(id), isAdmin: () => true },
+  });
+  await app.ui.show();
+  assert.ok(app.root.querySelector('[data-print-inbox]'));
+  await app.click('#printing-store-manage');
+  assert.deepEqual(app.root.querySelectorAll('[data-print-provider-edit]').map(node => node.dataset.printProviderEdit), [giftId]);
+  const edit = app.root.querySelector('[data-print-provider-edit]');
+  edit.dataset.printProviderEdit = paperId;
+  await app.dispatchClick(edit);
+  assert.equal(app.root.querySelector('#printing-management-form'), null, 'a forged provider edit target cannot open another owner profile');
+  assert.match(app.messages.at(-1), /صاحب المكتبة المعتمد/);
+  const inbox = app.root.querySelector('[data-print-provider-inbox]');
+  inbox.dataset.printProviderInbox = paperId;
+  await app.dispatchClick(inbox);
+  assert.equal(app.requests.some(request => request.query.action === 'inbox'), false, 'scoped access is checked before the inbox request');
+  assert.equal(app.root.querySelector('#printing-settings'), null);
+  assert.equal(app.root.querySelector('[data-print-inbox]'), null);
+  await app.click('[data-print-claim]');
+  assert.deepEqual(claims, [paperId]);
+  await app.ui.storefront(paperId);
+  for (const selector of ['[data-print-inbox]', '#printing-store-manage', '#printing-store-showcase', '#printing-service-inbox']) assert.equal(app.root.querySelector(selector), null);
+  assert.deepEqual(calls, []);
+  app.ui.home();
+  assert.ok(app.root.querySelector('[data-print-inbox]'), 'the overall directory still permits access to the owner\'s own inbox');
+});
+
+test('provider logo prefers the live URL, accepts only safe local defaults, and respects an explicitly cleared logo', async () => {
+  for (const [logoPath, logoUrl, expected] of [
+    ['/media/printing/ps-kayan-city-logo.webp', null, '/media/printing/ps-kayan-city-logo.webp'],
+    ['/media/printing/ps-kayan-city-logo.webp', 'https://storage.example/current-logo.webp?token=owner', 'https://storage.example/current-logo.webp?token=owner'],
+    [null, null, null],
+    ['/media/printing/../private.png', null, null],
+    ['https://other.example/default.png', null, null],
+  ]) {
+    const catalog = catalogFixture();
+    Object.assign(catalog.providers.find(provider => provider.id === paperId), { logoPath, logoUrl });
+    const app = setup({ url: `/market?view=printing&printProvider=${paperId}`, catalog });
+    await app.ui.show();
+    const images = app.root.querySelectorAll('img').map(node => node.getAttribute('src'));
+    assert.deepEqual(images, expected ? [expected] : []);
+  }
+});
+
+test('saving a provider profile omits an unchanged static logo and sends only explicit removal or uploaded replacement', async () => {
+  for (const action of ['keep', 'remove', 'upload']) {
+    const catalog = catalogFixture(), place = catalog.providers.find(provider => provider.id === paperId);
+    Object.assign(place, { canManage: true, version: 1, logoPath: '/media/printing/ps-kayan-city-logo.webp', logoUrl: null });
+    const app = setup({ url: `/market?view=printing&printProvider=${paperId}`, catalog, profilePayload: true, handler: request => request.body?.action === 'provider_save' ? reply({ id: paperId }) : undefined });
+    await app.ui.show();
+    await app.click('#printing-store-manage');
+    await app.click(`[data-print-provider-edit="${paperId}"]`);
+    const form = app.root.querySelector('#printing-management-form');
+    assert.ok(form);
+    form.elements.enabled.value = 'true';
+    form.elements.deliveryEnabled.value = 'true';
+    form.elements.removeLogo.value = action === 'remove' ? 'true' : 'false';
+    if (action === 'upload') form.elements.logo.files = [{ name: 'new-logo.webp', type: 'image/webp', size: 128 }];
+    await form.onsubmit({ preventDefault() {} });
+    const payload = app.requests.find(request => request.body?.action === 'provider_save')?.body;
+    assert.ok(payload, 'the actual profile submit callback must produce a mutation');
+    assert.equal(payload.providerId, paperId);
+    if (action === 'keep') assert.equal(Object.hasOwn(payload.fields, 'logoPath'), false);
+    if (action === 'remove') assert.equal(payload.fields.logoPath, null);
+    if (action === 'upload') {
+      assert.equal(app.uploads.length, 1);
+      assert.equal(app.uploads[0].bucket, 'jowwa-print-showcase');
+      assert.equal(payload.fields.logoPath, app.uploads[0].path);
+      assert.match(payload.fields.logoPath, new RegExp(`^${CUSTOMER}/.+\\.webp$`));
+    } else assert.equal(app.uploads.length, 0);
   }
 });
 
@@ -745,7 +969,7 @@ test('unsafe logo or non-Google maps URLs are not rendered as usable resources',
     ['//evil.example/image.png', 'https://evil.example/maps'],
   ]) {
     const catalog = catalogFixture();
-    Object.assign(catalog.providers.find(provider => provider.id === paperId), { logoUrl, mapUrl });
+    Object.assign(catalog.providers.find(provider => provider.id === paperId), { logoUrl, mapUrl, logoPath: null });
     const app = setup({ url: `/market?view=printing&printProvider=${paperId}`, catalog });
     await app.ui.show();
     assert.equal(app.root.querySelectorAll('img').length, 0);
@@ -755,8 +979,10 @@ test('unsafe logo or non-Google maps URLs are not rendered as usable resources',
 });
 
 test('customer and merchant lists launched from a storefront retain provider scope on pagination and refresh', async () => {
+  const catalog = catalogFixture();
+  catalog.providers.find(provider => provider.id === giftId).canManage = true;
   const app = setup({
-    url: '/market?view=printing&printProvider=memorycraft',
+    url: '/market?view=printing&printProvider=memorycraft', catalog,
     handler: request => ['mine', 'inbox'].includes(request.query.action) ? reply({ items: [], nextCursor: request.query.cursor ? null : 'next-page' }) : undefined,
   });
   await app.ui.show();

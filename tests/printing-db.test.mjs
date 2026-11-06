@@ -203,11 +203,16 @@ test('a newly conflicting product identifier cannot cross provider ownership dur
 });
 
 test('deployment verification exercises the real RPC boundary and rolls back all temporary fixtures',async()=>{
- const before=(await w.db.query('select (select count(*) from auth.users)+(select count(*) from jowwa_private.printing_orders)+(select count(*) from storage.objects) n')).rows[0].n;
- const lines=[],result=await verifyPrintingClient(w.db,{log:line=>lines.push(line)});
- assert.equal(result.rolledBack,true);assert.ok(result.passed>=15);assert.equal(lines.length,result.passed);
- assert.ok(lines.every(line=>/^\[printing-live\] PASS [a-z ]+$/.test(line)));
- assert.equal((await w.db.query('select (select count(*) from auth.users)+(select count(*) from jowwa_private.printing_orders)+(select count(*) from storage.objects) n')).rows[0].n,before);
+ const fixture=await printingWorld({upTo:'046'});
+ try{
+  const before=(await fixture.db.query('select (select count(*) from auth.users)+(select count(*) from jowwa_private.printing_orders)+(select count(*) from storage.objects) n')).rows[0].n;
+  const lines=[],result=await verifyPrintingClient(fixture.db,{log:line=>lines.push(line)});
+  assert.equal(result.rolledBack,true);assert.ok(result.passed>=40);assert.equal(lines.length,result.passed);
+  assert.ok(lines.every(line=>/^\[printing-live\] PASS [a-z ]+$/.test(line)));
+  assert.ok(lines.includes('[printing-live] PASS nonowner admin cannot read private order'));
+  assert.ok(lines.includes('[printing-live] PASS named owner bound to current verified account'));
+  assert.equal((await fixture.db.query('select (select count(*) from auth.users)+(select count(*) from jowwa_private.printing_orders)+(select count(*) from storage.objects) n')).rows[0].n,before);
+ }finally{await fixture.close();}
 });
 
 test('completed work contributes only an aggregate count and never publishes customer details or files',async()=>{

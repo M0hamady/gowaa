@@ -41,13 +41,14 @@ export function createProviderRequests({fetcher,ensure,getUser,beforeOpen=()=>{}
   byId('request-retry').onclick=retry;byId('request-go-back').onclick=()=>back();byId('request-claim')?.addEventListener('click',claimActivity);
  }
  function claimActivity(){close();if(onClaim)onClaim();else location.assign('/market?serviceClaim=1');}
- async function create(directoryId,name='',description=''){
+ async function create(directoryId,name='',description='',options={}){
   if(!validDirectoryId(directoryId))return;const token=await start();if(!token)return;
   show('<h2>نبعت للمكان؟</h2><p role="status">بنجهّز طلبك…</p>');
   try{
    const {data:target}=await api({action:'availability',directoryId});if(!live(token))return;
    if(!target?.canRequest){show('<h2>المكان لسه بيتجهّز لاستقبال الرسائل</h2><p>تقدر تختار نشاط تاني من جوه. الطلب ما اتبعتش.</p><a class="secondary" href="/market?view=services">شوف الخدمات</a>');return;}
-   const key=token.owner+':'+directoryId;let draft=drafts.get(key);if(!draft){draft=storedDraft(key)||{requestId:crypto.randomUUID(),values:{customerName:getUser()?.user_metadata?.display_name||getUser()?.name||'',description:typeof description==='string'&&description.length<=1500?description:'',preferred:''}};drafts.set(key,draft);}
+   const suffix=typeof options?.draftKey==='string'&&/^[a-z0-9-]{1,100}$/.test(options.draftKey)?':'+options.draftKey:'';
+   const key=token.owner+':'+directoryId+suffix;let draft=drafts.get(key);if(!draft){draft=storedDraft(key)||{requestId:crypto.randomUUID(),values:{customerName:getUser()?.user_metadata?.display_name||getUser()?.name||'',description:typeof description==='string'&&description.length<=1500?description:'',preferred:''}};drafts.set(key,draft);}
    if(draft.saved){back=()=>mine();return thread(draft.saved);}
    const providerName=target.providerName||name||'المكان',v=draft.values;
    show(`<h2>ابعت لـ${esc(providerName)}</h2><p>${target.registered?'رسالتك هتظهر لصاحب النشاط في طلباته على جوه.':'هنحفظ طلبك، ونحاول ننبه النشاط عشان يسجّل ويتابعه من جوه.'} الطلب لسه محتاج رد المكان.</p><form id="provider-request-form" class="market-form"><label>ننادي عليك بإيه؟<input name="customerName" autocomplete="name" required minlength="2" maxlength="60" value="${esc(v.customerName)}"></label><label>محتاج إيه من المكان؟<textarea name="description" required minlength="2" maxlength="1500" placeholder="اكتب الخدمة أو الأصناف والكميات اللي محتاجها">${esc(v.description)}</textarea></label><label>في ميعاد مناسب ليك؟<input name="preferred" maxlength="120" placeholder="اختياري — مثال: بكرة بعد ٥" value="${esc(v.preferred)}"></label><label class="check-row" data-question="نشارك بيانات طلبك مع المكان؟"><input name="consent" type="checkbox" required ${v.consent?'checked':''}> موافق إن جوه يحفظ الطلب ويشارك اسمي ورقم حسابي المؤكد وتفاصيل طلبي مع النشاط لمتابعته، ولو لسه مسجّلش يتبعت له تنبيه بالطلب ودعوة للتسجيل.</label><p class="data-note">الحجز أو التنفيذ يتأكد بعد رد النشاط هنا. إرسال الطلب مش تأكيد قبول، ومفيش دفع في الخطوة دي.</p><div class="form-error" role="alert"></div><button type="submit" class="primary">ابعت الطلب من جوه</button></form><button type="button" class="text-button" id="request-open-mine">طلباتي ورسائلي</button>`);

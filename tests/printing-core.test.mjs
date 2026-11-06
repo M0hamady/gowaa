@@ -277,7 +277,8 @@ test('ready orders enforce active status and available inventory across merged l
 test('catalog preserves evidence limits: unpriced custom samples, unknown locations, and conditional same-day work', () => {
   const printer = catalog.providers.find(provider => provider.id === 'printing-paper-kayan');
   const memorycraft = catalog.providers.find(provider => provider.id === 'memorycraft');
-  assert.equal(printer.officialNameConfirmed, false);
+  assert.equal(printer.officialNameConfirmed, true);
+  assert.equal(printer.name, 'PS Kayan City | خدمات الطباعة والتصوير');
   assert.equal(printer.address, null);
   assert.equal(printer.coordinates, null);
   assert.equal(printer.pricing.bulkDiscountPercent, null);
