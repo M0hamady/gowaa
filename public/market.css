@@ -52,6 +52,18 @@
 .concierge-order ul{margin:8px 0;padding-inline-start:18px}.concierge-order li small{color:#6b756f;margin-inline-start:6px}
 .concierge-form{border-top:1px solid #eee;margin-top:14px;padding-top:12px}.concierge-fulfillment{display:flex;gap:16px;border:0;padding:0}.concierge-fulfillment legend{font-weight:600}
 .cart-qty{display:flex;align-items:center;gap:4px}.cart-qty input{width:56px;text-align:center;min-height:40px}
+
+/* Cart state is visible through both the count and the button colour. */
+.basket-dock.primary,.place-basket-dock.primary,#provider-basket-open{background:#f0f5f1;color:#365c4d;border:2px solid #bacdbe;transition:background-color .18s ease,color .18s ease,box-shadow .18s ease}
+.basket-dock.primary.has-items,.place-basket-dock.primary.has-items,#provider-basket-open.has-items{background:#174c3b;color:#fff;border-color:#174c3b;box-shadow:0 10px 30px #123e3240}
+.basket-dock.has-items .basket-dock-count,.place-basket-dock.has-items b{background:#ffe1a3;color:#173f31}
+.basket-dock:focus-visible,.place-basket-dock:focus-visible,#provider-basket-open:focus-visible{outline:3px solid #c78e26;outline-offset:4px}
+.place-basket-dock[hidden]{display:none}
+.basket-announcement{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
+.provider-basket-dialog .qty-step,.cart-quantity-actions button{min-width:44px;min-height:44px}
+.provider-basket-dialog .qty-step:disabled,.cart-quantity-actions button:disabled{opacity:.4;cursor:not-allowed}
+.provider-basket-dialog .question-footer .primary{margin:0}
+@media(prefers-reduced-motion:reduce){.basket-dock.primary,.basket-dock.basket-pulse,.place-basket-dock.primary,#provider-basket-open{animation:none;transition:none}.basket-dock.primary:hover,.place-basket-dock.primary:hover{transform:none}}
 .qty-step{min-width:40px;min-height:40px;border-radius:10px;border:1px solid #cfd8d2;background:#fff;font-size:1.2rem;line-height:1}
 
 /* Detail URLs render their own SSR content from the first paint. The marketplace

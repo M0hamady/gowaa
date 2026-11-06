@@ -7,10 +7,13 @@ const STATUS={pending:['مستني رد','wait'],approved:['اتوافق علي�
 const kidsWord=n=>n===1?'طفل':n===2?'طفلين':'أطفال';
 
 export function createBookings({db,getUser,requireUser,modal,closeModal,esc}){
- let providers=null,providersUntil=0,providersPending=null,openGeneration=0;
- async function token(){if(!db)return '';const {data}=await db.auth.getSession();return data?.session?.access_token||'';}
- async function api(method,body){
-  const headers={'Content-Type':'application/json'},t=method==='GET'&&body.action==='providers'?'':await token();if(t)headers.Authorization='Bearer '+t;
+ let providers=null,providersUntil=0,providersPending=null,openGeneration=0,pendingSubmission=null;
+ const drafts=new Map();
+ const accountChanged=()=>Object.assign(Error('الحساب اتغيّر أو الجلسة انتهت. افتح الحجز بحسابك الحالي.'),{code:'BOOKING_ACCOUNT_CHANGED'});
+ async function token(ownerId){if(!db)return '';const {data}=await db.auth.getSession();if(ownerId&&(getUser()?.id!==ownerId||data?.session?.user?.id!==ownerId))throw accountChanged();return data?.session?.access_token||'';}
+ async function api(method,body,ownerId){
+  const headers={'Content-Type':'application/json'},t=method==='GET'&&body.action==='providers'?'':await token(ownerId);if(t)headers.Authorization='Bearer '+t;
+  if(ownerId&&getUser()?.id!==ownerId)throw accountChanged();
   const url=method==='GET'?'/api/bookings?'+new URLSearchParams(body):'/api/bookings';
   const r=await fetch(url,{method,headers,cache:'no-store',signal:AbortSignal.timeout(method==='POST'?25000:15000),...(method==='POST'?{body:JSON.stringify(body)}:{})});
   const b=await r.json().catch(error=>{if(error.name==='AbortError'||error.name==='TimeoutError')throw error;return {};});if(!r.ok)throw Object.assign(Error(b.error||'حصلت مشكلة. جرّب تاني.'),{status:r.status});return b;
@@ -23,7 +26,7 @@ export function createBookings({db,getUser,requireUser,modal,closeModal,esc}){
  const providerFor=async id=>(await loadProviders({strict:true})).find(p=>p.directoryId===id)||null;
 
  async function openForm(place){
-  if(!place?.id)return;
+  if(!place?.id||pendingSubmission&&pendingSubmission.ownerId===getUser()?.id)return;
   const generation=++openGeneration;
   modal(`<section class="booking-loading" role="status" aria-live="polite">${icon('clock')}<h2>بنجهّز حجزك في ${esc(place.name||'المكان')}…</h2></section>`);
   let provider;
@@ -34,9 +37,12 @@ export function createBookings({db,getUser,requireUser,modal,closeModal,esc}){
   }
   if(generation!==openGeneration)return;
   if(!provider){modal(`<h2>${esc(place.name)}</h2><p>المكان ده مش بيستقبل حجوزات من جوه دلوقتي. تقدر تتواصل معاه من صفحته.</p>`);return;}
-  if(!requireUser(()=>openForm(place)))return;
+  if(!requireUser(()=>{if(generation===openGeneration)void openForm(place);}))return;
   if(!Number.isInteger(provider.minAge)||!Number.isInteger(provider.maxAge)||provider.minAge<0||provider.maxAge>25||provider.maxAge<provider.minAge||!Number.isInteger(provider.maxKids)||provider.maxKids<1||provider.maxKids>20){modal('<h2>بيانات الحجز بتتحدّث</h2><p>حاول تاني بعد شوية، أو تواصل مع المكان من صفحته.</p>');return;}
-  const user=getUser(),ownerId=user?.id;
+  const user=getUser(),ownerId=user?.id,key=ownerId+':'+place.id;
+  // Keep the same attempt when an uncertain response is followed by close/reopen.
+  // The draft is scoped to this page and account; it is removed after confirmed success.
+  let draft=drafts.get(key);if(!draft){draft={requestId:crypto.randomUUID(),values:{}};drafts.set(key,draft);}
   const ages=Array.from({length:provider.maxAge-provider.minAge+1},(_,i)=>provider.minAge+i);
   const ageSelect=i=>`<label data-question-icon="user" data-choice-layout="compact" data-hint="السن المتاح من ${provider.minAge} لحد ${provider.maxAge} سنة.">سن الطفل ${i+1}؟<select name="age${i+1}" data-booking-age data-choice-grid required><option value="">اختار السن</option>${ages.map(a=>`<option value="${a}">${a} ${a>=3&&a<=10?'سنين':'سنة'}</option>`).join('')}</select></label>`;
   modal(`<header class="booking-heading"><div class="booking-symbol">${icon('clock')}</div><div><h2>حجزك في ${esc(provider.name)}</h2><p>سؤال بسؤال، وهنراجع معاك قبل الإرسال.</p></div></header><form id="booking-form" class="market-form booking-form" novalidate>
@@ -48,27 +54,35 @@ export function createBookings({db,getUser,requireUser,modal,closeModal,esc}){
    <p class="booking-submit-note">ده طلب حجز، وبيتأكد بعد رد الأكاديمية. هتلاقي لينك المتابعة بعد الإرسال، ورسالة على رقمك المسجل لو خدمة الرسائل متاحة.</p>
    <p class="form-error" role="alert"></p><button class="primary" type="submit">ابعت طلب الحجز</button></form>`);
   const form=document.getElementById('booking-form'),ageFields=[...form.querySelectorAll('[data-booking-age]')];
+  for(const name of ['parentName','kidsCount','preferred','note'])if(draft.values[name]!==undefined)form.elements[name].value=draft.values[name];
+  ageFields.forEach((field,index)=>{field.value=draft.values.ages?.[index]||'';});
+  const remember=()=>{draft.values={...Object.fromEntries(['parentName','kidsCount','preferred','note'].map(name=>[name,form.elements[name].value])),ages:ageFields.map(field=>field.value)};};
+  form.addEventListener('input',remember);form.addEventListener('change',remember);
   const steps=formSteps(form,{onSubmitLabel:'ابعت طلب الحجز',visible:(id,f)=>!/^age\d+$/.test(id)||Number(id.slice(3))<=Number(f.elements.kidsCount.value)});
   const validateName=()=>{form.elements.parentName.setCustomValidity(form.elements.parentName.value.trim().length<2?'اكتب اسم ولي الأمر من حرفين على الأقل.':'');};validateName();form.elements.parentName.addEventListener('input',validateName);
-  const requestId=crypto.randomUUID();let sending=false;
+  const requestId=draft.requestId;let sending=false;
   form.onsubmit=async e=>{e.preventDefault();const err=form.querySelector('.form-error'),btn=form.querySelector('[type=submit]');err.textContent='';
-   if(sending)return;
+   if(sending||generation!==openGeneration||!form.isConnected)return;
    if(getUser()?.id!==ownerId){err.textContent='الحساب اتغيّر. اقفل الحجز وافتحه بحسابك الحالي.';return;}
    const kids=Number(form.elements.kidsCount.value),selectedAges=ageFields.slice(0,kids),ageValues=selectedAges.map(s=>Number(s.value));
    if(form.elements.parentName.value.trim().length<2){err.textContent='اكتب اسم ولي الأمر.';return;}
    if(selectedAges.some(s=>!s.value||!s.checkValidity())){err.textContent='اختار سن كل طفل.';steps.refresh();return;}
+   remember();
    const payload={action:'create',directoryId:place.id,requestId,parentName:form.elements.parentName.value.trim(),kidsCount:kids,ages:ageValues,preferred:form.elements.preferred.value.trim(),note:form.elements.note.value.trim()};
+   const attempt={ownerId};pendingSubmission=attempt;draft.attempted=true;
    sending=true;form.setAttribute('aria-busy','true');const controls=[...form.querySelectorAll('input,select,textarea,button')].map(el=>[el,el.disabled]);controls.forEach(([el])=>el.disabled=true);btn.textContent='بنبعت طلبك…';
-   try{const r=await api('POST',payload);
-    if(generation!==openGeneration||!form.isConnected)return;
+   try{const r=await api('POST',payload,ownerId);
+    if(generation!==openGeneration||!form.isConnected||getUser()?.id!==ownerId)return;
+    if(!/^[a-f0-9]{32}$/.test(r.data?.trackingToken||''))throw Object.assign(Error('تعذر تأكيد نتيجة الحجز. بياناتك محفوظة؛ حاول إرسال نفس الطلب تاني.'),{code:'BOOKING_RESPONSE_INVALID'});
     const link='/track#b-'+r.data.trackingToken,replayed=r.data.replayed===true;
+    if(drafts.get(key)===draft)drafts.delete(key);
     // An idempotent replay describes the saved first attempt, not any later draft edits.
     modal(`<div class="booking-done"><div class="booking-success-icon">${icon('check')}</div><h2>${replayed?'طلبك اتسجل في المحاولة الأولى':'طلبك وصل ✓'}</h2><p>${replayed?'عشان ما نكررش الحجز، افتح المتابعة وراجع تفاصيل الطلب اللي اتسجل.':`بعتنا طلب حجز ${kids} ${kidsWord(kids)} لـ${esc(provider.name)}.`}</p>
      ${replayed?'':`<p>${r.sms?.sent?'هيوصلك رسالة على موبايلك فيها لينك المتابعة، ولما الأكاديمية ترد هيوصلك رسالة تانية بالرد ورقم التواصل.':'تقدر تتابع الطلب من اللينك ده، ولما الأكاديمية ترد هيظهر الرد ورقم التواصل.'}</p>`}
      <div class="booking-actions"><a class="primary" href="${esc(link)}">تابع الطلب</a><button class="secondary" type="button" data-close-booking>تمام</button></div></div>`);
     document.querySelector('[data-close-booking]')?.addEventListener('click',()=>closeModal());
-   }catch(x){err.textContent=x.status===401?'انتهت جلستك. سجّل دخولك وحاول تاني.':x.name==='TimeoutError'||x.name==='AbortError'?'الرد اتأخر. بياناتك محفوظة؛ حاول إرسال نفس الطلب تاني.':x.status?x.message:'الاتصال اتقطع. بياناتك محفوظة؛ راجع النت وحاول تاني.';}
-   finally{sending=false;controls.forEach(([el,disabled])=>el.disabled=disabled);form.removeAttribute('aria-busy');btn.innerHTML=icon('check')+' ابعت طلب الحجز';}
+   }catch(x){err.textContent=x.code==='BOOKING_ACCOUNT_CHANGED'||x.code==='BOOKING_RESPONSE_INVALID'?x.message:x.status===401?'انتهت جلستك. سجّل دخولك وحاول تاني.':x.name==='TimeoutError'||x.name==='AbortError'?'الرد اتأخر. بياناتك محفوظة؛ حاول إرسال نفس الطلب تاني.':x.status?x.message:'الاتصال اتقطع. بياناتك محفوظة؛ راجع النت وحاول تاني.';}
+   finally{sending=false;if(pendingSubmission===attempt)pendingSubmission=null;controls.forEach(([el,disabled])=>el.disabled=disabled);form.removeAttribute('aria-busy');btn.innerHTML=icon('check')+' ابعت طلب الحجز';}
   };
  }
 
@@ -97,7 +111,13 @@ export function createBookings({db,getUser,requireUser,modal,closeModal,esc}){
  }
  async function renderMine(root){if(!getUser()||!root)return;let list;try{list=(await api('GET',{action:'mine'})).data||[];}catch{return;}if(!list.length)return;
   root.querySelector('#my-bookings')?.remove();root.insertAdjacentHTML('beforeend',`<section id="my-bookings" class="booking-inbox"><div class="section-title"><div><h2>حجوزاتي</h2></div></div><div class="booking-list">${list.map(b=>card(b,false)).join('')}</div></section>`);}
- return {openForm,renderInbox,renderMine,loadProviders,providerFor,cancelOpen:()=>{openGeneration++;}};
+ function cancelOpen({force=false,clearDrafts=false}={}){
+  if(!force&&pendingSubmission&&pendingSubmission.ownerId===getUser()?.id){const note=document.querySelector('#booking-form .form-error');if(note)note.textContent='بنبعت طلبك… استنى الرد لحظة.';return false;}
+  openGeneration++;
+  if(clearDrafts)for(const [key,draft] of drafts){if(draft.attempted)draft.values={};else drafts.delete(key);}
+  if(force)pendingSubmission=null;return true;
+ }
+ return {openForm,renderInbox,renderMine,loadProviders,providerFor,cancelOpen};
 }
 
 const BOOKING_BASE_CSS='.booking-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.booking-actions a,.booking-actions button{padding:10px 18px;border-radius:999px;text-decoration:none;font-weight:700}.booking-form{display:grid;gap:12px}.booking-ages{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}.booking-done{display:grid;gap:10px}.booking-inbox{display:grid;gap:12px;margin:0 0 22px}.booking-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}.booking-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px;display:grid;gap:6px}.booking-card p{margin:0;font-size:13px}.booking-card-head{display:flex;justify-content:space-between;gap:8px;align-items:center}.booking-status{font-size:12px;font-weight:700;border-radius:999px;padding:3px 10px;background:#fff6dc;color:#7a5a00}.booking-status.ok{background:#e4f3e1;color:#1d6b35}.booking-status.no{background:#f6e6e3;color:#8a2c1d}.booking-count{font-size:12px;background:#d1f36a;color:#123e32;border-radius:999px;padding:2px 9px;vertical-align:middle}.booking-decide{display:grid;gap:8px;margin-top:6px}.leisure-book{margin-inline-start:auto}';

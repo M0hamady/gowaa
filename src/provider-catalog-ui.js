@@ -11,7 +11,7 @@ export function mountProviderCatalog(){
  const id=match[1];
  let activeUser=null,products=[],provider=null,lines=[],orderGate={},concierge=false,host=null,filter='',search='',catalogStatus='idle';
  let generation=0,loadPromise=null,loadController=null,dialog=null,dialogMode='basket',quoteSeq=0,quoteController=null,qtyTimer=null,lastQuote=null;
- let checkoutDraft={},conciergeRequest=null,sending=false,searchFrame=null;
+ let checkoutDraft={},conciergeRequest=null,sending=false,searchFrame=null,addSequence=0;
  const signature=()=>JSON.stringify(lines);
  const estimate=()=>basketTotal(products,lines,id);
  const canConcierge=quote=>concierge&&quote?.items?.length>0&&!quote.items.some(line=>line.missing||line.unavailable);
@@ -19,7 +19,7 @@ export function mountProviderCatalog(){
  function announceBasket(){
   const button=host?.querySelector('#provider-basket-open'),count=providerBasketCount(lines);
   if(host)host.dataset.catalogStatus=catalogStatus;
-  if(button){button.dataset.basketCount=String(count);button.querySelector('[data-provider-count]').textContent=String(count);button.setAttribute('aria-label','فتح سلة '+provider.name+' • '+count+' قطعة');}
+  if(button){button.dataset.basketCount=String(count);button.dataset.basketState=count?'filled':'empty';button.classList.toggle('has-items',count>0);button.querySelector('[data-provider-count]').textContent=count?String(count):'فاضية';button.setAttribute('aria-label','فتح سلة '+provider.name+' • '+(count?count+' قطعة':'فاضية'));button.setAttribute('aria-haspopup','dialog');button.setAttribute('aria-controls','provider-basket-dialog');}
   window.dispatchEvent(new CustomEvent(providerBasketUpdated,{detail:{providerId:id,count,status:catalogStatus,available:products.length>0||lines.length>0}}));
  }
  function cancelQuote(){clearTimeout(qtyTimer);qtyTimer=null;quoteSeq++;quoteController?.abort();quoteController=null;}
@@ -64,27 +64,46 @@ export function mountProviderCatalog(){
   const selected=products.filter(product=>(!filter||product.section===filter)&&(!search||(product.title+' '+(product.description||'')).includes(search))).slice(0,120);
   host.querySelector('#provider-products').innerHTML=selected.map(product=>{
    const price=catalogPrice(product),unavailable=product.stockStatus==='unavailable'||product.quantity===0;
-   return '<article class="market-card provider-product" data-product-id="'+esc(product.id)+'">'+(product.imageUrl?'<img class="card-photo" src="'+esc(product.imageUrl)+'" alt="'+esc(product.title)+'" loading="lazy" decoding="async" referrerpolicy="no-referrer">':'<div class="catalog-placeholder">'+icon(product.kind==='service'?'store':'bag')+'</div>')+'<div class="card-content"><small>'+esc(product.section||product.category)+'</small><h3>'+esc(product.title)+'</h3><p>'+esc(product.description||'')+'</p><strong class="price">'+(price===null?'اسأل عن السعر':money(price)+' جنيه')+'</strong><small>'+esc(availabilityLabel(product))+'</small>'+(product.requiresVariant?'<a class="secondary" href="/item/'+esc(product.managedId)+'">اختار المقاس أو النوع</a>':'<div class="provider-product-buy"><label>الكمية<input type="number" min="1" max="'+(Number.isFinite(product.quantity)?Math.min(99,Math.max(1,product.quantity)):99)+'" step="1" value="1" required inputmode="numeric" aria-label="كمية '+esc(product.title)+'"></label><button type="button" class="primary" data-provider-add="'+esc(product.id)+'" '+(unavailable?'disabled':'')+'>'+icon('bag')+' للسلة</button></div>')+'</div></article>';
+   return '<article class="market-card provider-product" data-product-id="'+esc(product.id)+'">'+(product.imageUrl?'<img class="card-photo" src="'+esc(product.imageUrl)+'" alt="'+esc(product.title)+'" loading="lazy" decoding="async" referrerpolicy="no-referrer">':'<div class="catalog-placeholder">'+icon(product.kind==='service'?'store':'bag')+'</div>')+'<div class="card-content"><small>'+esc(product.section||product.category)+'</small><h3>'+esc(product.title)+'</h3><p>'+esc(product.description||'')+'</p><strong class="price">'+(price===null?'اسأل عن السعر':money(price)+' جنيه')+'</strong><small>'+esc(availabilityLabel(product))+'</small>'+(product.requiresVariant?'<a class="secondary" href="/item/'+esc(product.managedId)+'">اختار المقاس أو النوع</a>':'<div class="provider-product-buy"><button type="button" class="primary" data-provider-add="'+esc(product.id)+'" aria-haspopup="dialog" aria-label="أضف '+esc(product.title)+' للسلة" '+(unavailable?'disabled':'')+'>'+icon('bag')+' أضف للسلة</button></div>')+'</div></article>';
   }).join('')||'<p class="data-note">مفيش منتجات منشورة بالاختيار ده لسه.</p>';
-  host.querySelectorAll('[data-provider-add]').forEach(button=>button.onclick=async()=>{
-   const input=button.closest('article').querySelector('input'),quantity=Number(input.value),productId=button.dataset.providerAdd;
-   if(!input.reportValidity()||button.disabled)return;button.disabled=true;
-   try{
-    if(!await ensureMember({kind:'basket'}))return;
-    if(memberState().user?.id!==activeUser||!provider)return;
-    lines=addProviderLine(lines,products.find(product=>product.id===productId),quantity);persist();showMessage('اتضاف لسلة '+provider.name+' ✓');
-   }catch(error){showMessage(error.message);}
-   finally{if(button.isConnected)button.disabled=false;}
-  });
+  host.querySelectorAll('[data-provider-add]').forEach(button=>button.onclick=()=>void showAdd(button.dataset.providerAdd));
  }
  function showMessage(message){const node=host?.querySelector('[data-catalog-message]');if(node)node.textContent=message;}
+ function quantityMax(productId){
+  const product=products.find(row=>row.id===productId);
+  if(!product||product.requiresVariant||product.stockStatus==='unavailable')return 0;
+  return Number.isFinite(product.quantity)?Math.min(99,Math.max(0,product.quantity)):99;
+ }
+ async function showAdd(productId){
+  const sequence=++addSequence,owner=activeUser,currentGeneration=generation;
+  if(sending||!await ensureMember({kind:'basket'}))return;
+  if(sequence!==addSequence||owner!==activeUser||currentGeneration!==generation||memberState().user?.id!==owner||!provider)return;
+  const product=products.find(row=>row.id===productId);if(!product||product.requiresVariant)return;
+  const existing=lines.find(line=>line.id===productId)?.quantity||0,max=quantityMax(productId)-existing,price=catalogPrice(product);
+  cancelQuote();ensureDialog();dialogMode='add';dialog.setAttribute('aria-label','أضف '+product.title+' للسلة');
+  dialog.innerHTML='<button type="button" class="member-close" data-cart-close aria-label="إغلاق">'+icon('close')+'</button><h2>أضف للسلة</h2><p>'+esc(product.title)+(price===null?' • السعر يحتاج تأكيد':' • '+money(price)+' جنيه')+'</p><form id="provider-basket-add" class="market-form"><label>تحب تضيف كام '+esc(product.unit||'قطعة')+'؟<input name="quantity" type="number" inputmode="numeric" min="1" max="'+Math.max(0,max)+'" step="1" value="1" required></label>'+(existing?'<p class="data-note">في سلتك '+existing+' من الصنف ده.</p>':'')+'<div class="form-error" role="alert"></div><button type="submit" class="primary">أضف للسلة</button></form><button type="button" class="text-button" data-cart-close>إلغاء</button>';
+  const form=dialog.querySelector('#provider-basket-add'),input=form.elements.quantity;
+  if(max<1)input.setCustomValidity('الكمية المتاحة من الصنف ده موجودة بالفعل في سلتك.');
+  formSteps(form,{summary:false,onSubmitLabel:'أضف للسلة'});
+  dialog.querySelectorAll('[data-cart-close]').forEach(button=>button.onclick=closeBasket);
+  let committing=false;
+  form.onsubmit=event=>{
+   event.preventDefault();
+   if(committing||sending||!dialog.open||dialogMode!=='add'||owner!==activeUser||currentGeneration!==generation||memberState().user?.id!==owner)return;
+   committing=true;
+   try{
+    lines=addProviderLine(lines,products.find(row=>row.id===productId),Number(input.value));persist();closeBasket();showMessage('اتضاف لسلة '+provider.name+' ✓');
+   }catch(error){form.querySelector('.form-error').textContent=error.message;committing=false;}
+  };
+  if(!dialog.open)dialog.showModal();input.focus({preventScroll:true});
+ }
  const lineText=line=>line.lineTotal===null?'السعر غير محدد':line.lineTotal===undefined?'الصنف اتشال':money(line.unitPrice)+' × '+line.quantity+' = '+money(line.lineTotal)+' جنيه';
  const summary=quote=>'<div class="cart-total"><span>إجمالي الأسعار المعروفة</span><strong>'+money(quote.knownTotal)+' جنيه</strong></div>'+(quote.tax?'<p>شامل '+money(quote.tax)+' جنيه ضريبة معلنة.</p>':'')+(quote.unpriced?'<p class="notice">'+quote.unpriced+' صنف سعره محتاج استفسار؛ مش داخل الإجمالي.</p>':'')+(quote.unknownTax?'<p class="data-note">الضريبة لبعض الأصناف غير مؤكدة.</p>':'');
  function syncMessage(message){const node=dialog?.querySelector('[data-cart-sync]');if(node)node.textContent=message;}
  function closeBasket(){if(sending)return;saveCheckoutDraft();cancelQuote();dialog?.close();}
  function ensureDialog(){
   if(dialog)return;
-  dialog=document.createElement('dialog');dialog.className='market-dialog provider-basket-dialog';dialog.setAttribute('aria-label','سلة المكان');document.body.append(dialog);
+  dialog=document.createElement('dialog');dialog.id='provider-basket-dialog';dialog.className='market-dialog provider-basket-dialog';dialog.setAttribute('aria-label','سلة المكان');document.body.append(dialog);
   dialog.addEventListener('cancel',event=>{event.preventDefault();closeBasket();});
   dialog.addEventListener('close',()=>{if(!dialog.open){saveCheckoutDraft();cancelQuote();}});
  }
@@ -96,9 +115,9 @@ export function mountProviderCatalog(){
   if(lines.length)await refreshQuote();
  }
  function drawBasket(quote){
-  dialogMode='basket';
+  dialogMode='basket';dialog.setAttribute('aria-label','سلة '+provider.name);
   dialog.innerHTML='<button type="button" class="member-close" data-cart-close aria-label="إغلاق">'+icon('close')+'</button><h2>سلة '+esc(provider.name)+'</h2>'
-   +(quote.items.map(line=>'<div class="cart-row" data-cart-line="'+esc(line.id)+'"><div><strong>'+esc(line.title||'صنف لم يعد متاحًا')+'</strong><p data-cart-line-text>'+lineText(line)+'</p><small data-cart-line-warn>'+(line.missing?'الصنف لم يعد متاحًا.':line.unavailable?'الكمية أو الصنف غير متاحين.':'')+'</small></div><div class="cart-qty"><button type="button" class="qty-step" data-qty-step="-1" aria-label="قلّل الكمية">−</button><input data-cart-qty="'+esc(line.id)+'" type="number" min="1" max="99" step="1" required value="'+line.quantity+'" inputmode="numeric" aria-label="كمية '+esc(line.title||'')+'"><button type="button" class="qty-step" data-qty-step="1" aria-label="زوّد الكمية">+</button></div><button type="button" class="text-button" data-cart-remove="'+esc(line.id)+'">حذف</button></div>').join('')||'<p>سلتك لسه فاضية. كمّل اختيار منتجات المكان.</p>')
+   +(quote.items.map(line=>'<div class="cart-row" data-cart-line="'+esc(line.id)+'"><div><strong>'+esc(line.title||'صنف لم يعد متاحًا')+'</strong><p data-cart-line-text>'+lineText(line)+'</p><small data-cart-line-warn>'+(line.missing?'الصنف لم يعد متاحًا.':line.unavailable?'الكمية أو الصنف غير متاحين.':'')+'</small></div><div class="cart-qty"><button type="button" class="qty-step" data-qty-step="-1" aria-label="قلّل كمية '+esc(line.title||'الصنف')+'" '+(line.quantity<=1||quantityMax(line.id)<1?'disabled':'')+'>−</button><input data-cart-qty="'+esc(line.id)+'" type="number" min="1" max="'+quantityMax(line.id)+'" step="1" required value="'+line.quantity+'" inputmode="numeric" aria-label="كمية '+esc(line.title||'')+'"><button type="button" class="qty-step" data-qty-step="1" aria-label="زوّد كمية '+esc(line.title||'الصنف')+'" '+(line.quantity>=quantityMax(line.id)?'disabled':'')+'>+</button></div><button type="button" class="text-button" data-cart-remove="'+esc(line.id)+'">حذف</button></div>').join('')||'<p>سلتك لسه فاضية. كمّل اختيار منتجات المكان.</p>')
    +'<div data-cart-summary>'+summary(quote)+'</div><p class="data-note" data-cart-sync role="status" aria-live="polite">'+(lines.length?'بنراجع السعر والتوفر…':'')+'</p><p class="data-note">الإجمالي تقديري. السعر النهائي ورسوم التوصيل يتأكدوا مع المكان، وإضافة الصنف مش حجزًا مؤكدًا.</p>'
    +(concierge?'<button type="button" class="primary" data-concierge-start disabled>كمّل الطلب '+icon('back')+'</button>':'')
    +(provider.phone?'<a class="secondary" href="tel:'+esc(provider.phone)+'">'+icon('phone')+' اتصل لتأكيد السعر والطلب</a>':'')+'<button type="button" class="text-button" data-cart-close>كمّل اختيار المنتجات</button>';
@@ -109,7 +128,7 @@ export function mountProviderCatalog(){
   });
   dialog.querySelectorAll('.cart-qty').forEach(box=>{
    const input=box.querySelector('input');
-   box.querySelectorAll('[data-qty-step]').forEach(button=>button.onclick=()=>{input.value=String(Math.min(99,Math.max(1,(Number(input.value)||1)+Number(button.dataset.qtyStep))));queueQuantity();});
+   box.querySelectorAll('[data-qty-step]').forEach(button=>button.onclick=()=>{input.value=String(Math.min(Number(input.max),Math.max(1,(Number(input.value)||1)+Number(button.dataset.qtyStep))));queueQuantity();});
    input.addEventListener('input',queueQuantity);input.addEventListener('change',()=>queueQuantity(true));
   });
   const checked=currentQuote();if(checked)patchQuote(checked,true);
@@ -119,7 +138,7 @@ export function mountProviderCatalog(){
  function queueQuantity(immediate=false){
   clearTimeout(qtyTimer);
   const inputs=[...dialog.querySelectorAll('[data-cart-qty]')],bad=inputs.find(input=>!input.checkValidity());
-  if(bad){cancelQuote();lastQuote=null;patchQuote(estimate(),false);syncMessage('اختار كمية صحيحة من 1 لـ 99.');return;}
+  if(bad){cancelQuote();lastQuote=null;patchQuote(estimate(),false);syncMessage(Number(bad.max)<1?'الصنف غير متاح حاليًا. احذفه من السلة عشان تكمّل.':'اختار كمية صحيحة من 1 لـ '+bad.max+'.');return;}
   const next=inputs.map(input=>({id:input.dataset.cartQty,quantity:Number(input.value)}));
   if(JSON.stringify(next)!==signature()){lines=next;persist();}
   patchQuote(estimate(),false);syncMessage('بنراجع الكميات الجديدة…');
@@ -130,6 +149,7 @@ export function mountProviderCatalog(){
   for(const line of quote.items){
    const row=dialog.querySelector('[data-cart-line="'+CSS.escape(line.id)+'"]');if(!row)continue;
    row.querySelector('[data-cart-line-text]').textContent=lineText(line);row.querySelector('[data-cart-line-warn]').textContent=line.missing?'الصنف لم يعد متاحًا.':line.unavailable?'الكمية أو الصنف غير متاحين.':'';
+   const input=row.querySelector('[data-cart-qty]'),max=quantityMax(line.id);input.max=String(max);row.querySelector('[data-qty-step="-1"]').disabled=line.quantity<=1||max<1;row.querySelector('[data-qty-step="1"]').disabled=line.quantity>=max;
   }
   const total=dialog.querySelector('[data-cart-summary]');if(total)total.innerHTML=summary(quote);
   const proceed=dialog.querySelector('[data-concierge-start]');if(proceed)proceed.disabled=!verified||!canConcierge(quote);
@@ -191,7 +211,7 @@ export function mountProviderCatalog(){
   };
  }
  function reset(){
-  generation++;loadController?.abort();loadPromise=null;cancelQuote();lastQuote=null;activeUser=null;provider=null;lines=[];products=[];checkoutDraft={};conciergeRequest=null;catalogStatus='idle';host?.replaceChildren();if(host)host.hidden=true;dialog?.replaceChildren();dialog?.close();announceBasket();
+  generation++;addSequence++;loadController?.abort();loadPromise=null;cancelQuote();lastQuote=null;activeUser=null;provider=null;lines=[];products=[];checkoutDraft={};conciergeRequest=null;catalogStatus='idle';host?.replaceChildren();if(host)host.hidden=true;dialog?.replaceChildren();dialog?.close();announceBasket();
  }
  onMemberChange((next,previous)=>{
   if(previous&&previous!==next.user?.id){try{localStorage.removeItem(providerBasketKey(previous,id));}catch{}reset();}
@@ -200,7 +220,7 @@ export function mountProviderCatalog(){
  window.addEventListener('storage',event=>{
   if(!activeUser||event.key!==providerBasketKey(activeUser,id)||sending)return;
   readBasket();cancelQuote();lastQuote=null;if(!products.length)render();else announceBasket();
-  if(dialog?.open){saveCheckoutDraft();drawBasket(estimate());if(lines.length)void refreshQuote();}
+  if(dialog?.open){if(dialogMode==='add'){closeBasket();showMessage('السلة اتحدثت من نافذة تانية. اختار الكمية من جديد.');}else{saveCheckoutDraft();drawBasket(estimate());if(lines.length)void refreshQuote();}}
  });
  window.addEventListener('pagehide',cancelQuote);
  if(memberState().member)void load();

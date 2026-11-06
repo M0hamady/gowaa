@@ -1,6 +1,7 @@
 import {activePrice,categories,digits,publicLink} from './market-core.js';
 import {localMenuImage} from './menu-source.js';
 import {AVAILABILITY} from './provider-catalog-core.js';
+import {variantAvailable,listingStockAvailable} from './stock-core.js';
 
 export const categoryIcons={food:'store',grocery:'bag',home:'building',fashion:'bag',electronics:'grid',care:'heart',transport:'car',education:'school',nursery:'heart',health:'heart',office:'building',other:'grid'};
 export const confirmedProviderPlaces=[{id:'directory-guide-food-location',name:'Food Location',category:'مطاعم',address:'كيان سيتي — العنوان التفصيلي يحدده صاحب النشاط',phone:'01033138856',whatsapp:'01033138856',ownerAccountPhone:'201033751633',description:'مطعم مؤكد على جوه يقدم مشويات وكريبات وشاورما سوري. اللوجو والمنيو من المادة المرفوعة، والأسعار والتوفر يراجعهما صاحب النشاط من حسابه.',status:'تم تأكيد مقدم الخدمة مع جوه؛ حساب الإدارة المستهدف 201033751633.',businessOwnerVerified:true,mapCategory:'restaurant',schemaType:'Restaurant',url:'/place/directory-guide-food-location',image:'/assets/market/food-location/logo.png'}];
@@ -18,8 +19,8 @@ function catalogImage(value){const local=localMenuImage(value);if(local)return l
 export function listingFacts(item){
  const directory=item.sourceKind==='directory';
  if(directory)return {price:amount(item.price),range:false,available:null,offer:false,stock:'التوفر عند المحل',kind:'product',district:item.district||'other',source:'directory'};
- const variants=Array.isArray(item.variants)?item.variants:[],liveVariants=variants.filter(v=>v.available===true&&Number(v.quantity)>0);
- const available=item.available===true&&(variants.length?liveVariants.length>0:(!item.track_stock||Number(item.quantity)>0));
+ const variants=Array.isArray(item.variants)?item.variants:[],liveVariants=variants.filter(variant=>variantAvailable(variant));
+ const available=listingStockAvailable(item);
  const selected=liveVariants.length?liveVariants:variants,prices=selected.map(v=>amount(v.price)).filter(v=>v!==null);
  const base=item.price_mode==='inquiry'?null:item.price_mode==='free'?0:amount(activePrice(item));
  const price=variants.length?(prices.length?Math.min(...prices):null):base;

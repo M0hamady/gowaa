@@ -140,10 +140,89 @@ QA_BASELINE_ROOT=/path/to/clean-411d4cc-checkout node scripts/qa-direct-navigati
 Navigation builds temporary copies and does not rewrite the working checkout.
 Screenshots and reports are generated in ignored test-output locations.
 
-## Release scope
+## Initial release scope
 
 No database migration, order-confirmation contract or SMS provider change is part
 of this release. The existing guarded live build and server authorization checks
 remain in force. Browser tests do not send real bookings, orders or SMS. Production
 verification should check the deployed commit, public routes, redirects and
 generated chunk availability without creating customer transactions.
+
+## Follow-up: consistent cart controls and booking resilience
+
+This follow-up starts from the published `main` commit
+`6431f2cb076099ade6769b370a06a4e8abc7f06d`.
+
+### Cart interaction
+
+- Product Add controls now say **أضف للسلة**. Ordinary provider products open a
+  single quantity question; confirming is the only action that adds the item.
+  Cancelling does not change the cart or send a quote request.
+- Empty carts use a light colour. Carts containing products use dark green and
+  a badge showing the sum of quantities. Removing the last line restores the
+  empty state. Count changes are announced accessibly, and reduced-motion
+  preferences are respected.
+- Quantity changes immediately update line totals, overall totals and badges.
+  Managed-cart taps remain local; provider quote requests remain debounced.
+- A linked provider product with variants retains an honest
+  **اختار المقاس أو النوع** link to its direct `/item/...` page. Its managed
+  checkout contract is kept intact, without a marketplace navigation detour.
+
+### Optional variant inventory
+
+Migration `035_optional_variant_stock.sql` adds an explicit per-variant
+`track_stock:false` option. Missing flags retain the old tracked behavior;
+changing the parent listing flag does not silently disable legacy variant stock.
+The editor skips the quantity question when tracking is disabled. Availability,
+order minimum/maximum quantities, current prices and business receiving consent
+remain separate checks.
+
+The server checks optional inventory in checkout, counter orders and acceptance.
+Only real stock reductions create debit records. Cancellation restores those
+recorded debits once, and cannot invent stock for a previously untracked sale.
+Outstanding tracked debits prevent removing a variant or disabling its tracking.
+
+The migration changes function definitions only. An isolated upgrade from 034
+preserves existing listing, order and debit rows exactly, including a repeated
+application after a simulated migration-ledger retry. The guarded production
+build applies 035 before serving the frontend that can save the new flag. Earlier
+migrations and the applied-checksum manifest are unchanged.
+
+### Booking protection
+
+- Submission verifies the current account and session before sending. Late
+  success from another account cannot replace the active screen.
+- Provider and marketplace booking dialogs stay open while a request is being
+  sent. Account changes force-clear the previous account's booking UI and answers.
+  Attempted request IDs remain scoped to their original account, so a temporary
+  membership lookup failure cannot turn a retry into a duplicate booking.
+- A draft retains its request identifier across close/reopen in the same page
+  session after an uncertain response. Retry remains idempotent, and a response
+  without a valid tracking token is treated as unconfirmed rather than successful.
+- The one-question journey and direct provider-page entry remain in place.
+- Successful phone/email authentication resumes the selected booking; deliberate
+  cancellation suppresses late authentication callbacks. A successful auth close
+  is distinct from cancelling the booking.
+
+Retry identity is retained for the current page lifetime. A full tab reload
+starts a new in-memory draft; this is not a claim of cross-reload persistence.
+
+### Follow-up verification
+
+The complete Node suite passed **451 tests** and the production bundle build
+passed. The extended cart browser suite passed **25 scenarios**, including
+computed empty/filled colours, cancellation, immediate totals, stock limits,
+untracked variants, the variant editor, account changes and direct item links.
+Its order submissions used loopback fixtures, with zero external requests.
+Booking browser coverage passed **372 assertions across 16 scenarios**, on mobile
+and desktop. Built-page navigation and authentication passed **12 scenarios**,
+including successful/cancelled email and phone sign-in. The current provider
+booking journey still uses **3 API reads, 0 discovery requests and 0 marketplace
+bundles**; its requested JavaScript totals 353,416 raw bytes before compression.
+The mobile review screenshot was visually checked for readable questions,
+answers, edit controls and final confirmation.
+
+These isolated checks do not substitute for authenticated production testing.
+Live website checks must state which public flows were exercised and whether a
+signed-in customer session was available. No real booking, order or SMS is needed
+to verify the public routes and deployed assets.

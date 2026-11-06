@@ -1,3 +1,4 @@
+import {listingStockAvailable} from './stock-core.js';
 export const categories={food:'أكل ومشروبات',grocery:'بقالة واحتياجات',home:'البيت والصيانة',fashion:'ملابس وإكسسوارات',electronics:'إلكترونيات',care:'عناية شخصية',transport:'نقل وتوصيل',education:'مدارس وتعليم',nursery:'حضانات ورعاية أطفال',health:'صيدليات وصحة',office:'مكاتب وخدمات إدارية',other:'خدمات أخرى'};
 export const serviceTypes={general:'خدمة أو سيرفيس',booking:'حجز موعد / زيارة',school_admission:'تقديم مدرسة',nursery_admission:'تقديم حضانة',university_admission:'تقديم جامعة'};
 export const priceModes={fixed:'سعر محدد',inquiry:'السعر بعد الاستفسار',free:'مجانية'};
@@ -14,7 +15,7 @@ export function publicLink(value,type='website'){
  if(type==='instagram'&&!/^(www\.)?instagram\.com$/.test(u.hostname))return null;
  return u.href.length<=500?u.href:null;}catch{return null;}
 }
-export function stockState(item){return !item.available||(item.track_stock&&Number(item.quantity)<=0)?'نفد / غير متاح':item.track_stock?`متاح • ${item.quantity} قطعة`:'متاح الآن';}
+export function stockState(item){return !listingStockAvailable(item)?'نفد / غير متاح':item.variants?.length?'متاح الآن':item.track_stock?`متاح • ${item.quantity} قطعة`:'متاح الآن';}
 export function activePrice(item,today=new Intl.DateTimeFormat('en-CA',{timeZone:'Africa/Cairo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date())){
  return item.offer_price!==null&&item.offer_price!==undefined&&item.offer_until>=today?Number(item.offer_price):Number(item.price);
 }

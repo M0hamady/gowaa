@@ -39,6 +39,8 @@ const server=http.createServer(async(req,res)=>{
     const text=Buffer.concat(chunks).toString();req.body=text?JSON.parse(text):{};req.query=Object.fromEntries(url.searchParams);
     if(path==='/auth/v1/user')return authorized(req)?json(res,user):json(res,{message:'Invalid token'},401);
     if(path==='/auth/v1/token')return req.query.grant_type==='password'?json(res,session):json(res,{message:'No refresh needed in this test'},400);
+    if(path==='/auth/v1/otp')return json(res,{});
+    if(path==='/auth/v1/verify')return json(res,session);
     if(path.startsWith('/rest/v1/rpc/')){
       const name=path.split('/').at(-1);
       const rpc={jowwa_is_admin:false,jowwa_my_platform_roles:{isAdmin:false,roles:[]},jowwa_market_popularity:[],jowwa_market_click_popularity:{},jowwa_concierge_item_popularity:{},jowwa_order_availability:{businesses:[gate]},jowwa_booking_providers:[provider]};
@@ -54,6 +56,7 @@ const server=http.createServer(async(req,res)=>{
     if(path==='/api/public-places')return json(res,[academy]);
     if(path==='/api/provider-catalog')return json(res,{provider:academy,products:[],orderGate:{canOrder:false,reason:'unclaimed'},concierge:false});
     if(path==='/api/seller-orders')return json(res,{businesses:[gate]});
+    if(path==='/api/notifications')return json(res,{sent:0});
     if(path==='/api/bookings'){
       if(req.method!=='GET')return json(res,{error:'This navigation test never sends a booking.'},405);
       return json(res,{data:req.query.action==='providers'?[provider]:[]});
@@ -176,6 +179,42 @@ try{
     assert.equal(new URL(page.url()).pathname,'/place/'+academy.id);assert.equal(new URL(page.url()).searchParams.get('book'),'1');
     assert.equal(seen.requests.filter(r=>r.type==='document'&&new URL(r.url).pathname==='/market').length,0);
     assert.deepEqual(seen.exceptions,[]);report.checks.push('Sign-in resumes the same provider booking without visiting the market');await ctx.close();
+  }
+
+  for(const method of ['email','phone'])for(const cancelled of [false,true]){
+    const ctx=await context({signedIn:false}),page=await ctx.newPage(),seen=capture(page);
+    const authPath=method==='email'?'/auth/v1/token':'/auth/v1/verify';let release;
+    if(cancelled){
+      const gate=new Promise(resolve=>release=resolve);
+      await ctx.route(url=>url.origin===base&&url.pathname===authPath,async route=>{await gate;await route.fulfill({json:session});});
+    }
+    await page.goto(base+'/market?view=leisure');
+    await page.locator('[data-book="'+academy.id+'"]').click();
+    if(method==='email'){
+      await page.locator('#phone-email-fallback').click();
+      await page.locator('#auth-form [name=email]').fill('qa@example.test');await page.locator('#auth-form [data-next]').click();
+      await page.locator('#auth-form [name=password]').fill('fixture-password');
+    }else{
+      await page.locator('#phone-form [name=phone]').fill('01000000001');await page.locator('#phone-form [type=submit]').click();
+      await page.locator('#phone-code-form [name=code]').fill('123456');
+    }
+    const request=page.waitForRequest(req=>req.method()==='POST'&&new URL(req.url()).pathname===authPath);
+    const response=page.waitForResponse(res=>res.request().method()==='POST'&&new URL(res.url()).pathname===authPath);
+    await page.locator(method==='email'?'#auth-form [type=submit]':'#phone-code-form [type=submit]').click();await request;
+    if(cancelled){
+      await page.locator('#market-close').click();assert.equal(await page.locator('#market-dialog').evaluate(el=>el.open),false);
+      release();await response;await page.waitForLoadState('networkidle');
+      assert.equal(await page.locator('#market-dialog').evaluate(el=>el.open),false,'late '+method+' sign-in cannot reopen a cancelled booking');
+      assert.equal(await page.locator('#booking-form').count(),0);
+    }else{
+      await response;await page.locator('#booking-form').waitFor();
+      assert.ok((await page.locator('.booking-heading').innerText()).includes(provider.name));
+      assert.equal(new URL(page.url()).pathname,'/market');
+    }
+    assert.equal(seen.requests.filter(req=>req.method==='POST'&&new URL(req.url).pathname==='/api/bookings').length,0);
+    assert.deepEqual(seen.exceptions,[]);
+    report.checks.push('Market '+method+' sign-in '+(cancelled?'cancellation ignores late success':'success resumes the selected service booking'));
+    await ctx.close();
   }
 
   for(const [type,id,ready] of [['item',itemId,'#share-item'],['seller',sellerId,'#share-seller'],['catalog',catalogId,'#share-seller']]){
