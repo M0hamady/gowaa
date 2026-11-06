@@ -3,7 +3,7 @@
 // local. The customer's first SMS carries the tracking link (/track#b-<token>).
 import {formSteps} from '../public/form-steps.js';
 import {icon} from '../public/ui-icons.js';
-const STATUS={pending:['مستني رد','wait'],approved:['اتوافق عليه','ok'],declined:['اعتذار','no'],cancelled:['اتلغى','no']};
+import {renderBookingCard} from './booking-view.mjs';
 const kidsWord=n=>n===1?'طفل':n===2?'طفلين':'أطفال';
 
 export function createBookings({db,getUser,requireUser,modal,closeModal,esc}){
@@ -78,7 +78,7 @@ export function createBookings({db,getUser,requireUser,modal,closeModal,esc}){
     if(drafts.get(key)===draft)drafts.delete(key);
     // An idempotent replay describes the saved first attempt, not any later draft edits.
     modal(`<div class="booking-done"><div class="booking-success-icon">${icon('check')}</div><h2>${replayed?'طلبك اتسجل في المحاولة الأولى':'طلبك وصل ✓'}</h2><p>${replayed?'عشان ما نكررش الحجز، افتح المتابعة وراجع تفاصيل الطلب اللي اتسجل.':`بعتنا طلب حجز ${kids} ${kidsWord(kids)} لـ${esc(provider.name)}.`}</p>
-     ${replayed?'':`<p>${r.sms?.sent?'هيوصلك رسالة على موبايلك فيها لينك المتابعة، ولما الأكاديمية ترد هيوصلك رسالة تانية بالرد ورقم التواصل.':'تقدر تتابع الطلب من اللينك ده، ولما الأكاديمية ترد هيظهر الرد ورقم التواصل.'}</p>`}
+     ${replayed?'':`<p>${r.sms?.sent?'هيوصلك رسالة على موبايلك فيها لينك المتابعة، ولما الأكاديمية ترد هيوصلك تنبيه وتلاقي الرد في جوه.':'تقدر تتابع الطلب من اللينك ده، ولما الأكاديمية ترد هيظهر الرد والتفاصيل هنا في جوه.'}</p>`}
      <div class="booking-actions"><a class="primary" href="${esc(link)}">تابع الطلب</a><button class="secondary" type="button" data-close-booking>تمام</button></div></div>`);
     document.querySelector('[data-close-booking]')?.addEventListener('click',()=>closeModal());
    }catch(x){err.textContent=x.code==='BOOKING_ACCOUNT_CHANGED'||x.code==='BOOKING_RESPONSE_INVALID'?x.message:x.status===401?'انتهت جلستك. سجّل دخولك وحاول تاني.':x.name==='TimeoutError'||x.name==='AbortError'?'الرد اتأخر. بياناتك محفوظة؛ حاول إرسال نفس الطلب تاني.':x.status?x.message:'الاتصال اتقطع. بياناتك محفوظة؛ راجع النت وحاول تاني.';}
@@ -86,15 +86,7 @@ export function createBookings({db,getUser,requireUser,modal,closeModal,esc}){
   };
  }
 
- function card(b,owner){
-  const [label,tone]=STATUS[b.status]||[b.status,'wait'],when=new Date(b.createdAt).toLocaleString('ar-EG',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'});
-  return `<article class="booking-card" data-booking="${esc(b.id)}"><div class="booking-card-head"><b>${owner?esc(b.parentName):esc(b.provider)}</b><span class="booking-status ${tone}">${label}</span></div>
-   <p>${b.kidsCount} ${kidsWord(b.kidsCount)} · السن: ${b.ages.map(Number).join('، ')}</p>${b.preferred?`<p>المواعيد المناسبة: ${esc(b.preferred)}</p>`:''}${owner&&b.note?`<p>ملاحظة: ${esc(b.note)}</p>`:''}
-   ${owner?`<p>الموبايل: <a href="tel:${esc(b.customerPhone)}" dir="ltr">${esc(b.customerPhone)}</a></p>`:''}${b.reply?`<p>الرد: ${esc(b.reply)}</p>`:''}${!owner&&b.contactPhone?`<p>رقم التواصل: <a href="tel:${esc(b.contactPhone)}" dir="ltr">${esc(b.contactPhone)}</a></p>`:''}
-   <small class="data-note">${when}</small>
-   ${owner&&b.status==='pending'?`<form class="booking-decide" data-id="${esc(b.id)}" data-version="${b.version}"><label>رسالة مع الرد؟ (اختياري)<input name="reply" maxlength="200" placeholder="مثلًا: التمرين السبت 5 العصر"></label><p class="form-error" role="alert"></p><div class="card-actions"><button class="primary" type="submit" value="approved">موافقة</button><button class="secondary" type="submit" value="declined">اعتذار</button></div></form>`:''}
-   ${!owner?`<div class="booking-actions"><a class="secondary" href="/track#b-${esc(b.trackingToken)}">تابع الطلب</a></div>`:''}</article>`;
- }
+ const card=(b,owner)=>renderBookingCard(b,owner);
 
  // Provider inbox inside "متجري" (only shown to accounts linked to a bookable place).
  async function renderInbox(root,{focus=false}={}){
@@ -102,7 +94,7 @@ export function createBookings({db,getUser,requireUser,modal,closeModal,esc}){
   if(!list.length&&!focus)return;
   const pending=list.filter(b=>b.status==='pending').length;
   root.querySelector('#booking-inbox')?.remove();
-  root.insertAdjacentHTML('afterbegin',`<section id="booking-inbox" class="booking-inbox"><div class="section-title"><div><h2>طلبات الحجز ${pending?`<span class="booking-count">${pending} جديد</span>`:''}</h2><p>لما توافق، العميل بيوصله رسالة فيها موافقتك ورقم الأكاديمية للتواصل.</p></div></div>${list.length?`<div class="booking-list">${list.map(b=>card(b,true)).join('')}</div>`:'<p class="empty-card">لسه مفيش طلبات حجز.</p>'}</section>`);
+  root.insertAdjacentHTML('afterbegin',`<section id="booking-inbox" class="booking-inbox"><div class="section-title"><div><h2>طلبات الحجز ${pending?`<span class="booking-count">${pending} جديد</span>`:''}</h2><p>لما توافق، العميل بيوصله تنبيه بالرد ولينك متابعة الطلب في جوه.</p></div></div>${list.length?`<div class="booking-list">${list.map(b=>card(b,true)).join('')}</div>`:'<p class="empty-card">لسه مفيش طلبات حجز.</p>'}</section>`);
   root.querySelectorAll('.booking-decide').forEach(form=>form.addEventListener('submit',async e=>{e.preventDefault();const decision=e.submitter?.value,err=form.querySelector('.form-error');err.textContent='';
    form.querySelectorAll('button').forEach(b=>b.disabled=true);
    try{await api('POST',{action:'decide',id:form.dataset.id,version:Number(form.dataset.version),decision,reply:form.elements.reply.value});await renderInbox(root,{focus:true});}

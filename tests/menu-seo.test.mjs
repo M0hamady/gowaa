@@ -20,9 +20,9 @@ test('archived places and their menus disappear from both page lookup and sitema
  const remaining=data.items.filter(v=>v.placeId!==item.placeId);assert.equal(eligibleMenus(data,places,overrides).length,remaining.length);assert.ok(!menuLinks(data,places,overrides).includes('https://jowwa-kayan.vercel.app/menu/'+item.id));
  assert.equal(eligibleMenus({items:[{...item,placeId:'unknown'}]},places).length,0);
 });
-test('admin place edits replace business name/phone and cleared phone does not reappear from old menu',()=>{
+test('admin place edits replace business name without publishing current or old business phones',()=>{
  const current=eligibleMenus(data,places,[{id:item.placeId,kind:'places',archived:false,data:{name:'اسم محدث',phone:'+201000000001'}}])[0];
- const html=renderMenuItem(current.item,current.place);assert.ok(html.includes('اسم محدث'));assert.ok(html.includes('tel:+201000000001'));assert.ok(!html.includes('tel:'+item.phone));
+ const html=renderMenuItem(current.item,current.place);assert.ok(html.includes('اسم محدث'));assert.doesNotMatch(html,/tel:|201000000001/);assert.ok(html.includes('/place/'+item.placeId+'?request=1'));
  assert.ok(!renderMenuItem(item,{...place,phone:''}).includes('href="tel:'));
 });
 test('menu source markup is escaped and only observed HTTPS image hosts are allowed',()=>{
@@ -38,7 +38,7 @@ test('reviewed local menu page images and undated before-tax prices remain factu
  const html=renderMenuItem(v,place),schema=JSON.parse(html.match(/<script type="application\/ld\+json">([^]*?)<\/script>/)[1]);
  assert.ok(html.includes('١٣٥ ج.م'));assert.ok(html.includes('قبل ١٤٪ ضريبة حسب المنيو'));assert.ok(html.includes('سعر من المنيو، تاريخ النشر غير معلن'));assert.ok(!html.includes('بتاريخ '+v.checkedAt));
  assert.equal(schema['@graph'][0].image.url,'https://jowwa-kayan.vercel.app/menus/voya/page-2.png');assert.equal(schema['@graph'][0].offers,undefined);
- const unknown=renderMenuItem({...v,price:null},place);assert.ok(unknown.includes('اسأل المحل عن السعر'));assert.ok(!unknown.includes('١٣٥ ج.م'));
+ const unknown=renderMenuItem({...v,price:null},place);assert.ok(unknown.includes('السعر يتأكد في طلبك من جوه'));assert.ok(!unknown.includes('١٣٥ ج.م'));
 });
 test('renderers behind member access honor archived overrides and fail closed on source-read errors',async()=>{
  const previousFetch=globalThis.fetch,previousUrl=process.env.NEXT_PUBLIC_SUPABASE_URL,previousKey=process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;

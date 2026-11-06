@@ -11,7 +11,7 @@ import pg from 'pg';
 import {readFile,readdir} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 
-const TABLES=['auth.users','public.sellers','public.listings','public.reviews','public.shop_orders','public.site_content','public.member_profiles','public.catalogs','public.engagement_events','public.jowwa_admin_users','jowwa_private.service_claims','jowwa_private.order_payments','jowwa_private.migrations'];
+const TABLES=['auth.users','public.sellers','public.listings','public.reviews','public.shop_orders','public.site_content','public.member_profiles','public.catalogs','public.engagement_events','public.jowwa_admin_users','jowwa_private.service_claims','jowwa_private.order_payments','jowwa_private.checkout_requests','jowwa_private.booking_requests','jowwa_private.booking_messages','jowwa_private.concierge_orders','jowwa_private.provider_requests','jowwa_private.provider_request_messages','jowwa_private.migrations'];
 
 export function lostRows(before,after){
  return Object.keys(before).filter(t=>before[t]!==null&&t!=='jowwa_private.migrations'&&(after[t]===null||after[t]<before[t]));

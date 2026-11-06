@@ -1,4 +1,5 @@
-import {mountMemberAccess, onMemberChange, memberState} from './member-access.js';
+import {mountMemberAccess, onMemberChange, memberState, memberFetch, ensureBookingMember} from './member-access.js';
+import {createProviderRequests} from './provider-requests-ui.js';
 import {mountProviderCatalog} from './provider-catalog-ui.js';
 import {mountPlaceBooking} from './place-booking.js';
 import {legacyCustomerDestination} from '../public/customer-navigation.js';
@@ -13,6 +14,8 @@ function start(){
  let adminModule=null;
  const mountAdmin=state=>{if(!state.admin||adminModule)return;adminModule=import('./provider-admin.js').then(module=>module.mountProviderAdmin()).catch(()=>{adminModule=null;});};
  onMemberChange(mountAdmin);mountAdmin(memberState());
- mountMemberAccess();mountAssistantMember();mountProviderCatalog();mountPlaceBooking();
+ const requests=createProviderRequests({fetcher:memberFetch,ensure:ensureBookingMember,getUser:()=>memberState().user});
+ onMemberChange((state,prior)=>{if(prior&&prior!==state.user?.id)requests.reset();});
+ mountMemberAccess();mountAssistantMember();mountProviderCatalog();mountPlaceBooking();requests.mount();
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();

@@ -3,6 +3,7 @@
 // the service role and the shared SMS budget. If SMS is not configured they stay queued.
 import {createClient} from '@supabase/supabase-js';
 import {sendSms,smsSendingReady} from './server-identity-sms.mjs';
+import {dispatchProviderOrderAlert} from './server-provider-alerts.mjs';
 
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const DIRECTORY=/^[a-z0-9-]{3,100}$/;
@@ -30,7 +31,7 @@ export function bookingOperation(body={}){
 const READS={providers:[false,()=>['jowwa_booking_providers',{}]],track:[false,q=>{if(!/^[a-f0-9]{32}$/.test(q.token||''))bad('رابط المتابعة مش صحيح.');return ['jowwa_booking_track',{p_token:q.token}];}],
  mine:[true,()=>['jowwa_my_bookings',{}]],provider:[true,()=>['jowwa_provider_bookings',{}]]};
 
-export async function dispatchBookingSms(bookingId,env=process.env,{service,send=sendSms}={}){
+export async function dispatchBookingSms(bookingId,env=process.env,{service,send=sendSms,providerDispatch=dispatchProviderOrderAlert}={}){
  if(!UUID.test(bookingId||''))return {sent:0,queued:0};
  if(!smsSendingReady(env))return {sent:0,queued:-1};
  const db=service||createClient(env.NEXT_PUBLIC_SUPABASE_URL,env.SUPABASE_SERVICE_ROLE_KEY,{auth:{persistSession:false,autoRefreshToken:false}});
@@ -38,7 +39,8 @@ export async function dispatchBookingSms(bookingId,env=process.env,{service,send
  let sent=0;
  for(const m of data){let ok=false;try{await send({phone:m.phone,message:m.body,kind:m.kind,idempotencyKey:'booking_'+m.id.replace(/-/g,'')},env);ok=true;sent++;}catch{}
   try{await db.rpc('jowwa_booking_message_done',{p_id:m.id,p_sent:ok});}catch{}}
- return {sent,queued:data.length-sent};
+ const provider=await providerDispatch({source:'booking',sourceId:bookingId},env,{service:db,send});
+ return {sent:sent+provider.sent,queued:data.length-sent+(provider.status==='queued'?1:0)};
 }
 
 const STATUS={'42501':403,'22023':400,'40001':409,'P0001':400};

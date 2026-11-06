@@ -3,6 +3,7 @@ import {esc,publicLink} from './market-core.js';
 import {normalizeEgyptian,shoppingTerms,everydayIntent,buildingMentions,buildingCandidates} from './egyptian-language.js';
 import {placeResults} from './ux.js';
 import {whatsappNumber} from './commerce-core.js';
+import {customerProviderRecord,customerContactText,isPublicContactPlace,providerRequestUrl} from './provider-contact-policy.js';
 
 export const welcomeActions=[
  {id:'navigate',title:'إزاي أروح؟',hint:'خطط طريقك',glyph:'navigation'},
@@ -38,10 +39,28 @@ export function readStoreDraft(store,now=Date.now()){
 }
 export function clearStoreDraft(store){try{store.removeItem(STORE_KEY);}catch{}}
 export function providerContact(record){
+ if(!isPublicContactPlace(record))return {phone:'',whatsapp:''};
  const phone=compact(record?.phone).replace(/[\s()-]/g,'');
  const number=/^\+?\d{3,15}$/.test(phone)?phone:'';
  const whatsapp=record?.whatsapp?whatsappNumber(record.whatsapp):'';
  return {phone:number,whatsapp};
+}
+export function renderWelcomeProviderDetail(record,map){
+ const p=customerProviderRecord(record),contact=providerContact(p),request=providerRequestUrl(p);
+ const link=typeof p.url==='string'&&/^\/place\/[a-zA-Z0-9_-]+$/.test(p.url)?p.url:'/place/'+encodeURIComponent(p.id);
+ const source=isPublicContactPlace(p)?publicLink(p.source):'';
+ return '<div class="journey-provider-detail"><span class="journey-provider-mark">'+icon('store')+'</span><h3>'+esc(p.name)+'</h3><p>'+esc(p.category||'خدمة')+'</p>'
+  +(p.address?'<p class="journey-address">'+icon('map')+' '+esc(p.address)+'</p>':'')
+  +(p.status?'<p class="journey-evidence">'+icon('info')+' '+esc(p.status)+'</p>':'')
+  +(p.checkedAt?'<small>آخر مراجعة للمصدر: '+esc(p.checkedAt)+'</small>':'<small>تاريخ مراجعة المصدر غير محدد</small>')
+  +(Array.isArray(p.priceOffers)&&p.priceOffers.length?'<section class="journey-price-offers"><h4>الأسعار والاشتراكات المعلنة</h4><ul>'+p.priceOffers.filter(o=>o&&o.currency==='EGP'&&typeof o.label==='string'&&Number.isFinite(o.price)&&o.price>=0).slice(0,15).map(o=>'<li><span>'+esc(customerContactText(p,o.label))+'</span><strong>'+new Intl.NumberFormat('ar-EG',{maximumFractionDigits:2}).format(o.price)+' جنيه</strong></li>').join('')+'</ul><p>الأسعار مأخوذة من الإعلان؛ سريانها يتأكد في طلبك على جوه.</p></section>':'')
+  +(request?'<a class="journey-primary" href="'+esc(request)+'" data-provider-request="'+esc(p.id)+'" data-place-name="'+esc(p.name)+'">'+icon('mail')+' ابعت طلب من جوه</a>':'')
+  +(contact.phone?'<a class="journey-primary" href="tel:'+esc(contact.phone)+'">'+icon('phone')+' اتصال بالجهة</a>':'')
+  +(contact.whatsapp?'<a class="journey-secondary" target="_blank" rel="noopener noreferrer" href="https://wa.me/'+contact.whatsapp+'">'+icon('phone')+' تواصل مع الجهة</a>':'')
+  +'<a class="journey-secondary" href="'+esc(link)+'">'+icon('store')+' تفاصيل المكان والمتابعة</a>'
+  +(map?.coordinate?'<button type="button" class="journey-secondary" data-route-to>'+icon('navigation')+' شوف الطريق للمكان</button>':publicLink(p.externalMapUrl)?'<a class="journey-secondary" href="'+esc(publicLink(p.externalMapUrl))+'" target="_blank" rel="noopener noreferrer">'+icon('map')+' افتح الموقع المشارَك في Google Maps</a>':'<p class="journey-hint">موقع الوصول على الخريطة لسه محتاج تأكيد.</p>')
+  +(source?'<a class="journey-link" target="_blank" rel="noopener noreferrer" href="'+esc(source)+'">المصدر المنشور</a>':'')
+  +(request?'<p class="journey-hint">طلبك ورد المكان ومتابعته من جوه. إرسال الطلب مش تأكيد قبول أو حجز؛ هتشوف رد المكان في المتابعة.</p>':'')+'</div>';
 }
 export function matchesNeed(record,branch,filter='',search=''){
  if(!record||typeof record.id!=='string'||!record.name)return false;
@@ -95,8 +114,9 @@ function groupingOptions(places){
  return values.sort((a,b)=>preferred.indexOf(a)<0?1:preferred.indexOf(b)<0?-1:preferred.indexOf(a)-preferred.indexOf(b)).slice(0,20);
 }
 export function mountWelcomeJourney({root,stage,places=[],directory=[],busRoutes=[],onRoute,onSelectEndpoint,onPickMap,onRound,onBus,onAsk,notify=()=>{},onGoHome=()=>{}}){
+ places=places.map(customerProviderRecord);
  const known=new Map(places.filter(p=>p?.id).map(p=>[p.id,p]));
- const publicRows=directory.filter(p=>p&&p.id&&p.name&&!p.archived);
+ const publicRows=directory.filter(p=>p&&p.id&&p.name&&!p.archived).map(customerProviderRecord);
  let state={branch:null,step:'',from:null,to:null,mode:'walk',kind:'',filter:'',query:'',selected:null,store:{name:'',description:'',district:'yasmin'}},history=[];
  let nextFocus=false;
  const q=selector=>stage.querySelector(selector);
@@ -136,21 +156,9 @@ export function mountWelcomeJourney({root,stage,places=[],directory=[],busRoutes
    html='<label class="journey-search-label" for="journey-provider-search">اسم المكان أو نوع الخدمة</label>'
     +'<input type="search" id="journey-provider-search" autocomplete="off" placeholder="اكتب حاجة أدق لو تحب" value="'+esc(state.query)+'">'
     +'<div id="journey-providers" class="journey-providers" aria-live="polite"></div>'
-    +'<p class="journey-hint">المعلومات من دليل جوه. التشغيل والسعر والتوفر لازم يتأكدوا من المكان نفسه.</p>';
+    +'<p class="journey-hint">المعلومات من دليل جوه. المكان يراجع السعر والتوفر ويرد عليك في متابعة طلبك.</p>';
   }else if(state.step==='detail'){
-   const p=state.selected,contact=providerContact(p),link=typeof p.url==='string'&&/^\/place\/[a-zA-Z0-9_-]+$/.test(p.url)?p.url:'/place/'+encodeURIComponent(p.id);
-   const source=publicLink(p.source),map=known.get(p.mapId);
-   html='<div class="journey-provider-detail"><span class="journey-provider-mark">'+icon('store')+'</span><h3>'+esc(p.name)+'</h3><p>'+esc(p.category||'خدمة')+'</p>'
-    +(p.address?'<p class="journey-address">'+icon('map')+' '+esc(p.address)+'</p>':'')
-    +(p.status?'<p class="journey-evidence">'+icon('info')+' '+esc(p.status)+'</p>':'')
-    +(p.checkedAt?'<small>آخر مراجعة للمصدر: '+esc(p.checkedAt)+'</small>':'<small>تاريخ مراجعة المصدر غير محدد</small>')
-    +(Array.isArray(p.priceOffers)&&p.priceOffers.length?'<section class="journey-price-offers"><h4>الأسعار والاشتراكات المعلنة</h4><ul>'+p.priceOffers.filter(o=>o&&o.currency==='EGP'&&typeof o.label==='string'&&Number.isFinite(o.price)&&o.price>=0).slice(0,15).map(o=>'<li><span>'+esc(o.label)+'</span><strong>'+new Intl.NumberFormat('ar-EG',{maximumFractionDigits:2}).format(o.price)+' جنيه</strong></li>').join('')+'</ul><p>الأسعار مأخوذة من الإعلان؛ تأكد من سريانها وقت الحجز.</p></section>':'')
-    +(contact.phone?'<a class="journey-primary" href="tel:'+esc(contact.phone)+'">'+icon('phone')+' اتصل واستفسر عن الطلب</a>':'')
-    +(contact.whatsapp?'<a class="journey-secondary" target="_blank" rel="noopener noreferrer" href="https://wa.me/'+contact.whatsapp+'?text='+encodeURIComponent('أهلًا، وصلت لبياناتكم من جوه. ممكن أعرف تفاصيل الخدمة والتوفر والسعر الحالي؟')+'">'+icon('phone')+' اسأل على واتساب</a>':'')
-    +'<a class="journey-secondary" href="'+esc(link)+'">'+icon('store')+' تفاصيل المكان والتواصل</a>'
-    +(map?.coordinate?'<button type="button" class="journey-secondary" data-route-to>'+icon('navigation')+' شوف الطريق للمكان</button>':publicLink(p.externalMapUrl)?'<a class="journey-secondary" href="'+esc(publicLink(p.externalMapUrl))+'" target="_blank" rel="noopener noreferrer">'+icon('map')+' افتح الموقع المشارَك في Google Maps</a>':'<p class="journey-hint">موقع الوصول على الخريطة لسه محتاج تأكيد.</p>')
-    +(source?'<a class="journey-link" target="_blank" rel="noopener noreferrer" href="'+esc(source)+'">المصدر المنشور</a>':'')
-    +'<p class="journey-hint">الاتصال أو واتساب للاستفسار فقط؛ مفيش طلب متأكد أو معاد محجوز قبل رد مقدم الخدمة.</p></div>';
+   html=renderWelcomeProviderDetail(state.selected,known.get(state.selected?.mapId));
   }else if(state.step==='bus'){
    html='<p class="journey-subline">اختار الخط الأول، وهتشوف المواعيد ومصدرها. مفيش تتبع مباشر للباص.</p>'
     +'<div class="journey-choice-grid">'+busRoutes.map(r=>'<button class="journey-choice" type="button" data-bus-choice="'+esc(r.id)+'">'+icon('bus')+'<strong>'+esc(r.name)+'</strong><small>'+esc(r.statusLabel||'راجع المواعيد')+'</small></button>').join('')+'</div>';
@@ -187,7 +195,7 @@ export function mountWelcomeJourney({root,stage,places=[],directory=[],busRoutes
    const input=q('#journey-place-search'),results=q('#journey-place-options');
    // A listed place without a confirmed location: say so and offer its page or a map pick, instead of an empty list.
    const unmapped=term=>{const hits=placeResults(publicRows.filter(p=>!p.coordinate&&!known.has(p.id)),term).slice(0,3);if(!hits.length)return '';
-    return '<p>'+hits.map(p=>'<b>'+esc(p.name)+'</b>').join('، ')+' موجود في الدليل بس مكانه على الخريطة لسه مش محدد. لو عارف مكانه اضغط «اختار من الخريطة»، أو افتح صفحته وكلّمهم.</p>'+hits.map(p=>'<a class="journey-link" href="'+esc(typeof p.url==='string'&&/^\/place\/[a-zA-Z0-9_-]+$/.test(p.url)?p.url:'/place/'+encodeURIComponent(p.id))+'">صفحة '+esc(p.name)+' ↗</a>').join('');};
+    return '<p>'+hits.map(p=>'<b>'+esc(p.name)+'</b>').join('، ')+' موجود في الدليل بس مكانه على الخريطة لسه مش محدد. لو عارف مكانه اضغط «اختار من الخريطة»، أو افتح صفحته وابعت طلب من جوه.</p>'+hits.map(p=>'<a class="journey-link" href="'+esc(typeof p.url==='string'&&/^\/place\/[a-zA-Z0-9_-]+$/.test(p.url)?p.url:'/place/'+encodeURIComponent(p.id))+'">صفحة '+esc(p.name)+' ↗</a>').join('');};
    const refresh=()=>{
     const term=input.value.trim(),matches=term?placeResults(places.filter(p=>p.coordinate&&!p.external),term).slice(0,7):[];
     results.innerHTML=matches.map(p=>'<button type="button" role="option" data-select-place="'+esc(p.id)+'">'+icon(p.number?'building':'map')+'<span>'+esc(p.name)+'<small>'+(p.number?'العمارة من المخطط • الموقع تقريبي':'موقع من بيانات جوه')+'</small></span></button>').join('')||(term?unmapped(term)||'<p>مش لاقي المكان بالاسم ده؛ جرّب رقم العمارة أو اختاره على الخريطة.</p>':'<p>ابدأ بكتابة رقم العمارة واسم المجمع.</p>');

@@ -25,6 +25,7 @@ export function placeReturnPath(id, query = {}) {
   const path = '/place/' + encodeURIComponent(id || '');
   const params = new URLSearchParams();
   if (query.book === '1') params.set('book', '1');
+  if (query.request === '1') params.set('request', '1');
   if (PRODUCT_ID.test(query.product || '')) params.set('product', query.product);
   return path + (params.size ? '?' + params.toString() : '');
 }

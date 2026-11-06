@@ -1,6 +1,7 @@
 import {icon} from './ui-icons.js';
 import {esc} from './market-core.js';
 import {whatsappNumber} from './commerce-core.js';
+import {isPublicContactPlace,providerRequestUrl,customerContactText} from './provider-contact-policy.js';
 const validId=value=>typeof value==='string'&&/^[a-zA-Z0-9_-]{1,100}$/.test(value);
 export function visitorRouteUrl(place){
  if(!place||!validId(place.id))return '';
@@ -9,20 +10,21 @@ export function visitorRouteUrl(place){
  return id?'/?to='+encodeURIComponent(id)+'&service='+encodeURIComponent(place.id):'';
 }
 export function visitorNote(place){
- if(typeof place.visitorNote==='string'&&place.visitorNote.trim())return place.visitorNote;
+ if(typeof place.visitorNote==='string'&&place.visitorNote.trim())return customerContactText(place,place.visitorNote);
  if(place.serviceKind==='atm'||/صراف آلي/.test(place.category||''))return 'ماكينة صراف، مش فرع بنك. التشغيل وتوافر النقد مش مؤكدين.';
- if(place.precision==='unlocated_service_area')return 'الخدمة بتغطي المنطقة؛ أكد السعر والتغطية والميعاد بالتواصل.';
+ if(place.precision==='unlocated_service_area')return 'الخدمة بتغطي المنطقة؛ ابعت طلبك من جوه لتأكيد السعر والتغطية والميعاد.';
  return 'أكد المواعيد والتوفر قبل الزيارة أو الطلب. مكان الوصول ممكن يكون تقريبي.';
 }
 export function visitorActions(place){
- const phone=String(place?.phone||'').replace(/[\s()-]/g,''),wa=place?.whatsapp?whatsappNumber(place.whatsapp):'',route=visitorRouteUrl(place),name=String(place?.name||'المكان'),actions=[];
- if(/^\+?\d{3,15}$/.test(phone))actions.push('<a class="visitor-action visitor-call" href="tel:'+esc(phone)+'" aria-label="اتصل بـ'+esc(name)+'">'+icon('phone')+'<span>اتصل</span></a>');
- if(wa)actions.push('<a class="visitor-action visitor-whatsapp" href="https://wa.me/'+esc(wa)+'" target="_blank" rel="noopener noreferrer" aria-label="واتساب '+esc(name)+'">'+icon('phone')+'<span>واتساب</span></a>');
+ const phone=String(place?.phone||'').replace(/[\s()-]/g,''),wa=place?.whatsapp?whatsappNumber(place.whatsapp):'',route=visitorRouteUrl(place),request=providerRequestUrl(place),name=customerContactText(place,place?.name||'المكان'),actions=[];
+ if(request)actions.push('<a class="visitor-action visitor-request" href="'+esc(request)+'" data-provider-request="'+esc(place.id)+'" data-place-name="'+esc(name)+'" aria-label="ابعت طلب لـ'+esc(name)+' من جوه">'+icon('mail')+'<span>ابعت طلب من جوه</span></a>');
+ if(isPublicContactPlace(place)&&/^\+?\d{3,15}$/.test(phone))actions.push('<a class="visitor-action visitor-call" href="tel:'+esc(phone)+'" aria-label="اتصل بـ'+esc(name)+'">'+icon('phone')+'<span>اتصل</span></a>');
+ if(isPublicContactPlace(place)&&wa)actions.push('<a class="visitor-action visitor-whatsapp" href="https://wa.me/'+esc(wa)+'" target="_blank" rel="noopener noreferrer" aria-label="واتساب '+esc(name)+'">'+icon('phone')+'<span>واتساب</span></a>');
  if(route)actions.push('<a class="visitor-action visitor-map" href="'+esc(route)+'" aria-label="شوف '+esc(name)+' على الخريطة">'+icon('map')+'<span>شوفه على الخريطة</span></a>');
  return actions.length?'<div class="visitor-actions">'+actions.join('')+'</div>':'';
 }
 export function visitorAddress(place){
- const address=String(place?.address||'العنوان التفصيلي لسه مش محدد'),route=visitorRouteUrl(place);
+ const address=customerContactText(place,place?.address||'العنوان التفصيلي لسه مش محدد'),route=visitorRouteUrl(place);
  return '<div class="visitor-address">'+icon('locate')+'<div><strong>العنوان</strong><span>'+esc(address)+'</span>'+(route?'<small>اختار بداية المشوار: موقعك بإذنك أو نقطة تحددها.</small>':'')+'</div></div>';
 }
 function removeSourceActions(root){
@@ -37,7 +39,7 @@ export function enhanceVisitorCards(root,records){
  const byId=new Map(records.map(p=>[p.id,p])),byName=new Map(records.map(p=>[p.name,p]));
  for(const card of root.querySelectorAll(visitorCardSelector)){
   if(card.dataset.visitorEnhanced==='1')continue;
-  const target=card.dataset.analyticsTarget||card.querySelector('a[href^="/place/"]')?.getAttribute('href')||'',id=target.split('/place/')[1];
+  const target=card.dataset.analyticsTarget||card.querySelector('a[href^="/place/"]')?.getAttribute('href')||'',id=(target.split('/place/')[1]||'').split(/[?#]/)[0];
   const p=byId.get(id)||(card.classList.contains('journey-provider-detail')?byName.get(card.querySelector('h3')?.textContent.trim()):null);if(!p)continue;
   card.dataset.visitorEnhanced='1';
   if(p.directoryGroup&&!card.classList.contains('place-detail')){card.hidden=true;continue;}
@@ -45,10 +47,10 @@ export function enhanceVisitorCards(root,records){
   host.querySelectorAll('.contact-links,.visitor-actions,.journey-address,button[data-route-to],button[data-place]').forEach(el=>el.remove());
   for(const a of host.querySelectorAll('a')){
    const href=a.getAttribute('href')||'',text=a.textContent.trim();
-   if(href.startsWith('tel:')||href.startsWith('https://wa.me/')||href.startsWith('/?to=')||/^(المصدر المنشور|مصدر المعلومة|مصدر المكان|شاهد المصدر|المصدر)$/.test(text)||text.includes('Google Maps'))a.remove();
+   if(/^(?:tel:|sms:|https:\/\/(?:wa\.me|api\.whatsapp\.com)\/)/i.test(href)||(!isPublicContactPlace(p)&&/^https?:\/\//i.test(href)&&!a.closest('.place-evidence'))||href.startsWith('/?to=')||/^(المصدر المنشور|مصدر المعلومة|مصدر المكان|شاهد المصدر|المصدر)$/.test(text)||text.includes('Google Maps'))a.remove();
    else if(text.includes('التفاصيل والمصدر'))a.textContent='تفاصيل المكان';
   }
-  for(const el of host.querySelectorAll('p,small')){if(el.textContent.trim()===p.address||el.textContent.startsWith('آخر مراجعة للمصدر:'))el.remove();}
+  for(const el of host.querySelectorAll('p,small')){if(el.textContent.trim()===p.address||el.textContent.startsWith('آخر مراجعة للمصدر:'))el.remove();else if(!el.children.length)el.textContent=customerContactText(p,el.textContent);}
   const evidence=host.querySelector('.journey-evidence');if(evidence)evidence.textContent=visitorNote(p);
   const slot=document.createElement('div');slot.className='visitor-contact-panel';slot.innerHTML=visitorAddress(p)+visitorActions(p);
   const heading=host.querySelector('h1,h2,h3,h4');if(heading&&heading.parentElement===host)heading.after(slot);else host.append(slot);

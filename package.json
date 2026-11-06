@@ -10,7 +10,8 @@
     "build": "node scripts/build.mjs --production"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.118.0"
+    "@supabase/supabase-js": "^2.118.0",
+    "@vercel/functions": "3.11.0"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.15",

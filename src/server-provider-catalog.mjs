@@ -4,6 +4,8 @@ import {createHash,randomUUID} from 'node:crypto';
 import {authenticatedMember,noStore} from './server-member.mjs';
 import {validKey,validateProviderFields,validateProduct,catalogForProvider,basketTotal} from '../public/provider-catalog-core.js';
 import {linkedProviderCatalog} from './provider-linked-products.mjs';
+import {customerProviderRecord} from '../public/provider-contact-policy.js';
+import {dispatchProviderOrderAlert} from './server-provider-alerts.mjs';
 const fail=(message,status=400)=>{throw Object.assign(Error(message),{status});};
 export function catalogOverrideKey(providerId,productId){return 'provider-product-'+createHash('sha256').update(providerId+':'+productId).digest('hex').slice(0,40);}
 export async function readProviderState(db,{read=readFile,providerId=null}={}){
@@ -69,7 +71,7 @@ export function createProviderHandler({admin=false,...options}={}){return async(
     } catch {}
    }
    let concierge=false;if(!admin&&!orderGate?.canOrder){try{const c=await member.db.rpc('jowwa_concierge_availability',{p_ids:[provider.id]});concierge=c.data?.[provider.id]===true;}catch{}}
-   return reply(200,{provider,products,orderGate,orderSettings,readiness,admin,concierge,analytics:metricsFor(provider,products),versions:admin?Object.fromEntries(state.overrides.filter(x=>x.data?.providerId===id).map(x=>[x.data.productId,x.updated_at])):undefined});
+   return reply(200,{provider:admin?provider:customerProviderRecord(provider),products:admin?products:products.map(customerProviderRecord),orderGate,orderSettings,readiness,admin,concierge,analytics:metricsFor(provider,products),versions:admin?Object.fromEntries(state.overrides.filter(x=>x.data?.providerId===id).map(x=>[x.data.productId,x.updated_at])):undefined});
   }
   if(!admin){
    if(body.action==='concierge_order')return reply(200,await conciergeOrder(body,state,member,options));
@@ -111,11 +113,13 @@ export const providerAdmin=createProviderHandler({admin:true});
 // "الطلب عن طريق جوه": price the basket on the server from the published catalog, then
 // create the order with the service role (the DB function refuses any other caller).
 const UUID=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
-export async function conciergeOrder(body,state,member,{env=process.env,serviceFactory=createClient,catalogOverride=null}={}){
- const keys=['action','providerId','requestId','lines','customer','fulfillment'];
+export async function conciergeOrder(body,state,member,{env=process.env,serviceFactory=createClient,catalogOverride=null,dispatch=dispatchProviderOrderAlert}={}){
+ const keys=['action','providerId','requestId','lines','customer','fulfillment','customerConsent'];
  if(Object.keys(body).some(k=>!keys.includes(k))||!validKey(body.providerId)||!UUID.test(String(body.requestId))||!['delivery','pickup'].includes(body.fulfillment)||!Array.isArray(body.lines)||!body.lines.length||body.lines.length>60)fail('راجع بيانات الطلب.');
  const c=body.customer;if(!c||typeof c!=='object'||Array.isArray(c)||Object.keys(c).some(k=>!['name','phone','address','note'].includes(k)))fail('راجع بيانات التواصل.');
- const name=String(c.name||'').trim(),phone=String(c.phone||'').replace(/[^0-9+]/g,''),address=String(c.address||'').trim(),note=String(c.note||'').trim();
+ if(body.customerConsent!==true)fail('وافق على مشاركة تفاصيل الطلب ورقم حسابك المؤكد مع النشاط لمتابعته.');
+ if(!member.user?.phone_confirmed_at)fail('أكد رقم حسابك الأول عشان نكمّل الطلب.',403);
+ const name=String(c.name||'').trim(),phone=String(member.user.phone||'').replace(/[^0-9+]/g,''),address=String(c.address||'').trim(),note=String(c.note||'').trim();
  if(name.length<2||name.length>60)fail('اكتب اسمك.');if(!/^\+?[0-9]{8,15}$/.test(phone))fail('رقم الموبايل غير صحيح.');
  if(body.fulfillment==='delivery'&&address.length<5)fail('اكتب عنوان التوصيل بالتفصيل.');if(address.length>300||note.length>500)fail('النص أطول من المسموح.');
  const provider=state.providers.find(p=>p.id===body.providerId&&!p._archived);if(!provider)fail('المكان لم يعد متاحًا.',404);
@@ -126,6 +130,8 @@ export async function conciergeOrder(body,state,member,{env=process.env,serviceF
  const svc=serviceFactory(url,key,{auth:{persistSession:false,autoRefreshToken:false}});
  const items=quote.items.map(x=>({id:x.id,title:x.title,quantity:x.quantity,unitPrice:x.unitPrice,lineTotal:x.lineTotal}));
  const r=await svc.rpc('jowwa_concierge_checkout',{p_buyer:member.user.id,p_request_id:body.requestId,p_directory_id:provider.id,p_provider_name:provider.name||'',p_items:items,p_total:quote.knownTotal,p_has_unpriced:quote.unpriced>0,p_customer:{name,phone,address,note},p_fulfillment:body.fulfillment});
- if(r.error){const m=String(r.error.message||'');fail(/not available/i.test(m)?'الطلب عن طريق جوه مش متاح للمكان ده دلوقتي.':/Too many/i.test(m)?'طلبات كتير في وقت قصير. استنى شوية.':'تعذر إرسال الطلب. حاول تاني.',/not available|Too many/i.test(m)?409:503);}
- return {order:r.data,quote};
+ if(r.error){if(['40001','23505'].includes(r.error.code))fail('الطلب محفوظ ببيانات مختلفة أو اتغير. افتح طلباتك وراجع الطلب قبل إعادة الإرسال.',409);const m=String(r.error.message||'');fail(/not available/i.test(m)?'الطلب عن طريق جوه مش متاح للمكان ده دلوقتي.':/Too many/i.test(m)?'طلبات كتير في وقت قصير. استنى شوية.':'تعذر إرسال الطلب. حاول تاني.',/not available|Too many/i.test(m)?409:503);}
+ let notification={status:'queued',sent:0};if(r.data?.id){try{notification=await dispatch({source:'concierge_order',sourceId:r.data.id},env,{service:svc});}catch{}}
+ const order={...r.data};delete order.providerPhone;
+ return {order,quote,notification};
 }

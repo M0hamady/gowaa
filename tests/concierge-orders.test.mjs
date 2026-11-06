@@ -46,15 +46,17 @@ let order;
 test('server prices the basket from the catalog; client prices are ignored; idempotent per request',async()=>{
  const state={providers:[{id:PLACE,name:'FOV Cafe'}],menus:[],overrides:[]};
  const products=[{id:'directory-menu-fov-1',providerId:PLACE,title:'لاتيه',price:95,taxIncluded:true},{id:'directory-menu-fov-2',providerId:PLACE,title:'كرواسون',price:60,taxIncluded:true}];
- const member={user:{id:U.buyer},db:{rpc:async()=>({data:[]}),from:()=>({select:()=>({eq:()=>({eq:()=>({in:()=>({data:[]})})})})})}};
+ const member={user:{id:U.buyer,phone:'201000000001',phone_confirmed_at:new Date().toISOString()},db:{rpc:async()=>({data:[]}),from:()=>({select:()=>({eq:()=>({eq:()=>({in:()=>({data:[]})})})})})}};
 
  // Feed the products through the same catalog function the handler uses.
  const env={NEXT_PUBLIC_SUPABASE_URL:'https://local.test',SUPABASE_SERVICE_ROLE_KEY:'service'};
  const run=(body)=>conciergeOrderWith(body,products,state,member,env);
  const rid=randomUUID();
- const body={action:'concierge_order',providerId:PLACE,requestId:rid,lines:[{id:'directory-menu-fov-1',quantity:2},{id:'directory-menu-fov-2',quantity:1}],fulfillment:'delivery',customer:{name:'سارة',phone:'01000000001',address:'الياسمين عمارة 5 الدور 2',note:'بدون سكر'}};
+ const body={action:'concierge_order',customerConsent:true,providerId:PLACE,requestId:rid,lines:[{id:'directory-menu-fov-1',quantity:2},{id:'directory-menu-fov-2',quantity:1}],fulfillment:'delivery',customer:{name:'سارة',phone:'01000000001',address:'الياسمين عمارة 5 الدور 2',note:'بدون سكر'}};
  const r=await run(body);order=r.order;
- assert.equal(r.quote.knownTotal,250);assert.match(order.trackingToken,/^[a-f0-9]{64}$/);
+ assert.equal(r.quote.knownTotal,250);assert.equal(order.providerPhone,undefined);
+ await assert.rejects(run({...body,customerConsent:false}),/وافق/);
+ await assert.rejects(conciergeOrderWith(body,products,state,{...member,user:{id:U.buyer,phone:'201000000001'}},env),/أكد رقم/);assert.match(order.trackingToken,/^[a-f0-9]{64}$/);
  assert.equal((await run(body)).order.replayed,true,'same requestId -> same order');
  await assert.rejects(run({...body,requestId:randomUUID(),lines:[{id:'directory-menu-fov-1',quantity:1,price:1}]}).then(x=>{const it=x.quote.items[0];assert.equal(it.unitPrice,95,'client price ignored');throw Error('ok');}),/ok/);
  await assert.rejects(run({...body,requestId:randomUUID(),lines:[{id:'not-on-menu',quantity:1}]}),/مش متاحة/);
@@ -65,13 +67,13 @@ test('server prices the basket from the catalog; client prices are ignored; idem
 
 // Same code path as the HTTP handler, with the catalog injected for the test.
 async function conciergeOrderWith(body,products,state,member,env){
- return conciergeOrder(body,state,member,{env,serviceFactory:()=>svc(),catalogOverride:()=>products});
+ return conciergeOrder(body,state,member,{env,serviceFactory:()=>svc(),catalogOverride:()=>products,dispatch:async()=>({status:'queued',sent:0})});
 }
 
 test('order desk: status flow, reasons required, customer tracking shows no personal data',async()=>{
  const desk=await rpc('pm','jowwa_admin_concierge_orders',{p_state:'new',p_days:7});
  const o=desk.orders.find(x=>x.id===order.id);
- assert.equal(o.customer.phone,'01000000001');assert.equal(o.providerPhone,'01000000099');
+ assert.equal(o.customer.phone,'201000000001');assert.equal(o.providerPhone,'01000000099');
  await err(rpc('stranger','jowwa_admin_concierge_orders',{p_state:'',p_days:7}),'42501');
  await err(rpc('pm','jowwa_admin_concierge_update',{p_order:o.id,expected_version:o.version,p_state:'delivered',p_note:''}),'22023');
  await err(rpc('pm','jowwa_admin_concierge_update',{p_order:o.id,expected_version:o.version,p_state:'rejected',p_note:''}),'22023');

@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import {visitorActions} from '../public/visitor-services.js';
 import {isMarketBusiness} from '../public/market-places-core.js';
 
 const ui = fs.readFileSync(new URL('../src/market.js', import.meta.url), 'utf8');
@@ -8,11 +9,11 @@ const placesUi = fs.readFileSync(new URL('../src/market-places-ui.js', import.me
 const places = JSON.parse(fs.readFileSync(new URL('../public/data/places.json', import.meta.url), 'utf8'));
 const reserve = JSON.parse(fs.readFileSync(new URL('../data/reserve/kayan-community-guide-2027.json', import.meta.url), 'utf8'));
 
-test('market has a separate shops and restaurants view with a VOYA join path', () => {
+test('market keeps shops discoverable and VOYA requests inside Jowwa', () => {
   assert.match(ui, /محلات ومطاعم/);
-  assert.match(ui, /directory-voya-house/);
-  assert.match(ui, /دعوة للانضمام على واتساب/);
-  assert.match(ui, /كمّل بياناتك من هنا/);
+  const voya=places.find(p=>p.id==='directory-voya-house');assert.ok(voya);const actions=visitorActions(voya);
+  assert.match(actions,/data-provider-request="directory-voya-house"/);assert.match(actions,/request=1/);
+  assert.doesNotMatch(actions,/tel:|wa\.me|sms:/);assert.doesNotMatch(ui,/دعوة للانضمام على واتساب/);
 });
 
 test('confirmed food provider is promoted with ownership and offerings', () => {

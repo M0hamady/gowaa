@@ -14,9 +14,9 @@ test('bank additions are idempotent, separate ATMs, with no invented phones or h
  assert.equal(get('directory-atms-sunmall').directoryGroup,true);
  const html=renderDirectory(records,'banks');for(const p of banks)assert.ok(html.includes('/place/'+p.id));assert.doesNotMatch(html,/href="\/place\/directory-atms-sunmall"/);
 });
-test('visitor cards show icon phone, conditional WhatsApp, address and native route link',()=>{
+test('business visitor cards use an in-app request, address and native route link',()=>{
  const p=get('directory-koshary'),html=visitorActions(p);
- assert.match(html,/href="tel:01040446383"/);assert.match(html,/visitor-call/);assert.match(html,/<svg/);assert.match(html,/wa.me\/201040446383/);assert.match(html,/شوفه على الخريطة/);
+ assert.match(html,/href="\/place\/directory-koshary\?request=1"/);assert.match(html,/data-provider-request="directory-koshary"/);assert.match(html,/<svg/);assert.doesNotMatch(html,/tel:|wa.me|01040446383/);assert.match(html,/شوفه على الخريطة/);
  const url=new URL(visitorRouteUrl(p),'https://example.test');assert.equal(url.searchParams.get('to'),p.mapId);assert.equal(url.searchParams.get('service'),p.id);assert.match(visitorAddress(p),/العنوان/);
  const wash=get('directory-mobile-car-wash-kayan');assert.equal(visitorRouteUrl(wash),'');assert.doesNotMatch(visitorActions(wash),/wa.me|visitor-map/);
 });
@@ -27,7 +27,7 @@ test('unsafe contact and map values never become actionable links',()=>{
 test('ordinary detail page hides source buttons while retaining reviewed source data and order gates',()=>{
  const p=get('directory-mobile-car-wash-kayan'),source=p.source,html=renderPlace(p,records);
  assert.doesNotMatch(html,/>\s*(شاهد المصدر|مصدر المعلومة|المصدر المنشور)\s*</);
- assert.match(html,/الطلب يتاح بعد تأكيد صاحب الخدمة/);assert.match(html,/01116039386/);assert.match(html,/٢٥٠/);assert.equal(p.source,source);
+ assert.match(html,/تقدر تبعت طلبك من جوه/);assert.doesNotMatch(html,/01116039386|telephone|href="tel:/);assert.match(html,/٢٥٠/);assert.equal(p.source,source);
 });
 test('all user shared map points are routable and preserve the original service page ids',()=>{
  for(const id of ['directory-international-garden-kayan','directory-projects-office-kayan','directory-gate4-mall','directory-fuel-near-sunmall','directory-madkour-yasmin-330','directory-gas-office-yasmin-188']){

@@ -29,7 +29,7 @@ test('new public directory and generated place catalog agree without duplicating
  assert.equal(new Set(live.map(p=>p.id)).size,live.length);
  assert.equal(live.filter(p=>p.id==='poi-1122262346').length,1);
 });
-test('at-home wash service keeps exactly 5 user-advertised offers and published phone',()=>{
+test('at-home wash keeps its five advertised offers and routes customer requests through Jowwa',()=>{
  assert.ok(wash);
  assert.equal(wash.businessOwnerVerified,false);
  assert.equal(wash.providerManaged,false);
@@ -41,11 +41,11 @@ test('at-home wash service keeps exactly 5 user-advertised offers and published 
  assert.equal(providerContact(wash).whatsapp,'');
  assert.match(renderPublishedPriceOffers(wash),/٤٥٠/);
  const html=renderPlace(wash,live);
- assert.match(html,/01116039386/);
+ assert.doesNotMatch(html,/01116039386|href="tel:/);assert.match(html,/data-provider-request="directory-mobile-car-wash-kayan"/);
  assert.match(html,/الأسعار والاشتراكات المعلنة/);
  assert.match(html,/3 مرات في الشهر/);
  assert.doesNotMatch(html,/https:\/\/wa\.me\/201116039386/);
- assert.match(html,/الطلب يتاح بعد تأكيد صاحب الخدمة/);
+ assert.match(html,/إرسال الطلب مش حجزًا مؤكدًا/);
 });
 test('new categories are searchable, and planned cinema/Carrefour are not falsely open',()=>{
  assert.ok(matchesNeed(wash,'services','غسيل سيارات',''));

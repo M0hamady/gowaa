@@ -18,6 +18,9 @@
  "rewrites":[
   {"source":"/api/member","destination":"/api/service-claims?__serviceRoute=member"},
   {"source":"/api/provider-catalog","destination":"/api/service-claims?__serviceRoute=provider-catalog"},
+  {"source":"/api/provider-requests","destination":"/api/service-claims?__serviceRoute=provider-requests"},
+  {"source":"/api/provider-alerts","destination":"/api/service-claims?__serviceRoute=provider-alerts"},
+  {"source":"/api/shop-checkout","destination":"/api/service-claims?__serviceRoute=shop-checkout"},
   {"source":"/api/provider-admin","destination":"/api/service-claims?__serviceRoute=provider-admin"},
   {"source":"/api/seller-orders","destination":"/api/service-claims?__serviceRoute=orders"},
   {"source":"/api/order-track","destination":"/api/service-claims?__serviceRoute=tracking"},
@@ -50,7 +53,7 @@
   "api/menu.mjs":{"includeFiles":"public/data/{places,market-directory}.json"},
   "api/sitemap.mjs":{"includeFiles":"public/data/{places,market-directory}.json"},
   "api/notifications-daily.mjs":{"maxDuration":60},
-  "api/service-claims.mjs":{"includeFiles":"public/data/{places,market-directory,transit,map,transport-hubs}.json","maxDuration":30}
+  "api/service-claims.mjs":{"includeFiles":"public/data/{places,market-directory,transit,map,transport-hubs}.json","maxDuration":300}
  },
  "crons":[{"path":"/api/notifications-daily","schedule":"5 22 * * *"}]
 }

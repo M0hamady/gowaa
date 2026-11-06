@@ -32,7 +32,7 @@ function dispatchError(code){return Object.assign(Error(code),{code});}
 /** Server-only dispatch, shared atomic segment budget with OTP and alerts. Never logs content. */
 export async function sendSms({phone,message,kind,idempotencyKey},env=process.env,{client,fetcher=fetch}={}){
  if(!smsSendingReady(env))throw dispatchError('sms_unavailable');
- let recipient;try{recipient=normalizeEgyptianPhone(phone);}catch{throw dispatchError('sms_invalid');}if(typeof message!=='string'||!message.trim()||message.length>500||!['otp','registration','daily_summary','round_invitation','provider_invitation','booking_request','booking_reply','assistant_request'].includes(kind)||!/^[A-Za-z0-9_-]{1,160}$/.test(idempotencyKey||''))throw dispatchError('sms_invalid');
+ let recipient;try{recipient=normalizeEgyptianPhone(phone);}catch{throw dispatchError('sms_invalid');}if(typeof message!=='string'||!message.trim()||message.length>500||!['otp','registration','daily_summary','round_invitation','provider_invitation','booking_request','booking_reply','assistant_request','provider_order','provider_order_invitation'].includes(kind)||!/^[A-Za-z0-9_-]{1,160}$/.test(idempotencyKey||''))throw dispatchError('sms_invalid');
  const deadline=AbortSignal.timeout(kind==='otp'?4000:30000);
  const db=client||createClient(env.NEXT_PUBLIC_SUPABASE_URL,env.SUPABASE_SERVICE_ROLE_KEY,{auth:{persistSession:false,autoRefreshToken:false},global:{fetch:(url,options)=>fetch(url,{...options,signal:deadline})}}),units=smsSegments(message),eventId=(kind==='otp'?'otp_':'notify_')+idempotencyKey;
  if(units>5)throw dispatchError('sms_invalid');

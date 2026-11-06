@@ -21,7 +21,7 @@ const bridge = role => (url, key, options) => {
 };
 
 test.before(async () => {
-  ({db} = await freshDb({upTo: '034'}));as = actor(db);
+  ({db} = await freshDb({upTo: '038'}));as = actor(db);
   await db.query(`insert into auth.users(id,phone,phone_confirmed_at) values($1,'201011112222',now()),($2,'201555130441',now()),($3,null,null)`, [customer, owner, admin]);
   await db.query('insert into public.jowwa_admin_users(user_id) values($1)', [admin]);
   await db.query(`insert into public.sellers(id,name,district,phone,publish_phone) values($1,'El kayan Sport Academy','yasmin','',false)`, [owner]);
@@ -40,7 +40,7 @@ test('validation happens before the database', () => {
   assert.throws(() => bookingOperation({action: 'decide', id: randomUUID(), version: 1, decision: 'maybe'}));
 });
 
-test('through the API: request sends 2 SMS (customer gets the tracking link), approval sends the academy number', async () => {
+test('through the API: request sends customer tracking and provider inbox alerts; approval stays inside Jowwa', async () => {
   assert.equal((await call(null, {action: 'create'})).statusCode, 401);
   const providers = await call(null, {action: 'providers'}, 'GET');assert.equal(providers.statusCode, 200);assert.equal(providers.body.data[0].maxAge, 17);
   const requestId = randomUUID();
@@ -49,7 +49,7 @@ test('through the API: request sends 2 SMS (customer gets the tracking link), ap
   assert.equal(sent.length, 2);
   const c = sent.find(m => m.phone === '+201011112222'), a = sent.find(m => m.phone === '+201555130441');
   assert.equal(c.kind, 'booking_request');assert.ok(c.message.includes('/track#b-' + r.body.data.trackingToken));
-  assert.match(a.message, /طلب حجز جديد/);assert.match(c.idempotencyKey, /^booking_[0-9a-f]{32}$/);
+  assert.equal(a.kind,'provider_order');assert.match(a.message, /طلب جديد/);assert.ok(a.message.includes('providerInbox=1'));assert.match(c.idempotencyKey, /^booking_[0-9a-f]{32}$/);
   const retry = await call(tok(customer), {action: 'create', directoryId: 'community-kayan-football-academy', requestId, parentName: 'منى', kidsCount: 2, ages: [5, 9], preferred: 'الجمعة', note: ''});
   assert.equal(retry.body.data.replayed, true);assert.equal(sent.length, 2, 'a retried request sends nothing new');
   const bad = await call(tok(customer), {action: 'create', directoryId: 'community-kayan-football-academy', requestId: randomUUID(), parentName: 'منى', kidsCount: 1, ages: [1], preferred: '', note: ''});
@@ -59,10 +59,10 @@ test('through the API: request sends 2 SMS (customer gets the tracking link), ap
   const forbidden = await call(tok(customer), {action: 'decide', id: r.body.data.id, version: 1, decision: 'approved', reply: ''});assert.equal(forbidden.statusCode, 403);
   const ok = await call(tok(owner), {action: 'decide', id: r.body.data.id, version: 1, decision: 'approved', reply: 'أهلا بيكم'});
   assert.equal(ok.statusCode, 200);assert.equal(sent.length, 3);
-  assert.equal(sent[2].phone, '+201011112222');assert.equal(sent[2].kind, 'booking_reply');assert.match(sent[2].message, /01555130441/);
+  assert.equal(sent[2].phone, '+201011112222');assert.equal(sent[2].kind, 'booking_reply');assert.ok(sent[2].message.includes('/track#b-'+r.body.data.trackingToken));assert.ok(!sent[2].message.includes('01555130441'));
   const conflict = await call(tok(owner), {action: 'decide', id: r.body.data.id, version: 1, decision: 'declined', reply: ''});assert.equal(conflict.statusCode, 409);
   const track = await call(null, {action: 'track', token: r.body.data.trackingToken}, 'GET');
-  assert.equal(track.body.data.status, 'approved');assert.equal(track.body.data.contactPhone, '01555130441');assert.ok(!JSON.stringify(track.body).includes('منى'));
+  assert.equal(track.body.data.status, 'approved');assert.ok(!('contactPhone' in track.body.data));assert.ok(!JSON.stringify(track.body).includes('منى'));
 });
 
 test('without SMS settings the messages wait in the queue instead of failing the booking', async () => {

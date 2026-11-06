@@ -13,9 +13,9 @@ test('directory metadata and public cards escape content and encode IDs',()=>{
  const html=renderPlace(p,[p]);assert.ok(html.includes('&lt;img'));assert.ok(!html.includes('<img src=x'));assert.ok(!html.includes('href="javascript:'));assert.ok(!html.includes('content="" onload='));assert.ok(html.includes('/place/x%22%20onclick%3D%22bad'));
  assert.equal(metadataUrl('//external.test/img'),'https://jowwa-kayan.vercel.app/social/places.png');assert.equal(metadataUrl('/social/test.png'),'https://jowwa-kayan.vercel.app/social/test.png');
 });
-test('reviewed provider details expose safe contact/menu/photo links without implying endorsement',()=>{
+test('reviewed provider details retain photos and ownership while routing all requests through Jowwa',()=>{
  const p={id:'directory-business',name:'نشاط محلي',phone:'01010060011',whatsapp:'01010060011',facebook:'https://facebook.com/business/',instagram:'https://instagram.com/business/',menuUrl:'https://example.com/menu',image:'https://example.com/photo.jpg',providerManaged:true,providerNote:'معلومات راجعتها الإدارة؛ ليست اعتمادًا رسميًا.'};
- const html=renderPlace(p,[p]);assert.ok(html.includes('https://wa.me/201010060011'));assert.ok(html.includes('https://facebook.com/business/'));assert.ok(html.includes('https://instagram.com/business/'));assert.ok(html.includes('/market?claim=directory-business'));assert.ok(html.includes('ليست اعتمادًا رسميًا'));assert.ok(html.includes('src="https://example.com/photo.jpg"'));
+ const html=renderPlace(p,[p]);assert.doesNotMatch(html,/01010060011|https:\/\/wa\.me|https:\/\/facebook\.com\/business|https:\/\/instagram\.com\/business/);assert.match(html,/data-provider-request="directory-business"/);assert.ok(html.includes('/market?claim=directory-business'));assert.ok(html.includes('ليست اعتمادًا رسميًا'));assert.ok(html.includes('src="https://example.com/photo.jpg"'));
  const unsafe=renderPlace({...p,whatsapp:'" onclick="bad',image:'javascript:bad()',facebook:'https://unrelated.test/'},[]);assert.ok(!unsafe.includes('href="https://unrelated.test/'));assert.ok(!unsafe.includes('src="javascript:'));assert.ok(!unsafe.includes('https://wa.me/'));
 });
 test('bus public page preserves distinct weekday schedules and suppresses suspended times',()=>{

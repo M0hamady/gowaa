@@ -52,7 +52,7 @@ export async function ensureBookingMember(){
  if(promptPromise)return promptPromise;
  phoneRequired=true;afterLogin=null;promptPromise=new Promise(resolve=>{completePrompt=resolve;});
  if(config.phoneAuth===true)phoneAuth.open(finish,{link:!!actualUser});
- else{modal('<h2>أكد رقمك لاستقبال رد الحجز</h2><p>الحجز محتاج رقم موبايل مؤكد. تأكيد الرقم مش متاح مؤقتًا؛ تقدر تتواصل مع المكان من صفحته.</p><button type="button" id="booking-phone-later" class="secondary">رجوع لصفحة المكان</button>');document.getElementById('booking-phone-later').onclick=cancel;}
+ else{modal('<h2>أكد رقمك لمتابعة طلبك</h2><p>إرسال الطلب محتاج رقم موبايل مؤكد. تأكيد الرقم مش متاح مؤقتًا؛ جرّب من حسابك تاني بعد شوية.</p><button type="button" id="booking-phone-later" class="secondary">رجوع لصفحة المكان</button>');document.getElementById('booking-phone-later').onclick=cancel;}
  return promptPromise;
 }
 function needsMember(target){

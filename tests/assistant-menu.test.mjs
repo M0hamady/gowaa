@@ -51,5 +51,5 @@ test('actual VOYA V60 card preserves before-tax price and undisclosed publicatio
 test('source price date is used rather than collection date and unknown prices stay unknown',()=>{
  const result=normalizeAnswer({intent:'shop',menuIds:['dated','unpriced']},buildGrounding({places:[{id:'fov',name:'FOV'}],menus:[{...menu,id:'dated',pricePublishedAt:'2026-10-02',checkedAt:'2026-11-04'},{...menu,id:'unpriced',price:null,sourcePublishedAt:null,checkedAt:'2026-11-04',taxIncluded:false,taxRate:14}]}));
  assert.equal(result.menus[0].sourcePublishedAt,'2026-10-02');assert.match(result.menus[0].sourceNote,/2026-10-02/);
- assert.equal(result.menus[1].price,'اسأل المحل عن السعر');assert.equal(result.menus[1].sourcePublishedAt,null);assert.match(result.menus[1].sourceNote,/تاريخ النشر غير معلن/);
+ assert.equal(result.menus[1].price,'اسأل المحل عن السعر من جوه');assert.equal(result.menus[1].sourcePublishedAt,null);assert.match(result.menus[1].sourceNote,/تاريخ النشر غير معلن/);
 });
