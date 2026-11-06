@@ -1,6 +1,6 @@
 """Branded 1200x630 link cards in the site font (Cairo), Arabic shaped with Pillow/RAQM.
 A place with its own reviewed shop photos shows them in the card; never customer photos."""
-from PIL import Image,ImageDraw,ImageFont,ImageOps
+from PIL import ImageChops, Image,ImageDraw,ImageFont,ImageOps
 from pathlib import Path
 import json
 root=Path(__file__).resolve().parents[1]
@@ -33,8 +33,11 @@ def logo_frame(im,logo,photos):
  g.ellipse((o-4*S,o-4*S,o+2*r*S+4*S,o+2*r*S+4*S),fill=(18,62,50,255))
  g.ellipse((o,o,o+2*r*S,o+2*r*S),fill=(255,255,255,255))
  big=big.resize((2*r+40,2*r+40),Image.LANCZOS)
+ # Clip to the white plate so square logos never spill over the ring.
  lg=Image.open(logo).convert('RGBA');inner=int(r*2*0.9);lg=ImageOps.contain(lg,(inner,inner),Image.LANCZOS)
- big.alpha_composite(lg,((2*r+40-lg.width)//2,(2*r+40-lg.height)//2))
+ layer=Image.new('RGBA',big.size,(0,0,0,0));layer.alpha_composite(lg,((2*r+40-lg.width)//2,(2*r+40-lg.height)//2))
+ m=Image.new('L',(big.width*S,big.height*S),0);ImageDraw.Draw(m).ellipse((20*S+2*S,20*S+2*S,20*S+2*r*S-2*S,20*S+2*r*S-2*S),fill=255);m=m.resize(big.size,Image.LANCZOS)
+ layer.putalpha(ImageChops.multiply(layer.getchannel('A'),m));big.alpha_composite(layer)
  im.paste(big,(cx-r-20,cy-r-20),big)
  d=ImageDraw.Draw(im);bx,by=cx,cy+r+26
  d.rounded_rectangle((bx-92,by-24,bx+92,by+24),radius=24,fill='#d1f36a')
@@ -83,5 +86,5 @@ def shop_photos(p):
 for p in json.loads((root/'public/data/places.json').read_text('utf-8')):
  photos=shop_photos(p);lv=p.get('logo') or '';lf=root/'public'/lv.lstrip('/')
  logo=lf if lv.startswith('/logos/') and lf.exists() else None
- card(p['id'],p['name'],'المنيو والصور والتواصل' if photos or logo else 'التفاصيل والتواصل ومصدر المعلومة',p['category']+' • دليل جوه',photos,logo)
+ card(p['id'],p['name'],'احجز لأولادك من جوه' if p.get('bookings') else 'المنيو والصور والتواصل' if photos or logo else 'التفاصيل والتواصل ومصدر المعلومة',p['category']+' • دليل جوه',photos,logo)
 print('Generated',len(list(out.glob('*.png'))),'Arabic social cards at 1200 x 630')

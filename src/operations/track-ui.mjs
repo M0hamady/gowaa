@@ -2,7 +2,7 @@
 const $=s=>document.querySelector(s);
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const STATE={assigned:'الطيار هيستلم طلبك قريب',picked_up:'طلبك في الطريق',delivered:'طلبك اتسلّم',failed:'التوصيل متعملش — المحل هيتواصل معاك'};
-const token=(location.hash.match(/[a-f0-9]{64}/)||[])[0],isConcierge=/^#c-/.test(location.hash);
+const isBooking=/^#b-[a-f0-9]{32}$/.test(location.hash),token=isBooking?location.hash.slice(3):(location.hash.match(/[a-f0-9]{64}/)||[])[0],isConcierge=/^#c-/.test(location.hash);
 const C_STATE={new:'طلبك وصل لفريق جوه وبنأكده مع المكان',confirmed:'المكان أكد طلبك',preparing:'طلبك بيتجهز',on_the_way:'طلبك في الطريق',ready_for_pickup:'طلبك جاهز للاستلام',delivered:'طلبك اتسلّم ✓',cancelled:'الطلب اتلغى',rejected:'المكان مقدرش ينفذ الطلب'};
 async function loadConcierge(){
  const r=await fetch('/api/operations?'+new URLSearchParams({action:'conciergeTrack',token}),{cache:'no-store'});const b=await r.json().catch(()=>({}));
@@ -24,4 +24,15 @@ async function load(){
   const r=await fetch('/api/operations',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'rate',token,stars:Number(f.get('stars')),comment:f.get('comment')||''})});
   e.target.outerHTML=r.ok?'<p>شكرًا على تقييمك!</p>':'<p>تعذر إرسال التقييم.</p>';});
 }
-const run=()=>isConcierge&&token?loadConcierge():load();run();setInterval(()=>{if(!document.hidden&&!$('#rate'))run();},30000);
+// Booking requests (academies): status, and the provider's number once approved.
+const B_STATE={pending:'طلبك وصل وبنستنى رد الأكاديمية',approved:'الأكاديمية وافقت على طلبك ✓',declined:'الأكاديمية اعتذرت عن الطلب',cancelled:'الطلب اتلغى'};
+async function loadBooking(){
+ const r=await fetch('/api/bookings?'+new URLSearchParams({action:'track',token}),{cache:'no-store'});const b=await r.json().catch(()=>({}));
+ if(!r.ok){$('#track').innerHTML=`<p>${esc(b.error||'مش لاقيين الطلب.')}</p>`;return;}
+ const d=b.data,steps=['pending',d.status==='pending'?'approved':d.status],kids=d.kidsCount===1?'طفل':d.kidsCount===2?'طفلين':'أطفال';
+ $('#track').innerHTML=`<h1>${esc(d.provider)}</h1><p class="track-num">طلب حجز · ${d.kidsCount} ${kids} · السن ${d.ages.map(Number).join('، ')}</p><p class="track-state">${B_STATE[d.status]||esc(d.status)}</p>
+ ${d.reply?`<p>رسالة الأكاديمية: ${esc(d.reply)}</p>`:''}${d.contactPhone?`<p>رقم الأكاديمية للتواصل: <a href="tel:${esc(d.contactPhone)}" dir="ltr"><b>${esc(d.contactPhone)}</b></a></p>`:''}
+ <ol class="track-steps">${steps.map((s,i)=>`<li class="${i===0||d.status!=='pending'?'done':''}">${B_STATE[s]}</li>`).join('')}</ol>
+ <p class="data-note">${d.preferred?'المواعيد اللي طلبتها: '+esc(d.preferred)+' · ':''}اتبعت ${new Date(d.createdAt).toLocaleString('ar-EG')}</p>`;
+}
+const run=()=>isBooking?loadBooking():isConcierge&&token?loadConcierge():load();run();setInterval(()=>{if(!document.hidden&&!$('#rate'))run();},30000);

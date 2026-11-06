@@ -2206,20 +2206,36 @@
     "category": "رياضة",
     "address": "كيان سيتي",
     "phone": "01555130441",
-    "description": "أكاديمية كرة قدم.",
-    "status": "رقم من دليل مجتمعي منشور؛ أكّد المواعيد والتوفر مع المكان قبل ما تتحرك.",
+    "description": "أكاديمية لتأسيس وتعليم فنون كرة القدم بشكل صحيح، من سن 3 لحد 17 سنة. تقدر تبعت طلب حجز لأولادك من جوه، والأكاديمية بترد بالموافقة ورقم التواصل.",
+    "status": "الأكاديمية سجلت على جوه (حساب El kayan Sport Academy). الحجز بيتأكد بموافقة الأكاديمية.",
     "keywords": [
       "كورة",
       "كرة قدم",
       "تدريب أطفال",
-      "أكاديمية"
+      "أكاديمية",
+      "رياضة",
+      "تمرين",
+      "حجز"
     ],
     "schemaType": "SportsClub",
     "sourceType": "user_shared_community_post",
     "sourceTitle": "دليل خدمات مدينة النرجس والياسمين 2026 — منشور مجتمعي أرسله أدمن جوه",
     "checkedAt": "2026-11-05",
-    "businessOwnerVerified": false,
-    "providerManaged": false
+    "businessOwnerVerified": true,
+    "providerManaged": false,
+    "aliases": [
+      "El Kayan Sport Academy",
+      "الكيان سبورت أكاديمي",
+      "أكاديمية الكيان"
+    ],
+    "facebook": "https://www.facebook.com/elkayansportacademy2",
+    "logo": "/logos/community-kayan-football-academy.webp",
+    "sellerId": "f0c2d068-d103-4b45-95d6-52b8b77b1fb8",
+    "bookings": {
+      "kind": "academy",
+      "minAge": 3,
+      "maxAge": 17
+    }
   },
   {
     "id": "community-kids-area-karma2",
