@@ -11,6 +11,7 @@ import {createMarketplace} from './market-discovery-ui.js';
 import {createMarketData} from './market-data.js';
 import {createMarketPlaces} from './market-places-ui.js';
 import {createMarketServices} from './market-services-ui.js';
+import {createMarketPrinting} from './market-printing-ui.js';
 import {icon} from '../public/ui-icons.js';
 import {listingFacts,categoryIcons} from '../public/market-discovery.js';
 import {createCommerce} from './commerce.js';
@@ -62,13 +63,13 @@ function authForm(mode='signup',next){
 async function refreshUser(){
  if(!db)return;if(refreshingUser)return refreshingUser;
  refreshingUser=(async()=>{const previousId=user?.id;const {data}=await db.auth.getUser();user=data.user;
-  if(previousId&&previousId!==user?.id){providerRequests.reset();clearAssistantContext();marketAssistant?.reset();commerce.orderDesk.stop();ordering.invalidate();bookings.cancelOpen({force:true,clearDrafts:true});close();$('my-content')?.replaceChildren();if(['mine','admin'].includes(view))setView('browse');}
+  if(previousId&&previousId!==user?.id){providerRequests.reset();printing.reset();clearAssistantContext();marketAssistant?.reset();commerce.orderDesk.stop();ordering.invalidate();bookings.cancelOpen({force:true,clearDrafts:true});close();$('my-content')?.replaceChildren();if(['mine','admin'].includes(view))setView('browse');}
   bindAssistantAccount(user?.id);admin=false;platformRoles={isAdmin:false,roles:[]};
   if(user){const [a,roles]=await Promise.all([db.rpc('jowwa_is_admin'),loadPlatformRoles(db)]);admin=a.data===true;platformRoles=roles;}
   $('admin-tab').hidden=!(admin||platformRoles.roles.length);const accountButton=$('account-button'),accountLabel=user?'حسابي':'دخول / تسجيل';accountButton.setAttribute('aria-label',accountLabel);accountButton.title=accountLabel;accountButton.innerHTML=icon('user')+'<span>'+accountLabel+'</span>';
  })().finally(()=>{refreshingUser=null;});return refreshingUser;
 }
-function account(){if(!user){phoneAuth.open(resumeAfterLogin);return;}modal(`<h2 class="dialog-title">أهلًا ${esc(user.user_metadata?.display_name||'بيك')}</h2><p class="dialog-subtitle" dir="ltr">${esc(user.phone||user.email||'')}</p><div class="market-form"><button id="account-profile" class="secondary">صورتي وبياناتي</button><button id="account-orders" class="secondary">طلبات المنتجات والمنيو</button><button type="button" data-provider-requests class="secondary">طلباتي ورسائلي للأماكن</button><button type="button" data-provider-inbox class="secondary">طلبات نشاطي والسجل</button><a class="secondary" href="/?journeys=1">مشاوير الأتوبيس المحفوظة</a><a class="secondary" href="/?assistantRequests=1">طلباتي للإدارة</a><a class="secondary" href="/?rounds=1">جولاتي ودعواتي</a><button id="account-phone" class="secondary">${user.phone_confirmed_at?'تغيير رقم الموبايل':'تأكيد رقم الموبايل'}</button><button id="account-mine" class="primary">متجري وإضافاتي</button><button id="account-services" class="secondary">خدماتي المرتبطة برقمي</button>${admin?'<button id="account-admin" class="secondary">لوحة الإدارة</button>':''}<button id="account-password" class="secondary">تغيير كلمة السر</button><button id="sign-out" class="secondary">تسجيل الخروج</button></div>`);$('account-profile').onclick=()=>commerce.profile();$('account-services').onclick=()=>serviceClaims.open();$('account-phone').onclick=()=>phoneAuth.open(null,{link:true});$('account-orders').onclick=()=>commerce.showOrders();$('account-mine').onclick=()=>{close();setView('mine');};$('account-admin')?.addEventListener('click',()=>{close();setView('admin');});$('account-password').onclick=()=>authForm('reset');$('sign-out').onclick=async()=>{clearAssistantContext();marketAssistant?.reset();await db.auth.signOut();user=null;admin=false;mediaCache.clear();await refreshUser();close();setView('browse');toast('تم تسجيل الخروج.');};}
+function account(){if(!user){phoneAuth.open(resumeAfterLogin);return;}modal(`<h2 class="dialog-title">أهلًا ${esc(user.user_metadata?.display_name||'بيك')}</h2><p class="dialog-subtitle" dir="ltr">${esc(user.phone||user.email||'')}</p><div class="market-form"><button id="account-profile" class="secondary">صورتي وبياناتي</button><button id="account-orders" class="secondary">طلبات المنتجات والمنيو</button><button id="account-printing" class="secondary">طلبات المكتبات والطباعة</button><button type="button" data-provider-requests class="secondary">طلباتي ورسائلي للأماكن</button><button type="button" data-provider-inbox class="secondary">طلبات نشاطي والسجل</button><a class="secondary" href="/?journeys=1">مشاوير الأتوبيس المحفوظة</a><a class="secondary" href="/?assistantRequests=1">طلباتي للإدارة</a><a class="secondary" href="/?rounds=1">جولاتي ودعواتي</a><button id="account-phone" class="secondary">${user.phone_confirmed_at?'تغيير رقم الموبايل':'تأكيد رقم الموبايل'}</button><button id="account-mine" class="primary">متجري وإضافاتي</button><button id="account-services" class="secondary">خدماتي المرتبطة برقمي</button>${admin?'<button id="account-admin" class="secondary">لوحة الإدارة</button>':''}<button id="account-password" class="secondary">تغيير كلمة السر</button><button id="sign-out" class="secondary">تسجيل الخروج</button></div>`);$('account-profile').onclick=()=>commerce.profile();$('account-services').onclick=()=>serviceClaims.open();$('account-phone').onclick=()=>phoneAuth.open(null,{link:true});$('account-orders').onclick=()=>commerce.showOrders();$('account-printing').onclick=()=>{close();setView('printing');printing.mine();};$('account-mine').onclick=()=>{close();setView('mine');};$('account-admin')?.addEventListener('click',()=>{close();setView('admin');});$('account-password').onclick=()=>authForm('reset');$('sign-out').onclick=async()=>{printing.reset();clearAssistantContext();marketAssistant?.reset();await db.auth.signOut();user=null;admin=false;mediaCache.clear();await refreshUser();close();setView('browse');toast('تم تسجيل الخروج.');};}
 async function imageUrl(path){if(!path||!db)return '';const old=mediaCache.get(path);if(old&&old.until>Date.now())return old.url;const {data,error}=await db.storage.from('jowwa-media').createSignedUrl(path,600);if(error)return '';mediaCache.set(path,{url:data.signedUrl,until:Date.now()+480000});return data.signedUrl;}
 async function loadImages(root=document){await Promise.all([...root.querySelectorAll('[data-image]')].map(async el=>{const url=await imageUrl(el.dataset.image);if(url){el.onerror=()=>{el.hidden=true;if(el.nextElementSibling?.classList.contains('photo-fallback'))el.nextElementSibling.hidden=false;};el.src=url;el.hidden=false;el.nextElementSibling?.classList.contains('photo-fallback')&&(el.nextElementSibling.hidden=true);}}));}
 const photo=(path,name,cls='card-photo')=>path?`<img hidden class="${cls}" data-image="${esc(path)}" alt="${esc(name)}" loading="lazy"><div class="${cls} photo-empty photo-fallback">◇</div>`:`<div class="${cls} photo-empty">◇</div>`;
@@ -93,10 +94,10 @@ function ensureLeisureView(){
  const section=document.createElement('section');section.id='leisure-view';section.hidden=true;section.setAttribute('aria-label','ترفيه ورياضة');section.innerHTML='<style>'+BOOKING_CSS+'</style><div id="leisure-content"></div>';
  $('businesses-view')?.after(section);button.onclick=()=>setView('leisure');
 }
-function marketViewFromUrl(){const params=new URLSearchParams(location.search),target=params.get('view');return target==='bookings'?'mine':['admin','directory','mine','businesses','leisure','services'].includes(target)?target:!target&&params.get('business')==='directory-guide-food-location'?'businesses':'browse';}
+function marketViewFromUrl(){const params=new URLSearchParams(location.search),target=params.get('view');return target==='bookings'?'mine':['admin','directory','mine','businesses','leisure','services','printing'].includes(target)?target:!target&&params.get('business')==='directory-guide-food-location'?'businesses':'browse';}
 function setView(next,{historyMode='push'}={}){
  if(directRoute){location.assign('/market'+(next==='browse'?'':'?view='+encodeURIComponent(next)));return;}
- if(!['browse','directory','businesses','leisure','services','mine','admin'].includes(next))next='browse';
+ if(!['browse','directory','businesses','leisure','services','printing','mine','admin'].includes(next))next='browse';
  ensureBusinessesView();ensureLeisureView();
  if(historyMode!=='none'){
   const url=new URL(location.href),categoryPath=url.pathname.match(/^\/market\/category\/([a-z-]+)\/?$/);
@@ -107,18 +108,20 @@ function setView(next,{historyMode='push'}={}){
    if(categoryPath)url.searchParams.set('category',categoryPath[1]);url.pathname='/market';url.searchParams.set('view',next);
   }
   if(next!=='businesses')url.searchParams.delete('business');
+  if(next!=='printing'){url.searchParams.delete('printOrder');url.searchParams.delete('printProvider');url.searchParams.delete('printType');}
   if(url.pathname+url.search!==location.pathname+location.search)history[historyMode==='replace'?'replaceState':'pushState']({},'',url.pathname+url.search);
  }
  view=next;document.querySelectorAll('[data-view]').forEach(button=>{const active=button.dataset.view===next;button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active));});
- for(const kind of ['browse','directory','businesses','leisure','services','mine','admin'])$(kind+'-view').hidden=kind!==next;
- document.querySelector('.market-hero').classList.toggle('compact',['mine','admin','businesses','leisure','services'].includes(next));
+ for(const kind of ['browse','directory','businesses','leisure','services','printing','mine','admin'])$(kind+'-view').hidden=kind!==next;
+ document.querySelector('.market-hero').classList.toggle('compact',['mine','admin','businesses','leisure','services','printing'].includes(next));
  if(next==='browse')return browse();
  if(next==='services')return services.show();
+ if(next==='printing')return printing.show();
  if(['directory','businesses','leisure'].includes(next))return placesUI.show(next);
  if(next==='mine')return showMine();
  if(next==='admin')return showAdmin();
 }
-function invalidateMarket(){marketData.invalidate();marketplace.invalidate();placesUI.invalidate();services.invalidate();}
+function invalidateMarket(){marketData.invalidate();marketplace.invalidate();placesUI.invalidate();services.invalidate();printing.invalidate();}
 async function sellerById(id){const {data,error}=await db.from('sellers').select('*').eq('id',id).maybeSingle();if(error)throw error;if(data)sellerCache.set(id,data);return data;}
 async function startStore(){if(!requireUser(startStore))return;try{const seller=await sellerById(user.id);if(seller){setView('mine');toast('متجرك موجود بالفعل. تقدر تضيف منتجات أو خدمات من صفحتك.');return;}sellerForm(null,()=>setView('mine'));}catch(e){toast(fail(e));}}
 async function startSelling(kind='product'){const listingKind=kind==='service'?'service':'product';if(!requireUser(()=>startSelling(listingKind)))return;try{const seller=await sellerById(user.id);if(!seller)sellerForm(null,()=>listingForm({kind:listingKind}));else listingForm({kind:listingKind});}catch(e){toast(fail(e));}}
@@ -172,7 +175,7 @@ async function init(){
   placesUI.init();
   window.addEventListener('popstate',()=>setView(marketViewFromUrl(),{historyMode:'none'}));
  }
- if(db){db.auth.onAuthStateChange((event,session)=>{if(event==='PASSWORD_RECOVERY')setTimeout(()=>authForm('reset'),0);else if(event==='SIGNED_OUT'||event==='SIGNED_IN'&&session?.user?.id!==user?.id)setTimeout(refreshUser,0);});await refreshUser();}
+ if(db){db.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_OUT')printing.reset();if(event==='PASSWORD_RECOVERY')setTimeout(()=>authForm('reset'),0);else if(event==='SIGNED_OUT'||event==='SIGNED_IN'&&session?.user?.id!==user?.id)setTimeout(refreshUser,0);});await refreshUser();}
  else{$('market-alert').hidden=false;$('market-alert').textContent='السوق والحسابات قيد التجهيز. الخريطة ودليل الأماكن متاحان.';}
  // A detail URL is its own page. Never load the discovery inventory or assistant
  // before showing the provider/product the visitor actually requested.
@@ -207,6 +210,7 @@ const marketData=createMarketData({db});
 const marketplace=createMarketplace({db,modal,close,listingCard,wireCards,ordering,empty,startSelling,share,loadPlaces:marketData.loadPlaces,loadCatalog:marketData.loadCatalog,showClaims:(id)=>serviceClaims.open(id),isAdmin:()=>admin});
 const placesUI=createMarketPlaces({...marketData,loadListings:()=>marketplace.getListings(),loadBookingProviders:()=>bookings.loadProviders({strict:true}),ordering,isVisible:kind=>view===kind,contactLinks,share,showClaims:id=>serviceClaims.open(id),openBooking:place=>bookings.openForm(place),empty,refreshSources:()=>{marketData.invalidate();marketplace.invalidate();}});
 const services=createMarketServices({root:()=>$('services-content'),loadPlaces:marketData.loadPlaces,loadListings:marketData.loadServices,loadBookingProviders:()=>bookings.loadProviders({strict:true}),ordering,isVisible:()=>view==='services'});
+const printing=createMarketPrinting({root:()=>$('printing-content'),db,getUser:()=>user,requireUser:next=>user&&(admin||user.email_confirmed_at||user.phone_confirmed_at)?true:requireUser(next),toast,isAdmin:()=>admin,isVisible:()=>view==='printing',showClaims:()=>serviceClaims.open()});
 const commerce=createCommerce({db,modal,close,toast,requireUser,ordering,upload,task,loadImages,photo,getUser:()=>user,isAdmin:()=>admin,refreshUser,refreshMine:()=>view==='admin'?showAdmin():showMine()});
 const providerRequests=createProviderRequests({fetcher:providerMemberFetch(db,()=>user),getUser:()=>user,ensure:()=>new Promise(resolve=>{if(!db){ready();resolve(false);return;}if(requireUser(()=>resolve(true)))resolve(true);}),beforeOpen:()=>close(),onClaim:()=>serviceClaims.open(new URLSearchParams(location.search).get('provider')||''),openShop:(id,back)=>commerce.orderDesk.details(id,back)});
 const management=createManagement({db,modal,close,toast,task,upload,commerce,isAdmin:()=>admin,platformRoles:()=>platformRoles,moderation:showModeration,listingForm,reviewServiceClaims:()=>serviceClaims.admin()});

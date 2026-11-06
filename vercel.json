@@ -16,6 +16,7 @@
   {"source":"/market","has":[{"type":"query","key":"menu","value":"(?<product>[a-zA-Z0-9_-]{1,100})"}],"destination":"/menu/:product","permanent":false}
  ],
  "rewrites":[
+  {"source":"/api/printing","destination":"/api/service-claims?__serviceRoute=printing"},
   {"source":"/api/member","destination":"/api/service-claims?__serviceRoute=member"},
   {"source":"/api/provider-catalog","destination":"/api/service-claims?__serviceRoute=provider-catalog"},
   {"source":"/api/provider-requests","destination":"/api/service-claims?__serviceRoute=provider-requests"},

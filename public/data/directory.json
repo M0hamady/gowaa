@@ -2335,5 +2335,62 @@
     ],
     "logo": "/logos/directory-kheir-ardna.png",
     "businessOwnerVerified": false
+  },
+  {
+    "id": "printing-paper-kayan",
+    "name": "خدمة طباعة الورق",
+    "category": "مكتبات وطباعة",
+    "phone": "01290099681",
+    "description": "طباعة ورق أبيض وأسود وألوان، وجه أو وجهين. ابعت ملفاتك ومواصفات الطباعة، وراجع عرض السعر قبل التنفيذ.",
+    "keywords": [
+      "مكتبة",
+      "طباعة",
+      "تصوير",
+      "ورق",
+      "أبحاث",
+      "مذكرات"
+    ],
+    "printingType": "paper",
+    "specialization": "printing",
+    "schemaType": "Store",
+    "address": "مكان الاستلام يتحدد مع الطلب",
+    "sourceType": "user_shared_business_message",
+    "sourceTitle": "مراسلة النشاط ونماذج أعماله التي شاركها مالك جوّه",
+    "checkedAt": "2026-11-06",
+    "businessOwnerVerified": false,
+    "providerManaged": false,
+    "status": "بيانات النشاط من رسائله المرفقة. السعر النهائي وميعاد التنفيذ وعنوان الاستلام يتأكدوا داخل الطلب.",
+    "visitorNote": "طلب خاص بالطباعة والهدايا. راجع عرض السعر والمعاينة قبل الموافقة."
+  },
+  {
+    "id": "memorycraft",
+    "name": "MemoryCraft | ميموري كرافت",
+    "category": "هدايا وطباعة",
+    "phone": "01019374388",
+    "description": "مجات وتيشيرتات وبازل وبراويز وأطقم بتصميم العميل. معاينة التصميم والسعر والميعاد تتأكد قبل التنفيذ.",
+    "keywords": [
+      "ميموري كرافت",
+      "MemoryCraft",
+      "هدايا",
+      "طباعة",
+      "مج",
+      "تيشيرت",
+      "بازل",
+      "برواز",
+      "مواليد"
+    ],
+    "printingType": "personalized",
+    "instagram": "https://www.instagram.com/memorycraft1/",
+    "telegram": "https://t.me/MemoryCraft1",
+    "specialization": "printing",
+    "schemaType": "Store",
+    "address": "مكان الاستلام يتحدد مع الطلب",
+    "sourceType": "user_shared_business_message",
+    "sourceTitle": "مراسلة النشاط ونماذج أعماله التي شاركها مالك جوّه",
+    "checkedAt": "2026-11-06",
+    "businessOwnerVerified": false,
+    "providerManaged": false,
+    "status": "بيانات النشاط من رسائله المرفقة. السعر النهائي وميعاد التنفيذ وعنوان الاستلام يتأكدوا داخل الطلب.",
+    "visitorNote": "طلب خاص بالطباعة والهدايا. راجع عرض السعر والمعاينة قبل الموافقة."
   }
 ]

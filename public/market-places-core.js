@@ -3,6 +3,7 @@ import {normalizeSearch,normalizeDirectoryCatalog,confirmedProviderCatalog,listi
 const leisurePattern=/رياض|ترفيه|نوادي|نادي|اكاديم|أكاديم|ملاهي|العاب أطفال|ألعاب أطفال|كرة|سباحة|جيم/;
 
 export function isMarketBusiness(place,menuCount=0){
+ if(place.specialization==='printing')return false;
  return menuCount>0||place.mapCategory==='restaurant'||['Restaurant','Bakery','CafeOrCoffeeShop','FoodEstablishment'].includes(place.schemaType)||/مطعم|كافيه|مخبز|مأكولات|حلويات|حلواني|بيكري|كيك/i.test((place.category||'')+' '+(place.name||''));
 }
 

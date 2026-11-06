@@ -1,0 +1,180 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-11-06",
+  "currency": "EGP",
+  "title": "المكتبات والطباعة",
+  "description": "ورقك، أدواتك، وهدية بتصميمك. اختار نوع طلبك وكمله خطوة بخطوة.",
+  "types": [
+    { "id": "paper", "name": "طباعة ورق", "description": "ارفع ملفاتك وحدد النسخ والمواصفات", "icon": "printer" },
+    { "id": "personalized", "name": "طباعة على قطعة", "description": "اختار القطعة وابعت الصورة أو الاسم أو فكرتك", "icon": "gift" },
+    { "id": "ready", "name": "منتجات المكتبات", "description": "استكشف المكتبات ومنتجاتها المتاحة", "icon": "book-open" }
+  ],
+  "providers": [
+    {
+      "id": "printing-paper-kayan",
+      "directoryId": "printing-paper-kayan",
+      "name": "خدمة طباعة الورق",
+      "officialNameConfirmed": false,
+      "description": "طباعة أبيض وأسود وألوان، وجه أو وجهين، مع مراجعة سعر الكميات الكبيرة.",
+      "orderTypes": ["paper"],
+      "catalogOnly": false,
+      "phone": "+201290099681",
+      "address": null,
+      "coordinates": null,
+      "hours": null,
+      "logo": null,
+      "fulfillment": { "pickup": "requires_confirmation", "delivery": "requires_confirmation" },
+      "rates": { "bw": { "single": 1.5, "double": 2 }, "color": { "single": 3, "double": 4 } },
+      "pricing": {
+        "mode": "estimate_then_quote",
+        "unit": "physical_sheet",
+        "currency": "EGP",
+        "paperSizeConfirmed": false,
+        "paperWeightConfirmed": false,
+        "oddDuplexSheetPolicy": "unconfirmed",
+        "estimateOddDuplexSheetPolicy": "full_duplex_rate",
+        "bulkOfferAboveSheets": 100,
+        "bulkDiscountPercent": null,
+        "note": "الأسعار المذكورة تقديرية. المقاس ونوع الورق والتشطيب وطريقة حساب آخر ورقة فردية والسعر النهائي يؤكدهم مقدم الخدمة. الكميات فوق ١٠٠ ورقة لها عرض يحدده مقدم الخدمة."
+      },
+      "capabilities": { "paper": true, "personalized": false, "ready": false, "customerOwnedPieces": false },
+      "evidence": { "kind": "user_supplied_business_message", "reviewedOn": "2026-11-06" }
+    },
+    {
+      "id": "memorycraft",
+      "directoryId": "memorycraft",
+      "name": "MemoryCraft | ميموري كرافت",
+      "officialNameConfirmed": true,
+      "description": "هدايا بتصميمك: مجات وتيشيرتات وبازل وبراويز وأطقم مخصصة. السعر والمواصفات بعد مراجعة طلبك.",
+      "orderTypes": ["personalized"],
+      "catalogOnly": false,
+      "phone": "+201019374388",
+      "address": null,
+      "coordinates": null,
+      "hours": null,
+      "logo": null,
+      "social": { "instagram": "https://www.instagram.com/memorycraft1/", "telegram": "https://t.me/MemoryCraft1" },
+      "fulfillment": { "pickup": "requires_confirmation", "delivery": "requires_confirmation" },
+      "turnaround": { "sameDayAdvertised": true, "guaranteed": false, "note": "قد يتاح التجهيز في نفس اليوم بعد مراجعة التصميم وتأكيد المتجر." },
+      "pricing": { "mode": "quote", "currency": "EGP", "note": "السعر حسب القطعة والمقاس والتصميم والكمية. اعتماد المعاينة مطلوب قبل التنفيذ." },
+      "capabilities": { "paper": false, "personalized": true, "ready": false, "customerOwnedPieces": false },
+      "evidence": { "kind": "user_supplied_business_messages_and_work_samples", "reviewedOn": "2026-11-06" }
+    },
+    {
+      "id": "community-labubu-library",
+      "directoryId": "community-labubu-library",
+      "name": "مكتبة لابوبو",
+      "description": "مكتبة من دليل جوّه. قائمة المنتجات والأسعار تحتاج تأكيد المكتبة.",
+      "orderTypes": ["ready"],
+      "catalogOnly": true,
+      "phone": null,
+      "address": null,
+      "coordinates": null,
+      "hours": null,
+      "logo": null,
+      "capabilities": { "paper": false, "personalized": false, "ready": false, "customerOwnedPieces": false },
+      "evidence": { "kind": "existing_directory_entry", "reviewedOn": "2026-11-06" }
+    },
+    {
+      "id": "community-kayan-library",
+      "directoryId": "community-kayan-library",
+      "name": "مكتبة الكيان",
+      "description": "مكتبة من دليل جوّه. قائمة المنتجات والأسعار تحتاج تأكيد المكتبة.",
+      "orderTypes": ["ready"],
+      "catalogOnly": true,
+      "phone": null,
+      "address": null,
+      "coordinates": null,
+      "hours": null,
+      "logo": null,
+      "capabilities": { "paper": false, "personalized": false, "ready": false, "customerOwnedPieces": false },
+      "evidence": { "kind": "existing_directory_entry", "reviewedOn": "2026-11-06" }
+    }
+  ],
+  "products": [
+    {
+      "id": "memorycraft-mug", "providerId": "memorycraft", "type": "personalized", "name": "مج بتصميمك",
+      "description": "صورتك أو اسمك أو تصميم تختاره على مج. اللون ومساحة الطباعة بعد تأكيد المتجر.",
+      "price": null, "pricingMode": "quote", "availability": "made_to_order", "image": "/media/printing/memorycraft-mug.webp", "imageNote": "صورة محسنة لعرض نموذج من أعمال المتجر؛ تفاصيل طلبك تتأكد في المعاينة.", "proofRequired": true,
+      "optionGroups": [
+        { "id": "color", "label": "لون المج المطلوب", "input": "text", "required": false, "maxLength": 80, "placeholder": "مثال: أبيض، أو حسب المتاح", "confirmationRequired": true },
+        { "id": "printArea", "label": "تحب الطباعة فين؟", "input": "select", "required": true, "values": [{ "value": "one-side", "label": "على ناحية واحدة" }, { "value": "two-sides", "label": "على الناحيتين" }, { "value": "wrap", "label": "تصميم يلف على المج" }], "confirmationRequired": true }
+      ]
+    },
+    {
+      "id": "memorycraft-tshirt", "providerId": "memorycraft", "type": "personalized", "name": "تيشيرت بتصميمك",
+      "description": "اطلب المقاس واللون والتصميم، والمتجر يؤكد الخامة والمقاس وإمكانية التنفيذ.",
+      "price": null, "pricingMode": "quote", "availability": "made_to_order", "image": null, "proofRequired": true,
+      "optionGroups": [
+        { "id": "size", "label": "المقاس المطلوب", "input": "text", "required": true, "maxLength": 80, "placeholder": "اكتب المقاس أو القياسات المطلوبة", "confirmationRequired": true },
+        { "id": "color", "label": "لون التيشيرت المطلوب", "input": "text", "required": false, "maxLength": 80, "confirmationRequired": true },
+        { "id": "printArea", "label": "مكان الطباعة المطلوب", "input": "select", "required": true, "values": [{ "value": "front", "label": "الأمام" }, { "value": "back", "label": "الخلف" }, { "value": "front-back", "label": "الأمام والخلف" }], "confirmationRequired": true }
+      ]
+    },
+    {
+      "id": "memorycraft-puzzle", "providerId": "memorycraft", "type": "personalized", "name": "بازل بصورتك",
+      "description": "حوّل صورة تختارها لبازل. المقاس وعدد القطع يتأكدوا في عرض السعر.",
+      "price": null, "pricingMode": "quote", "availability": "made_to_order", "image": null, "proofRequired": true,
+      "optionGroups": [
+        { "id": "size", "label": "في مقاس معين للبازل؟", "input": "text", "required": false, "maxLength": 80, "confirmationRequired": true },
+        { "id": "pieceCount", "label": "عدد القطع المطلوب، لو محدد", "input": "text", "required": false, "maxLength": 80, "confirmationRequired": true }
+      ]
+    },
+    {
+      "id": "memorycraft-frame", "providerId": "memorycraft", "type": "personalized", "name": "برواز بصورة مخصصة",
+      "description": "صورة لذكرى مميزة مع اختيار البرواز. النماذج المرسلة تشمل بروازًا مضيئًا؛ التوفر والمقاس حسب تأكيد المتجر.",
+      "price": null, "pricingMode": "quote", "availability": "made_to_order", "image": "/media/printing/memorycraft-frame.webp", "imageNote": "صورة محسنة لعرض نموذج من أعمال المتجر؛ تفاصيل طلبك تتأكد في المعاينة.", "proofRequired": true,
+      "optionGroups": [
+        { "id": "size", "label": "مقاس البرواز المطلوب", "input": "text", "required": false, "maxLength": 80, "placeholder": "مثال: ١٥ × ٢٠ سم، لو متاح", "confirmationRequired": true },
+        { "id": "style", "label": "شكل البرواز اللي تحبه", "input": "text", "required": false, "maxLength": 120, "placeholder": "مثال: برواز مضيء زي النموذج", "confirmationRequired": true }
+      ]
+    },
+    {
+      "id": "memorycraft-notebook", "providerId": "memorycraft", "type": "personalized", "name": "نوت بوك بتصميمك",
+      "description": "غلاف مخصص باسم أو صورة أو تصميم. مقاس النوت بوك ونوعه يتأكدوا قبل التنفيذ.",
+      "price": null, "pricingMode": "quote", "availability": "made_to_order", "image": null, "proofRequired": true,
+      "optionGroups": [
+        { "id": "size", "label": "مقاس النوت بوك المطلوب", "input": "text", "required": false, "maxLength": 80, "confirmationRequired": true },
+        { "id": "printArea", "label": "مكان التصميم على الغلاف", "input": "select", "required": true, "values": [{ "value": "front", "label": "الغلاف الأمامي" }, { "value": "front-back", "label": "الغلاف الأمامي والخلفي" }], "confirmationRequired": true }
+      ]
+    },
+    {
+      "id": "memorycraft-keychain", "providerId": "memorycraft", "type": "personalized", "name": "ميدالية مخصصة",
+      "description": "ميدالية بصورة أو اسم أو شعار. الشكل والمقاس حسب المتاح لدى المتجر.",
+      "price": null, "pricingMode": "quote", "availability": "made_to_order", "image": null, "proofRequired": true,
+      "optionGroups": [
+        { "id": "shape", "label": "الشكل أو المقاس المطلوب", "input": "text", "required": false, "maxLength": 100, "confirmationRequired": true },
+        { "id": "printArea", "label": "الطباعة على الميدالية", "input": "select", "required": true, "values": [{ "value": "one-side", "label": "وجه واحد" }, { "value": "two-sides", "label": "الوجهين" }], "confirmationRequired": true }
+      ]
+    },
+    {
+      "id": "memorycraft-desk-sign", "providerId": "memorycraft", "type": "personalized", "name": "لوحة مكتبية بستاند",
+      "description": "لوحة بصورة أو عبارة تختارها. الخامة والمقاس يوضحهم المتجر في عرض السعر.",
+      "price": null, "pricingMode": "quote", "availability": "made_to_order", "image": "/media/printing/memorycraft-desk-sign.webp", "imageNote": "صورة محسنة لعرض نموذج من أعمال المتجر؛ تفاصيل طلبك تتأكد في المعاينة.", "proofRequired": true,
+      "optionGroups": [
+        { "id": "size", "label": "مقاس اللوحة المطلوب", "input": "text", "required": false, "maxLength": 80, "confirmationRequired": true }
+      ]
+    },
+    {
+      "id": "memorycraft-baby-set", "providerId": "memorycraft", "type": "personalized", "name": "طقم مولود بالاسم",
+      "description": "طقم باسم المولود وتصميم تختاره. القطع والخامة وطريقة التخصيص تتأكد في العرض والمعاينة.",
+      "price": null, "pricingMode": "quote", "availability": "made_to_order", "image": "/media/printing/memorycraft-baby-set.webp", "imageNote": "صورة محسنة لعرض نموذج من أعمال المتجر؛ تفاصيل طلبك تتأكد في المعاينة.", "proofRequired": true,
+      "optionGroups": [
+        { "id": "name", "label": "اسم المولود زي ما تحب يظهر", "input": "text", "required": true, "maxLength": 80, "confirmationRequired": true },
+        { "id": "size", "label": "المقاس أو عمر المولود", "input": "text", "required": true, "maxLength": 80, "confirmationRequired": true },
+        { "id": "color", "label": "ألوان الطقم أو الكتابة المطلوبة", "input": "text", "required": false, "maxLength": 120, "confirmationRequired": true }
+      ]
+    },
+    {
+      "id": "memorycraft-gift-set", "providerId": "memorycraft", "type": "personalized", "name": "طقم هدايا متناسق",
+      "description": "النموذج يشمل مج ونوت بوك وكوستر وميدالية. محتويات الطقم النهائية والتغليف يتأكدوا في عرض السعر.",
+      "price": null, "pricingMode": "quote", "availability": "made_to_order", "image": "/media/printing/memorycraft-gift-set.webp", "imageNote": "صورة محسنة لعرض نموذج من أعمال المتجر؛ تفاصيل طلبك تتأكد في المعاينة.", "proofRequired": true,
+      "bundleComponents": ["مج", "نوت بوك", "كوستر", "ميدالية"],
+      "optionGroups": [
+        { "id": "personalizationMode", "label": "تصميم واحد للطقم كله؟", "input": "select", "required": true, "values": [{ "value": "same", "label": "نفس الفكرة لكل القطع" }, { "value": "different", "label": "تفاصيل مختلفة لكل قطعة" }], "confirmationRequired": true },
+        { "id": "pieceNotes", "label": "اكتب المطلوب على كل قطعة", "input": "text", "required": false, "requiredWhen": { "field": "personalizationMode", "value": "different" }, "maxLength": 1000, "confirmationRequired": true },
+        { "id": "packaging", "label": "طلب خاص للتغليف؟", "input": "text", "required": false, "maxLength": 200, "confirmationRequired": true }
+      ]
+    }
+  ]
+}

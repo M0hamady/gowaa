@@ -1,4 +1,8 @@
 const paths={
+ file:'<path d="M14 2H5v20h14V7l-5-5Zm0 0v5h5M8 12h8M8 16h8"/>',
+ printer:'<path d="M6 8V3h12v5M6 17H3V8h18v9h-3M6 14h12v8H6Z"/><path d="M17 11h1"/>',
+ gift:'<path d="M3 8h18v5H3Zm2 5v9h14v-9M12 8v14"/><path d="M12 8C2 8 5 0 9 3l3 5Zm0 0c10 0 7-8 3-5l-3 5Z"/>',
+ book:'<path d="M12 5C8 2 4 3 2 4v16c3-1 7-1 10 2 3-3 7-3 10-2V4c-2-1-6-2-10 1Zm0 0v17"/>',
  arrow:'<path d="m8 4 8 8-8 8M4 12h12"/>',navigation:'<path d="m12 3 8 18-8-5-8 5Z"/>',
  map:'<path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3Zm6-3v15m6-12v15"/>',
  locate:'<circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/>',

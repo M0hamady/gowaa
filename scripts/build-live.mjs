@@ -29,6 +29,14 @@ if (process.env.VERCEL_ENV === 'production' && process.env.JOWWA_SKIP_MIGRATIONS
   if (run.status !== 0) throw new Error('Migrations failed; production deploy stopped. Live stays on the previous version.');
 }
 
+// Exercise the new printing lifecycle against the production database in one
+// rollback-only transaction. No uploaded blobs, real orders or messages remain.
+if (process.env.VERCEL_ENV === 'production') {
+  const {spawnSync} = await import('node:child_process');
+  const verify = spawnSync(process.execPath, ['scripts/verify-printing-live.mjs'], {stdio: 'inherit', env: process.env});
+  if (verify.status !== 0) throw new Error('Printing verification failed; production deploy stopped.');
+}
+
 await import('./build.mjs');
 await writeFile('public/operations-build.json', JSON.stringify({
   mode: 'live-marketplace',

@@ -4,6 +4,7 @@ import {readFileSync} from 'node:fs';
 import {mergeDirectoryUpdates,visitorDirectory} from '../public/directory-updates.js';
 import {directoryPlaces} from '../public/directory-core.js';
 import {visitorRouteUrl,visitorActions,visitorAddress} from '../public/visitor-services.js';
+import {isMarketBusiness} from '../public/market-places-core.js';
 import {renderPlace,renderDirectory} from '../src/place-render.mjs';
 const curated=mergeDirectoryUpdates(JSON.parse(readFileSync(new URL('../public/data/directory.json',import.meta.url),'utf8'))),map=JSON.parse(readFileSync(new URL('../public/data/map.json',import.meta.url),'utf8')),records=directoryPlaces(curated,map);
 const get=id=>records.find(p=>p.id===id);
@@ -36,4 +37,14 @@ test('all user shared map points are routable and preserve the original service 
  assert.match(get('directory-madkour-yasmin-330').name,/عمارة 30/);
  assert.equal(get('directory-international-garden-kayan').externalMapUrl,'https://maps.app.goo.gl/QcxrqHDhefkdnmjSA');
  assert.equal(get('directory-fuel-near-sunmall').externalMapUrl,'https://maps.app.goo.gl/8DNNUzi6uMg6ceDR7');
+});
+
+test('printing providers route to their own order flow and remain outside shop menus',()=>{
+ for(const id of ['printing-paper-kayan','memorycraft']){
+  const p=get(id),html=visitorActions(p);assert.equal(p.specialization,'printing');
+  assert.equal(isMarketBusiness(p,5),false);assert.match(html,/view=printing/);
+  assert.ok(html.includes('printProvider='+id));assert.doesNotMatch(html,/data-provider-request=/);
+ }
+ assert.equal(isMarketBusiness(get('directory-koshary'),1),true);
+ assert.match(visitorActions(get('directory-koshary')),/data-provider-request=/);
 });
