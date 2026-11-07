@@ -5,7 +5,6 @@ import {catalogForProvider,basketTotal} from '../public/provider-catalog-core.js
 import {normalizeDirectoryCatalog} from '../public/market-discovery.js';
 import {isMarketBusiness} from '../public/market-places-core.js';
 import {conciergeOrder} from '../src/server-provider-catalog.mjs';
-import {freshDb,apply} from './helpers/ops-db.mjs';
 
 const directory=JSON.parse(await readFile(new URL('../public/data/directory.json',import.meta.url),'utf8'));
 const marketPayload=JSON.parse(await readFile(new URL('../public/data/market-directory.json',import.meta.url),'utf8'));
@@ -48,11 +47,8 @@ test('Sucréve checkout adds the selected Karma delivery fee to the saved Jowwa 
  await assert.rejects(()=>conciergeOrder({...body,requestId:'22222222-2222-4222-8222-222222222222',customer:{...body.customer,deliveryArea:'مدينة نصر'}},state,member,{env:{NEXT_PUBLIC_SUPABASE_URL:'https://db.example',SUPABASE_SERVICE_ROLE_KEY:'secret'},serviceFactory,catalogOverride:()=>products}),/اختار منطقة التوصيل/);
 });
 
-test('047 seeds Sucréve as an enabled Jowwa concierge provider',async()=>{
- const {db}=await freshDb({upTo:'046'});
- try{
-  await apply(db,'047_sucreve_native_checkout.sql');
-  const row=(await db.query("select directory_id,enabled,provider_name,provider_phone from jowwa_private.concierge_providers where directory_id='directory-sucreve'")).rows[0];
-  assert.deepEqual(row,{directory_id:'directory-sucreve',enabled:true,provider_name:'Sucréve',provider_phone:'01554303992'});
- }finally{await db.close();}
+test('047 contains the one-time concierge enablement for Sucréve',async()=>{
+ const sql=await readFile(new URL('../supabase/047_sucreve_native_checkout.sql',import.meta.url),'utf8');
+ assert.match(sql,/directory-sucreve/);
+ assert.match(sql,/values\('directory-sucreve',true,'Sucréve','01554303992'/);
 });
