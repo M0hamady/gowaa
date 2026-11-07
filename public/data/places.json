@@ -1546,6 +1546,8 @@
     ],
     "visitorNote": "متجر أونلاين فقط؛ لا يوجد عنوان استقبال أو موقع على الخريطة. اطلب عبر واتساب. التوصيل: كارما 1 بـ25 جنيه، وكارما 2 بـ35 جنيه.",
     "menuNote": "الأصناف والأسعار مدخلة من صورة المنيو التي أرسلها صاحب الطلب. أكد التوفر والإجمالي قبل تأكيد الطلب.",
-    "schemaType": "OnlineStore"
+    "schemaType": "OnlineStore",
+    "image": "/social/sucreve-logo.jpg",
+    "logo": "/social/sucreve-logo.jpg"
   }
 ]
