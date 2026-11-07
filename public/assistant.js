@@ -29,10 +29,11 @@ export function actionEnvelope(action,now=Date.now()){
 }
 const icons={spark:'✦',arrow:'←',pin:'⌖',bus:'▣',bag:'▧',reset:'↻'};
 const confidence=p=>!p.mapId?'الموقع يحتاج تأكيدًا':p.mapLabel?'موقع تقريبي • راجع التفاصيل':/يحتاج|تحتاج|غير مؤكد|تأكيد|تقريبي/.test(p.status||'')?'راجع التفاصيل قبل التحرك':'موجود في دليل جوه';
-export function mountAssistant({root,onPlace,onBus,onAskOrigin,onPrepareRound,onPrepareRoute,onTransportMap,getCurrentOrigin=()=>null,getMapContext=()=>null,toast,endpoint='/api/assistant',storage=globalThis.sessionStorage,openOnMount=false,servicesLoader=()=>import('./assistant-actions.js')}){
+const asksForCurrentOrigin=query=>/(?:من\s*(?:موقعي|مكاني)|موقعي\s*الحالي|مكاني\s*الحالي|من\s*هنا|my\s+location)/i.test(String(query||''));
+export function mountAssistant({root,onPlace,onBus,onAskOrigin,onRouteFromCurrent,onPrepareRound,onPrepareRoute,onTransportMap,getCurrentOrigin=()=>null,getMapContext=()=>null,toast,endpoint='/api/assistant',storage=globalThis.sessionStorage,openOnMount=false,servicesLoader=()=>import('./assistant-actions.js')}){
  if(!root)return {destroy(){}};
  const restored=readAssistantMemory(storage);
- let context=restored?.context||null,pendingAction=restored?.draftAction||null,answer=null,step='question',pending=false,controller=null,requestId=0;
+ let context=restored?.context||null,pendingAction=restored?.draftAction||null,answer=null,step='question',pending=false,controller=null,requestId=0,lastQuestion='';
  const remember=()=>writeAssistantMemory(storage,context,pendingAction);
  root.classList.add('jowwa-assistant');
  root.innerHTML=`<details class="assistant-drawer"><summary><span aria-hidden="true">${icons.spark}</span><span>اسأل جوه</span><small>مشوارك وخدماتك بالمصري</small></summary><div class="assistant-body" aria-live="polite"></div></details>`;
@@ -45,7 +46,7 @@ export function mountAssistant({root,onPlace,onBus,onAskOrigin,onPrepareRound,on
   Promise.resolve().then(()=>onTransportMap(options)).catch(()=>toast?.('تعذر فتح اختيارك على الخريطة. جرّب تاني.'));
  };
  body.addEventListener('click',transportLinkClick);
- const reset=()=>{requestId++;controller?.abort();controller=null;pending=false;context=null;answer=null;pendingAction=null;clearAssistantMemory(storage);inputView();};
+ const reset=()=>{requestId++;controller?.abort();controller=null;pending=false;context=null;answer=null;pendingAction=null;lastQuestion='';clearAssistantMemory(storage);inputView();};
  const openJourneys=()=>servicesLoader().then(module=>module.openAssistantJourneys()).catch(()=>toast?.('تعذر فتح مشاويرك. جرّب تاني.'));
  const openRequests=()=>servicesLoader().then(module=>module.openAssistantRequests()).catch(()=>toast?.('تعذر فتح طلباتك. جرّب تاني.'));
  const shortcuts=()=>{for(const b of body.querySelectorAll('[data-my-journeys]'))b.onclick=openJourneys;for(const b of body.querySelectorAll('[data-my-requests]'))b.onclick=openRequests;};
@@ -59,7 +60,8 @@ export function mountAssistant({root,onPlace,onBus,onAskOrigin,onPrepareRound,on
  };
  const originView=p=>{
   step='origin';context={...context,placeIds:[p.id]};remember();
-  body.innerHTML=`<h3>هتبدأ منين؟</h3><p>${esc(p.name)}</p><button type="button" class="assistant-primary assistant-origin">${icons.pin} اختار البداية</button><button type="button" class="assistant-back">رجوع</button>`;
+  body.innerHTML=`<h3>رايح ${esc(p.name)} منين؟</h3><button type="button" class="assistant-primary assistant-current">${icons.pin} من موقعي الحالي</button><button type="button" class="assistant-origin">اختار محطة أو نقطة بداية</button><small>هنحدد موقعك بإذنك. ولو اخترت محطة، راجع نقطة الركوب ومواعيد الخط.</small><button type="button" class="assistant-back">رجوع</button>`;
+  body.querySelector('.assistant-current').onclick=()=>{if(onRouteFromCurrent)onRouteFromCurrent(p.mapId);else{onPlace?.(p.mapId);onAskOrigin?.();}drawer.open=false;};
   body.querySelector('.assistant-origin').onclick=()=>{onPlace?.(p.mapId);if(!onPlace)onAskOrigin?.();drawer.open=false;};body.querySelector('.assistant-back').onclick=()=>resultView(false);
  };
  const goMarket=action=>{
@@ -98,7 +100,7 @@ export function mountAssistant({root,onPlace,onBus,onAskOrigin,onPrepareRound,on
   body.querySelector('.assistant-next').onclick=()=>{const picked=items.filter(i=>[...body.querySelectorAll('input:checked')].some(el=>el.value===i.id));if(!picked.length){toast?.('اختار منتجًا الأول.');return;}context={...context,selectedItemIds:picked.map(i=>i.id)};remember();quantityView(picked,0,[],quantity);};body.querySelector('.assistant-back').onclick=()=>resultView(false);
  };
  const resultView=(showAction=true)=>{
-  if(answer.travel||answer.responseMode==='conversation'||answer.requestDraft){step=answer.travel?'travel':answer.requestDraft?'request-review':'conversation';return renderAssistantConversation(body,answer,{ask,reset,openJourneys,openRequests,saveJourney:async plan=>(await(await servicesLoader()).assistantServices()).journeys.save(plan),submitRequest:async (draft,options)=>(await(await servicesLoader()).assistantServices()).submitRequest(draft,options)});}
+  if(answer.travel||answer.responseMode==='conversation'||answer.requestDraft){step=answer.travel?'travel':answer.requestDraft?'request-review':'conversation';return renderAssistantConversation(body,answer,{ask,reset,openJourneys,openRequests,saveJourney:async plan=>(await(await servicesLoader()).assistantServices()).journeys.save(plan),submitRequest:async (draft,options)=>(await(await servicesLoader()).assistantServices()).submitRequest(draft,options),...(asksForCurrentOrigin(lastQuestion)?{onRoute:mapId=>{if(onRouteFromCurrent){onRouteFromCurrent(mapId);drawer.open=false;}}}:{})});}
   if(showAction&&answer.action){if(answer.action.type==='prepare_basket')return basketSelection(answer.items,answer.action.quantity);return prepareActionView(answer.action);}
   step='results';const places=answer.places||[],routes=answer.routes||[],items=answer.items||[],menus=answer.menus||[];
   body.innerHTML=`<p class="assistant-reply">${esc(answer.message)}</p><h3>${items.length||menus.length?'أنهي اختيار مناسب لك؟':places.length||routes.length?'تحب تفتح أنهي نتيجة؟':'نجرّب سؤال تاني؟'}</h3><div class="assistant-cards">
@@ -107,7 +109,7 @@ export function mountAssistant({root,onPlace,onBus,onAskOrigin,onPrepareRound,on
   ${places.map(p=>`<article class="assistant-card"><span aria-hidden="true">${icons.pin}</span><div><h4>${esc(p.name)}</h4><small>${esc(confidence(p))}</small><div class="assistant-card-actions"><a href="${esc(p.url)}">التفاصيل والمصدر</a>${p.mapId?`<button type="button" data-place="${esc(p.id)}">${icons.pin} الطريق</button>`:''}</div></div></article>`).join('')}
   ${routes.map(r=>`<article class="assistant-card"><span aria-hidden="true">${icons.bus}</span><div><h4>${esc(r.name)}</h4><small>${esc(r.status==='suspended'?'متوقف • راجع التفاصيل':r.status==='published'?'مواعيد منشورة • تأكد قبل التحرك':'بيانات جزئية • راجع التفاصيل')}</small><div class="assistant-card-actions"><a href="${esc(r.url)}">المصدر</a><button type="button" data-route="${esc(r.id)}">${icons.bus} المواعيد</button></div></div></article>`).join('')}
   </div><div class="assistant-chips">${items.some(p=>p.canOrder===true)?'<button type="button" class="assistant-basket-all">▧ جهّز سلة</button>':''}${places.filter(p=>p.mapId).length>1?'<button type="button" class="assistant-round">⌖ جهّز جولة</button>':''}</div><button type="button" class="assistant-follow">كمّل على الاختيارات ${icons.arrow}</button><button type="button" class="assistant-reset">${icons.reset} ابدأ جديد</button><div class="assistant-shortcuts"><button type="button" data-my-journeys>مشاويري</button><button type="button" data-my-requests>طلباتي للإدارة</button></div>`;
-  for(const b of body.querySelectorAll('[data-place]'))b.onclick=()=>originView(places.find(p=>p.id===b.dataset.place));
+  for(const b of body.querySelectorAll('[data-place]'))b.onclick=()=>{const place=places.find(p=>p.id===b.dataset.place);if(place?.mapId&&onRouteFromCurrent&&asksForCurrentOrigin(lastQuestion)){onRouteFromCurrent(place.mapId);drawer.open=false;}else originView(place);};
   for(const b of body.querySelectorAll('[data-route]'))b.onclick=()=>{onBus?.(b.dataset.route);drawer.open=false;};
   for(const b of body.querySelectorAll('[data-basket]'))b.onclick=()=>{context={...context,selectedItemIds:[b.dataset.basket]};remember();basketSelection(items,1,[b.dataset.basket]);};
   body.querySelector('.assistant-basket-all')?.addEventListener('click',()=>basketSelection(items));
@@ -117,6 +119,7 @@ export function mountAssistant({root,onPlace,onBus,onAskOrigin,onPrepareRound,on
  };
  async function ask(question,patch=null){
   if(pending||typeof question!=='string'||question.trim().length<1)return;
+  lastQuestion=question;
   if(patch?.map?.version===1)context={...context,map:mapContext(patch.map)};
   if(patch?.travel)context={...context,travel:travelContext(patch.travel),rail:null};
   if(patch?.rail)context={...context,rail:railContext(patch.rail),travel:null,intercity:null};
