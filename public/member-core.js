@@ -5,6 +5,6 @@ export function safeReturnPath(value,fallback='/'){
 }
 export function verifiedMember(user){return !!(user?.id&&(user.phone_confirmed_at||user.email_confirmed_at));}
 export function protectedDestination(value){
- try{const u=new URL(value,'https://jowwa.invalid');return /^\/(item|seller|menu|catalog)\//.test(u.pathname)||u.pathname==='/market'&&u.searchParams.has('menu')||u.pathname==='/'&&(u.searchParams.has('to')||u.searchParams.has('from')||u.searchParams.has('round'));}catch{return false;}
+ try{const u=new URL(value,'https://jowwa.invalid');if(u.pathname==='/place/directory-sucreve')return false;return /^\/(item|seller|menu|catalog)\//.test(u.pathname)||u.pathname==='/market'&&u.searchParams.has('menu')||u.pathname==='/'&&(u.searchParams.has('to')||u.searchParams.has('from')||u.searchParams.has('round'));}catch{return false;}
 }
 export function memberLabel(kind){return kind==='route'?'سجّل عشان نكمّل طريقك':kind==='basket'?'سجّل عشان تحفظ سلتك':kind==='booking'?'سجّل عشان نكمّل حجزك':kind==='request'?'سجّل عشان تبعت طلبك وتتابع الرد':kind==='assistant'?'سجّل عشان تحفظ مشوارك وتتابع طلبك':'سجّل عشان تشوف تفاصيل المكان';}
