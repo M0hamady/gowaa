@@ -4,6 +4,7 @@ import {whatsappNumber} from './commerce-core.js';
 import {isPublicContactPlace,providerRequestUrl,customerContactText} from './provider-contact-policy.js';
 const validId=value=>typeof value==='string'&&/^[a-zA-Z0-9_-]{1,100}$/.test(value);
 export function visitorRouteUrl(place){
+ if(place?.onlineOnly)return '';
  if(!place||!validId(place.id))return '';
  const c=place.coordinate,point=Array.isArray(c)&&c.length===2&&c.every(Number.isFinite)&&Math.abs(c[0])<=180&&Math.abs(c[1])<=90;
  const id=validId(place.mapId)?place.mapId:point?place.id:null;
@@ -25,6 +26,7 @@ export function visitorActions(place){
  return actions.length?'<div class="visitor-actions">'+actions.join('')+'</div>':'';
 }
 export function visitorAddress(place){
+ if(place?.onlineOnly)return '<div class="visitor-address">'+icon('bag')+'<div><strong>متجر أونلاين</strong><span>لا يوجد عنوان استقبال أو موقع على الخريطة</span><small>'+esc(place.serviceArea?'نطاق التوصيل: '+place.serviceArea:'الطلب أونلاين فقط')+'</small></div></div>';
  const address=customerContactText(place,place?.address||'العنوان التفصيلي لسه مش محدد'),route=visitorRouteUrl(place);
  return '<div class="visitor-address">'+icon('locate')+'<div><strong>العنوان</strong><span>'+esc(address)+'</span>'+(route?'<small>اختار بداية المشوار: موقعك بإذنك أو نقطة تحددها.</small>':'')+'</div></div>';
 }
