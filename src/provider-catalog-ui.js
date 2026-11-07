@@ -105,7 +105,7 @@ export function mountProviderCatalog(){
   const fee=fulfillment==='delivery'?sucreveFee(area):0;
   const feeLine=id==='directory-sucreve'?'<div class="cart-total"><span>رسوم التوصيل'+(fulfillment==='delivery'?' — '+esc(area||'اختار المنطقة'):'')+'</span><strong>'+(fee===null?'اختار المنطقة':money(fee)+' جنيه')+'</strong></div>':'';
   const total=fee===null?null:quote.knownTotal+fee;
-  return summary(quote)+feeLine+(id==='directory-sucreve'?'<div class="cart-total"><span>الإجمالي شامل التوصيل</span><strong>'+(total===null?'—':money(total)+' جنيه')+'</strong></div>':'');
+  return feeLine+(id==='directory-sucreve'?'<div class="cart-total"><span>الإجمالي شامل التوصيل</span><strong>'+(total===null?'—':money(total)+' جنيه')+'</strong></div>':'');
  };
  function requestSelection(quote){
   const selected=(quote.items||[]).map(line=>customerContactText(provider,line.title||'صنف لم يعد منشورًا')+' × '+line.quantity);
