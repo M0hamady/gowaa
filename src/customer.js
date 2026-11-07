@@ -21,6 +21,6 @@ function start(){
  const marketPage=/^\/market(?:\.html|\/category\/[a-z-]+)?\/?$/.test(location.pathname)||marketDetailRoute(location.pathname);
  const requests=marketPage||document.body.hasAttribute('data-member-page')?null:createProviderRequests({fetcher:memberFetch,ensure:()=>ensureBookingMember({kind:'request'}),getUser:()=>memberState().user});
  if(requests)onMemberChange((state,prior)=>{if(prior&&prior!==state.user?.id)requests.reset();});
- mountMemberAccess();mountAssistantMember();mountProviderCatalog();mountPlaceBooking();requests?.mount();
+ mountMemberAccess();mountAssistantMember();if(location.pathname!=='/place/directory-sucreve')mountProviderCatalog();mountPlaceBooking();requests?.mount();
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
