@@ -76,6 +76,7 @@ export function createProviderHandler({admin=false,...options}={}){return async(
   if(!admin){
    if(body.action==='concierge_order')return reply(200,await conciergeOrder(body,state,member,options));
    if(body.action!=='quote'||!validKey(body.providerId))fail('طلب غير صحيح.');const provider=state.providers.find(p=>p.id===body.providerId&&!p._archived);if(!provider)fail('المكان لم يعد متاحًا.',404);
+
    const linked=await linkedProviderCatalog(member.db,provider.id),products=[...catalogForProvider(provider,state.menus,state.overrides),...linked.products];
    return reply(200,{quote:basketTotal(products,body.lines,provider.id),confirmedOrder:false});
   }
@@ -116,22 +117,30 @@ const UUID=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
 export async function conciergeOrder(body,state,member,{env=process.env,serviceFactory=createClient,catalogOverride=null,dispatch=dispatchProviderOrderAlert}={}){
  const keys=['action','providerId','requestId','lines','customer','fulfillment','customerConsent'];
  if(Object.keys(body).some(k=>!keys.includes(k))||!validKey(body.providerId)||!UUID.test(String(body.requestId))||!['delivery','pickup'].includes(body.fulfillment)||!Array.isArray(body.lines)||!body.lines.length||body.lines.length>60)fail('راجع بيانات الطلب.');
- const c=body.customer;if(!c||typeof c!=='object'||Array.isArray(c)||Object.keys(c).some(k=>!['name','phone','address','note'].includes(k)))fail('راجع بيانات التواصل.');
+ const c=body.customer;if(!c||typeof c!=='object'||Array.isArray(c)||Object.keys(c).some(k=>!['name','phone','address','note','deliveryArea'].includes(k)))fail('راجع بيانات التواصل.');
  if(body.customerConsent!==true)fail('وافق على مشاركة تفاصيل الطلب ورقم حسابك المؤكد مع النشاط لمتابعته.');
  if(!member.user?.phone_confirmed_at)fail('أكد رقم حسابك الأول عشان نكمّل الطلب.',403);
  const name=String(c.name||'').trim(),phone=String(member.user.phone||'').replace(/[^0-9+]/g,''),address=String(c.address||'').trim(),note=String(c.note||'').trim();
  if(name.length<2||name.length>60)fail('اكتب اسمك.');if(!/^\+?[0-9]{8,15}$/.test(phone))fail('رقم الموبايل غير صحيح.');
  if(body.fulfillment==='delivery'&&address.length<5)fail('اكتب عنوان التوصيل بالتفصيل.');if(address.length>300||note.length>500)fail('النص أطول من المسموح.');
  const provider=state.providers.find(p=>p.id===body.providerId&&!p._archived);if(!provider)fail('المكان لم يعد متاحًا.',404);
+ const deliveryArea=String(c.deliveryArea||'').trim();
+ let deliveryFee=0;
+ if(provider.id==='directory-sucreve'&&body.fulfillment==='delivery'){
+  const selected=Array.isArray(provider.deliveryFees)?provider.deliveryFees.find(x=>x.area===deliveryArea&&Number.isFinite(x.fee)&&x.currency==='EGP'):null;
+  if(!selected)fail('اختار منطقة التوصيل: كارما 1 أو كارما 2.');
+  deliveryFee=selected.fee;
+ }
  const products=catalogOverride?catalogOverride(provider):[...catalogForProvider(provider,state.menus,state.overrides),...(await linkedProviderCatalog(member.db,provider.id)).products];
  const quote=basketTotal(products,body.lines,provider.id);
  if(!quote.items.length||quote.items.some(x=>x.missing||x.unavailable))fail('في أصناف في السلة مش متاحة. راجع السلة.',409);
  const url=env.NEXT_PUBLIC_SUPABASE_URL||env.SUPABASE_URL,key=env.SUPABASE_SERVICE_ROLE_KEY;if(!url||!key)fail('الطلب عن طريق جوه مش متاح دلوقتي.',503);
  const svc=serviceFactory(url,key,{auth:{persistSession:false,autoRefreshToken:false}});
  const items=quote.items.map(x=>({id:x.id,title:x.title,quantity:x.quantity,unitPrice:x.unitPrice,lineTotal:x.lineTotal}));
- const r=await svc.rpc('jowwa_concierge_checkout',{p_buyer:member.user.id,p_request_id:body.requestId,p_directory_id:provider.id,p_provider_name:provider.name||'',p_items:items,p_total:quote.knownTotal,p_has_unpriced:quote.unpriced>0,p_customer:{name,phone,address,note},p_fulfillment:body.fulfillment});
+ if(deliveryFee>0)items.push({id:'delivery-fee-'+(deliveryArea==='كارما 1'?'karma-1':'karma-2'),title:'رسوم التوصيل — '+deliveryArea,quantity:1,unitPrice:deliveryFee,lineTotal:deliveryFee,kind:'delivery_fee'});
+ const r=await svc.rpc('jowwa_concierge_checkout',{p_buyer:member.user.id,p_request_id:body.requestId,p_directory_id:provider.id,p_provider_name:provider.name||'',p_items:items,p_total:quote.knownTotal+deliveryFee,p_has_unpriced:quote.unpriced>0,p_customer:{name,phone,address,note:deliveryArea?('منطقة التوصيل: '+deliveryArea+(note?' • '+note:'')).slice(0,500):note},p_fulfillment:body.fulfillment});
  if(r.error){if(['40001','23505'].includes(r.error.code))fail('الطلب محفوظ ببيانات مختلفة أو اتغير. افتح طلباتك وراجع الطلب قبل إعادة الإرسال.',409);const m=String(r.error.message||'');fail(/not available/i.test(m)?'الطلب عن طريق جوه مش متاح للمكان ده دلوقتي.':/Too many/i.test(m)?'طلبات كتير في وقت قصير. استنى شوية.':'تعذر إرسال الطلب. حاول تاني.',/not available|Too many/i.test(m)?409:503);}
  let notification={status:'queued',sent:0};if(r.data?.id){try{notification=await dispatch({source:'concierge_order',sourceId:r.data.id},env,{service:svc});}catch{}}
  const order={...r.data};delete order.providerPhone;
- return {order,quote,notification};
+ return {order,quote:{...quote,deliveryFee,total:quote.knownTotal+deliveryFee},notification};
 }

@@ -100,6 +100,13 @@ export function mountProviderCatalog(){
  }
  const lineText=line=>line.lineTotal===null?'السعر غير محدد':line.lineTotal===undefined?'الصنف اتشال':money(line.unitPrice)+' × '+line.quantity+' = '+money(line.lineTotal)+' جنيه';
  const summary=quote=>'<div class="cart-total"><span>إجمالي الأسعار المعروفة</span><strong>'+money(quote.knownTotal)+' جنيه</strong></div>'+(quote.tax?'<p>شامل '+money(quote.tax)+' جنيه ضريبة معلنة.</p>':'')+(quote.unpriced?'<p class="notice">'+quote.unpriced+' صنف سعره محتاج استفسار؛ مش داخل الإجمالي.</p>':'')+(quote.unknownTax?'<p class="data-note">الضريبة لبعض الأصناف غير مؤكدة.</p>':'');
+ const sucreveFee=area=>id==='directory-sucreve'?({ 'كارما 1':25,'كارما 2':35 }[area]??null):0;
+ const checkoutSummary=(quote,area,fulfillment)=>{
+  const fee=fulfillment==='delivery'?sucreveFee(area):0;
+  const feeLine=id==='directory-sucreve'?'<div class="cart-total"><span>رسوم التوصيل'+(fulfillment==='delivery'?' — '+esc(area||'اختار المنطقة'):'')+'</span><strong>'+(fee===null?'اختار المنطقة':money(fee)+' جنيه')+'</strong></div>':'';
+  const total=fee===null?null:quote.knownTotal+fee;
+  return feeLine+(id==='directory-sucreve'?'<div class="cart-total"><span>الإجمالي شامل التوصيل</span><strong>'+(total===null?'—':money(total)+' جنيه')+'</strong></div>':'');
+ };
  function requestSelection(quote){
   const selected=(quote.items||[]).map(line=>customerContactText(provider,line.title||'صنف لم يعد منشورًا')+' × '+line.quantity);
   return {selected,description:'محتاج أستفسر عن الاختيارات دي:\n'+selected.join('\n')+'\nالسعر والكميات والتوفر محتاجين تأكيد من المكان.'};
@@ -190,23 +197,24 @@ export function mountProviderCatalog(){
  }
  function saveCheckoutDraft(){
   const form=dialog?.querySelector('#concierge-form');if(!form)return;
-  checkoutDraft={...Object.fromEntries(['name','fulfillment','address','note'].map(name=>[name,form.elements.namedItem(name)?.value||''])),consent:form.elements.customerConsent?.checked===true};
+  checkoutDraft={...Object.fromEntries(['name','fulfillment','deliveryArea','address','note'].map(name=>[name,form.elements.namedItem(name)?.value||''])),consent:form.elements.customerConsent?.checked===true};
  }
  async function showCheckout(){
   const owner=activeUser,version=generation,snapshot=signature();
   if(!await ensureBookingMember()||owner!==activeUser||version!==generation||snapshot!==signature()||memberState().user?.id!==owner||!dialog?.open||dialogMode!=='basket')return;
   const quote=currentQuote()||await refreshQuote();if(!canConcierge(quote)||owner!==activeUser||version!==generation||snapshot!==signature()||!dialog?.open||dialogMode!=='basket')return;
-  dialogMode='checkout';const user=memberState().user,verifiedPhone=(user?.phone||'').replace(/^\+?20/,'0'),values={name:user?.name||'',fulfillment:'delivery',address:'',note:'',consent:false,...checkoutDraft};
+  dialogMode='checkout';const user=memberState().user,verifiedPhone=(user?.phone||'').replace(/^\+?20/,'0'),values={name:user?.name||'',fulfillment:'delivery',deliveryArea:'',address:'',note:'',consent:false,...checkoutDraft};
   dialog.innerHTML='<button type="button" class="member-close" data-cart-close aria-label="إغلاق">'+icon('close')+'</button><button type="button" class="text-button" data-checkout-back>'+icon('arrow')+' رجوع للسلة</button><h2>طلبك من '+esc(provider.name)+'</h2><form class="market-form concierge-form" id="concierge-form">'
-   +'<label>هتستلم إزاي؟<select name="fulfillment"><option value="delivery">توصيل</option><option value="pickup">هستلم من المكان</option></select></label>'
+   +'<label>هتستلم إزاي؟<select name="fulfillment"><option value="delivery">توصيل</option><option value="pickup">هستلم من المكان</option></select></label>'+(id==='directory-sucreve'?'<label data-sucreve-area>منطقة التوصيل<select name="deliveryArea" required><option value="">اختار المنطقة</option><option value="كارما 1">كارما 1 — 25 جنيه</option><option value="كارما 2">كارما 2 — 35 جنيه</option></select></label>':'')
    +'<label>اسمك إيه؟<input name="name" required minlength="2" maxlength="60" autocomplete="name" value="'+esc(values.name)+'"></label>'
    +'<p class="data-note" data-step-for="customerConsent">رقم حسابك المتحقق: <b dir="ltr">'+esc(verifiedPhone)+'</b>. ده الرقم اللي هيتبعت مع طلبك.</p>'
    +'<label>هنوصلك فين؟<textarea name="address" minlength="5" maxlength="300" autocomplete="street-address" placeholder="المنطقة، العمارة، الدور والشقة">'+esc(values.address)+'</textarea></label>'
    +'<label>تحب تقول للمكان حاجة؟<textarea name="note" maxlength="500" placeholder="ملاحظة اختيارية">'+esc(values.note)+'</textarea></label>'
    +'<label data-question="نشارك بيانات الطلب مع المكان؟"><input name="customerConsent" type="checkbox" required '+(values.consent?'checked':'')+'>موافق نبعت اسمي ورقمي المتحقق وتفاصيل طلبي لـ'+esc(provider.name)+' عشان يتابع الطلب من جوه.</label>'
-   +'<div data-cart-summary>'+summary(quote)+'</div><p class="data-note">طلبك بيتسجل في جوه، والتنفيذ محتاج تأكيد من المكان. السعر ورسوم التوصيل بيتأكدوا قبل التنفيذ، وتتابع حالة الطلب من هنا.</p><p id="concierge-sync" class="data-note" data-cart-sync role="status" aria-live="polite"></p><div class="form-error" role="alert"></div><button class="primary" type="submit">ابعت الطلب</button></form>';
-  const form=dialog.querySelector('#concierge-form');form.elements.fulfillment.value=values.fulfillment;
-  const updateDelivery=()=>{const delivery=form.elements.fulfillment.value==='delivery';form.elements.address.required=delivery;};updateDelivery();
+   +'<div data-cart-summary>'+summary(quote)+'</div>'+(id==='directory-sucreve'?'<div data-sucreve-total>'+checkoutSummary(quote,values.deliveryArea,values.fulfillment)+'</div>':'')+'<p class="data-note">طلبك بيتسجل في جوه، والتنفيذ محتاج تأكيد من المكان. السعر ورسوم التوصيل بيتأكدوا قبل التنفيذ، وتتابع حالة الطلب من هنا.</p><p id="concierge-sync" class="data-note" data-cart-sync role="status" aria-live="polite"></p><div class="form-error" role="alert"></div><button class="primary" type="submit">ابعت الطلب</button></form>';
+  const form=dialog.querySelector('#concierge-form');form.elements.fulfillment.value=values.fulfillment;if(form.elements.deliveryArea)form.elements.deliveryArea.value=values.deliveryArea;
+  const updateDelivery=()=>{const delivery=form.elements.fulfillment.value==='delivery';form.elements.address.required=delivery;if(form.elements.deliveryArea){form.elements.deliveryArea.required=delivery;form.querySelector('[data-sucreve-area]').hidden=!delivery;}const total=dialog.querySelector('[data-sucreve-total]');if(total)total.innerHTML=checkoutSummary(quote,form.elements.deliveryArea?.value||'',form.elements.fulfillment.value);};updateDelivery();
+  form.elements.deliveryArea?.addEventListener('change',()=>{saveCheckoutDraft();updateDelivery();});
   form.elements.fulfillment.addEventListener('change',updateDelivery);
   form.addEventListener('input',saveCheckoutDraft);form.addEventListener('change',saveCheckoutDraft);
   formSteps(form,{onSubmitLabel:'ابعت الطلب',visible:field=>field!=='address'||form.elements.fulfillment.value==='delivery',review:step=>{if(step==='review'&&!currentQuote())void refreshQuote();}});
@@ -218,7 +226,7 @@ export function mountProviderCatalog(){
    saveCheckoutDraft();const snapshot=signature(),owner=activeUser,currentGeneration=generation;let checked=currentQuote();
    if(!checked)checked=await refreshQuote();
    if(!canConcierge(checked)||snapshot!==signature()||owner!==activeUser){form.querySelector('.form-error').textContent='راجع السعر والكميات في السلة قبل إرسال الطلب.';return;}
-   const customer={name:checkoutDraft.name,phone:memberState().user?.phone||'',address:checkoutDraft.fulfillment==='delivery'?checkoutDraft.address:'',note:checkoutDraft.note};
+   const customer={name:checkoutDraft.name,phone:memberState().user?.phone||'',address:checkoutDraft.fulfillment==='delivery'?checkoutDraft.address:'',note:checkoutDraft.note,...(id==='directory-sucreve'&&checkoutDraft.fulfillment==='delivery'?{deliveryArea:checkoutDraft.deliveryArea}:{})};
    const payload={action:'concierge_order',providerId:id,lines:JSON.parse(snapshot),fulfillment:checkoutDraft.fulfillment,customer,customerConsent:true},requestSignature=JSON.stringify(payload);
    if(conciergeRequest?.signature!==requestSignature)conciergeRequest={signature:requestSignature,id:crypto.randomUUID()};
    sending=true;form.querySelector('.form-error').textContent='';syncMessage('بنبعت الطلب…');
