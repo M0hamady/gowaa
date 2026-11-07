@@ -76,13 +76,7 @@ export function createProviderHandler({admin=false,...options}={}){return async(
   if(!admin){
    if(body.action==='concierge_order')return reply(200,await conciergeOrder(body,state,member,options));
    if(body.action!=='quote'||!validKey(body.providerId))fail('طلب غير صحيح.');const provider=state.providers.find(p=>p.id===body.providerId&&!p._archived);if(!provider)fail('المكان لم يعد متاحًا.',404);
-const deliveryArea=String(c.deliveryArea||'').trim();
- let deliveryFee=0;
- if(provider.id==='directory-sucreve'&&body.fulfillment==='delivery'){
-  const selected=Array.isArray(provider.deliveryFees)?provider.deliveryFees.find(x=>x.area===deliveryArea&&Number.isFinite(x.fee)&&x.currency==='EGP'):null;
-  if(!selected)fail('اختار منطقة التوصيل: كارما 1 أو كارما 2.');
-  deliveryFee=selected.fee;
- }
+
    const linked=await linkedProviderCatalog(member.db,provider.id),products=[...catalogForProvider(provider,state.menus,state.overrides),...linked.products];
    return reply(200,{quote:basketTotal(products,body.lines,provider.id),confirmedOrder:false});
   }
@@ -130,6 +124,13 @@ export async function conciergeOrder(body,state,member,{env=process.env,serviceF
  if(name.length<2||name.length>60)fail('اكتب اسمك.');if(!/^\+?[0-9]{8,15}$/.test(phone))fail('رقم الموبايل غير صحيح.');
  if(body.fulfillment==='delivery'&&address.length<5)fail('اكتب عنوان التوصيل بالتفصيل.');if(address.length>300||note.length>500)fail('النص أطول من المسموح.');
  const provider=state.providers.find(p=>p.id===body.providerId&&!p._archived);if(!provider)fail('المكان لم يعد متاحًا.',404);
+ const deliveryArea=String(c.deliveryArea||'').trim();
+ let deliveryFee=0;
+ if(provider.id==='directory-sucreve'&&body.fulfillment==='delivery'){
+  const selected=Array.isArray(provider.deliveryFees)?provider.deliveryFees.find(x=>x.area===deliveryArea&&Number.isFinite(x.fee)&&x.currency==='EGP'):null;
+  if(!selected)fail('اختار منطقة التوصيل: كارما 1 أو كارما 2.');
+  deliveryFee=selected.fee;
+ }
  const products=catalogOverride?catalogOverride(provider):[...catalogForProvider(provider,state.menus,state.overrides),...(await linkedProviderCatalog(member.db,provider.id)).products];
  const quote=basketTotal(products,body.lines,provider.id);
  if(!quote.items.length||quote.items.some(x=>x.missing||x.unavailable))fail('في أصناف في السلة مش متاحة. راجع السلة.',409);
