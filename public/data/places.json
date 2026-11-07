@@ -1,5 +1,34 @@
 [
   {
+    "id": "directory-sucreve",
+    "name": "Sucréve",
+    "category": "حلويات",
+    "description": "متجر حلويات ووافل أونلاين. الطلب من داخل جوه، والتوصيل إلى كرمة 1 وكرمة 2 فقط.",
+    "serviceArea": "كرمة 1 وكرمة 2 فقط",
+    "onlineOnly": true,
+    "priority": 1,
+    "featured": true,
+    "verified": true,
+    "badgeText": "شريك موثّق • جودة ممتازة",
+    "qualityBadge": "أعلى تقييم في كرمة",
+    "businessOwnerVerified": true,
+    "image": "/logos/sucreve-logo.jpg",
+    "logo": "/logos/sucreve-logo.jpg",
+    "url": "/place/directory-sucreve",
+    "deliveryFees": [
+      {
+        "area": "كرمة 1",
+        "fee": 25,
+        "currency": "EGP"
+      },
+      {
+        "area": "كرمة 2",
+        "fee": 35,
+        "currency": "EGP"
+      }
+    ]
+  },
+  {
     "id": "poi-1021898717",
     "name": "صن مول الياسمين",
     "category": "تسوق",
