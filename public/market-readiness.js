@@ -55,12 +55,13 @@ export function recommendationKey(record,{kind='provider',facts,...signals}={}){
  const priority=bounded(record.market_priority??record.marketPriority,999)||bounded(record.sellers?.market_priority,999)||bounded(signals.provider?.market_priority??signals.provider?.marketPriority,999);
  const orders=bounded(record.orderCount,999),sellerOrders=bounded(record.sellerOrderCount??record.sellers?.orderCount,999),clicks=bounded(record.clickCount,5000);
  const popularity=(orders>0?20000:0)+orders*20+clicks*3+(sellerOrders>0?5000:0)+sellerOrders*5;
+ const badgeTier=kind==='provider'&&((record.featured===true||record.verified===true||record.badgeText||Number(record.priority)===1)?4:record.logo||record.image||record.imageUrl?3:(record.businessOwnerVerified===true||record.providerManaged===true)?2:1);
  const quality=(facts?.available===true?4:0)+(facts?.offer?2:0)+(record.image_path||record.imageUrl||record.image||record.logo?1:0)-(record.isAddOn?50:0);
- return {readiness,priority,popularity:popularity+quality,title:String(record.title??record.name??''),id:String(record.id??'')};
+ return {readiness,priority,badgeTier,popularity:popularity+quality,title:String(record.title??record.name??''),id:String(record.id??'')};
 }
 
 export function compareRecommendations(a,b){
- return b.readiness.level-a.readiness.level||b.priority-a.priority||b.popularity-a.popularity||collator.compare(a.title,b.title)||(a.id<b.id?-1:a.id>b.id?1:0);
+ return b.badgeTier-a.badgeTier||b.readiness.level-a.readiness.level||b.priority-a.priority||b.popularity-a.popularity||collator.compare(a.title,b.title)||(a.id<b.id?-1:a.id>b.id?1:0);
 }
 
 export function sortProviders(providers,{signals=()=>({})}={}){
