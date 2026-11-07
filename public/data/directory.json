@@ -1,5 +1,40 @@
 [
   {
+    "id": "directory-sucreve",
+    "name": "Sucréve",
+    "category": "حلويات",
+    "description": "متجر حلويات ووافل أونلاين. تصفح المنيو وأضف اختياراتك للسلة وأرسل طلبك من داخل جوه. التوصيل متاح لكارما 1 وكارما 2 فقط حسب الرسوم الموضحة.",
+    "phone": "01554303992",
+    "whatsapp": "01554303992",
+    "schemaType": "FoodEstablishment",
+    "onlineOnly": true,
+    "precision": "online_only",
+    "serviceArea": "كرمة 1 وكرمة 2 فقط",
+    "deliveryFees": [
+      {
+        "area": "كارما 1",
+        "fee": 25,
+        "currency": "EGP"
+      },
+      {
+        "area": "كارما 2",
+        "fee": 35,
+        "currency": "EGP"
+      }
+    ],
+    "status": "متجر أونلاين فقط • لا يوجد عنوان استقبال أو موقع على الخريطة • الطلب والمتابعة من جوه",
+    "checkedAt": "2026-11-07",
+    "visitorNote": "الطلب من جوه فقط. التوصيل: كارما 1 بـ25 جنيه، كارما 2 بـ35 جنيه.",
+    "image": "/social/places.png",
+    "url": "/place/directory-sucreve",
+    "logo": "/logos/sucreve-logo.jpg",
+    "priority": 1,
+    "featured": true,
+    "verified": true,
+    "badgeText": "شريك موثّق • جودة ممتازة",
+    "qualityBadge": "أعلى تقييم في كرمة"
+  },
+  {
     "id": "poi-1021898717",
     "name": "صن مول الياسمين",
     "category": "تسوق",
@@ -2392,35 +2427,5 @@
     "providerManaged": false,
     "status": "بيانات النشاط من رسائله المرفقة. السعر النهائي وميعاد التنفيذ وعنوان الاستلام يتأكدوا داخل الطلب.",
     "visitorNote": "طلب خاص بالطباعة والهدايا. راجع عرض السعر والمعاينة قبل الموافقة."
-  },
-  {
-    "id": "directory-sucreve",
-    "name": "Sucréve",
-    "category": "حلويات",
-    "description": "متجر حلويات ووافل أونلاين. تصفح المنيو وأضف اختياراتك للسلة وأرسل طلبك من داخل جوه. التوصيل متاح لكارما 1 وكارما 2 فقط حسب الرسوم الموضحة.",
-    "phone": "01554303992",
-    "whatsapp": "01554303992",
-    "schemaType": "FoodEstablishment",
-    "onlineOnly": true,
-    "precision": "online_only",
-    "serviceArea": "كارما 1، كارما 2",
-    "deliveryFees": [
-      {
-        "area": "كارما 1",
-        "fee": 25,
-        "currency": "EGP"
-      },
-      {
-        "area": "كارما 2",
-        "fee": 35,
-        "currency": "EGP"
-      }
-    ],
-    "status": "متجر أونلاين فقط • لا يوجد عنوان استقبال أو موقع على الخريطة • الطلب والمتابعة من جوه",
-    "checkedAt": "2026-11-07",
-    "visitorNote": "الطلب من جوه فقط. التوصيل: كارما 1 بـ25 جنيه، كارما 2 بـ35 جنيه.",
-    "image": "/social/places.png",
-    "url": "/place/directory-sucreve",
-    "logo": "/logos/sucreve-logo.jpg"
   }
 ]
