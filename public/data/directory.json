@@ -1,5 +1,40 @@
 [
   {
+    "id": "directory-sucreve",
+    "name": "Sucréve",
+    "category": "حلويات",
+    "description": "متجر حلويات ووافل أونلاين. تصفح المنيو وأضف اختياراتك للسلة وأرسل طلبك من داخل جوه. التوصيل متاح لكارما 1 وكارما 2 فقط حسب الرسوم الموضحة.",
+    "phone": "01554303992",
+    "whatsapp": "01554303992",
+    "schemaType": "FoodEstablishment",
+    "onlineOnly": true,
+    "precision": "online_only",
+    "serviceArea": "كرمة 1 وكرمة 2 فقط",
+    "deliveryFees": [
+      {
+        "area": "كارما 1",
+        "fee": 25,
+        "currency": "EGP"
+      },
+      {
+        "area": "كارما 2",
+        "fee": 35,
+        "currency": "EGP"
+      }
+    ],
+    "status": "متجر أونلاين فقط • لا يوجد عنوان استقبال أو موقع على الخريطة • الطلب والمتابعة من جوه",
+    "checkedAt": "2026-11-07",
+    "visitorNote": "الطلب من جوه فقط. التوصيل: كارما 1 بـ25 جنيه، كارما 2 بـ35 جنيه.",
+    "image": "/social/places.png",
+    "url": "/place/directory-sucreve",
+    "logo": "/logos/sucreve-logo.jpg",
+    "priority": 1,
+    "featured": true,
+    "verified": true,
+    "badgeText": "شريك موثّق • جودة ممتازة",
+    "qualityBadge": "أعلى تقييم في كرمة"
+  },
+  {
     "id": "poi-1021898717",
     "name": "صن مول الياسمين",
     "category": "تسوق",
@@ -116,7 +151,10 @@
       31.644104,
       29.916714
     ],
-    "mapId": "directory-narges-pharmacy"
+    "mapId": "directory-narges-pharmacy",
+    "aliases": [
+      "صيدلية د. ندى"
+    ]
   },
   {
     "id": "directory-wataniya-services",
@@ -397,7 +435,10 @@
     "mapLabel": "الوصول إلى صن مول",
     "mapCategory": "health",
     "schemaType": "Pharmacy",
-    "checkedAt": "2026-11-04"
+    "checkedAt": "2026-11-04",
+    "aliases": [
+      "صيدلية د. مها"
+    ]
   },
   {
     "id": "directory-public-services",
@@ -1118,5 +1159,1273 @@
     "sourceGroupId": "directory-atms-sunmall",
     "precision": "mall_location_only",
     "schemaType": "AutomatedTeller"
+  },
+  {
+    "id": "directory-guide-food-location",
+    "name": "Food Location",
+    "category": "مطاعم",
+    "address": "الياسمين — كيان سيتي",
+    "description": "مطعم مؤكد على جوه يقدم مشويات وكريبات وشاورما سوري. افتح صفحة النشاط لمراجعة المنيو والأصناف المرتبطة به.",
+    "status": "تم تأكيد مقدم الخدمة مع جوه؛ الأسعار والتوفر النهائي يراجعهما صاحب النشاط.",
+    "businessOwnerVerified": true,
+    "mapCategory": "restaurant",
+    "schemaType": "Restaurant",
+    "image": "/assets/market/food-location/logo.png",
+    "source": "https://jowwa-kayan.vercel.app/market?business=directory-guide-food-location",
+    "sourceType": "provider_menu_image",
+    "sourceTitle": "منيو Food Location المرفوع",
+    "checkedAt": "2026-11-05",
+    "phone": "01033138856"
+  },
+  {
+    "id": "lead-ahmed-fahmy-electrician",
+    "name": "عم أحمد فهمي",
+    "category": "كهرباء",
+    "phone": "01011940776",
+    "description": "كهربا وتعليق وتركيب بالشنيور والهيلتي، وبيخدم النرجس.",
+    "status": "مرشح من منشور مجتمعي؛ ننتظر موافقة صاحب الرقم قبل النشر العام.",
+    "sourceType": "user_shared_facebook_comments",
+    "sourceTitle": "قائمة مقدمي خدمات مرشحين من صور وتعليقات منشور فيسبوك",
+    "checkedAt": "2026-11-05",
+    "businessOwnerVerified": false,
+    "providerManaged": false
+  },
+  {
+    "id": "lead-hany-electrician",
+    "name": "بشمهندس هاني",
+    "category": "كهرباء",
+    "phone": "01008027066",
+    "description": "خدمات كهرباء.",
+    "status": "مرشح من منشور مجتمعي؛ ننتظر موافقة صاحب الرقم قبل النشر العام.",
+    "sourceType": "user_shared_facebook_comments",
+    "sourceTitle": "قائمة مقدمي خدمات مرشحين من صور وتعليقات منشور فيسبوك",
+    "checkedAt": "2026-11-05",
+    "businessOwnerVerified": false,
+    "providerManaged": false
+  },
+  {
+    "id": "lead-unnamed-electrician-01068251240",
+    "name": "كهربائي — بدون اسم",
+    "category": "كهرباء",
+    "phone": "01068251240",
+    "description": "خدمات كهرباء، الاسم يحتاج تأكيدًا.",
+    "status": "مرشح من منشور مجتمعي؛ ننتظر موافقة صاحب الرقم قبل النشر العام.",
+    "sourceType": "user_shared_facebook_comments",
+    "sourceTitle": "قائمة مقدمي خدمات مرشحين من صور وتعليقات منشور فيسبوك",
+    "checkedAt": "2026-11-05",
+    "businessOwnerVerified": false,
+    "providerManaged": false
+  },
+  {
+    "id": "lead-unnamed-electrician-01144696041",
+    "name": "كهربائي — يعمل مع شركة جوه الكيان",
+    "category": "كهرباء",
+    "phone": "01144696041",
+    "description": "خدمات كهرباء؛ التوفر غير ثابت حسب الترشيح.",
+    "status": "مرشح من منشور مجتمعي؛ ننتظر موافقة صاحب الرقم قبل النشر العام.",
+    "sourceType": "user_shared_facebook_comments",
+    "sourceTitle": "قائمة مقدمي خدمات مرشحين من صور وتعليقات منشور فيسبوك",
+    "checkedAt": "2026-11-05",
+    "businessOwnerVerified": false,
+    "providerManaged": false
+  },
+  {
+    "id": "lead-ayman-kemo-electrician",
+    "name": "Ayman Kemo",
+    "category": "كهرباء",
+    "phone": "01104279839",
+    "description": "إعلان لخدمات كهرباء؛ الرقم كُتب في المنشور.",
+    "status": "إعلان مرشح؛ ننتظر موافقة صاحب الرقم قبل النشر العام.",
+    "sourceType": "user_shared_facebook_comments",
+    "sourceTitle": "قائمة مقدمي خدمات مرشحين من صور وتعليقات منشور فيسبوك",
+    "checkedAt": "2026-11-05",
+    "businessOwnerVerified": false,
+    "providerManaged": false
+  },
+  {
+    "id": "lead-ahmed-narges-plumber",
+    "name": "أحمد — سباك النرجس",
+    "category": "سباكة",
+    "phone": "01104847545 / 01276326950",
+    "description": "خدمات سباكة.",
+    "status": "مرشح من منشور مجتمعي؛ ننتظر موافقة صاحب الرقم قبل النشر العام.",
+    "sourceType": "user_shared_facebook_comments",
+    "sourceTitle": "قائمة مقدمي خدمات مرشحين من صور وتعليقات منشور فيسبوك",
+    "checkedAt": "2026-11-05",
+    "businessOwnerVerified": false,
+    "providerManaged": false
+  },
+  {
+    "id": "lead-alaa-yasmin-plumber",
+    "name": "علاء — سباك الياسمين",
+    "category": "سباكة",
+    "phone": "01159042008",
+    "description": "خدمات سباكة في الياسمين.",
+    "status": "مرشح من منشور مجتمعي؛ ننتظر موافقة صاحب الرقم قبل النشر العام.",
+    "sourceType": "user_shared_facebook_comments",
+    "sourceTitle": "قائمة مقدمي خدمات مرشحين من صور وتعليقات منشور فيسبوك",
+    "checkedAt": "2026-11-05",
+    "businessOwnerVerified": false,
+    "providerManaged": false
+  },
+  {
+    "id": "lead-mahmoud-mabrouk-turki-plumber",
+    "name": "محمود مبروك تركي",
+    "category": "سباكة",
+    "phone": "01068603032",
+    "description": "خدمات سباكة؛ واتساب مذكور في الترشيح.",
+    "status": "مرشح من منشور مجتمعي؛ ننتظر موافقة صاحب الرقم قبل النشر العام.",
+    "sourceType": "user_shared_facebook_comments",
+    "sourceTitle": "قائمة مقدمي خدمات مرشحين من صور وتعليقات منشور فيسبوك",
+    "checkedAt": "2026-11-05",
+    "businessOwnerVerified": false,
+    "providerManaged": false
+  },
+  {
+    "id": "lead-om-waleed-plumber",
+    "name": "عم وليد",
+    "category": "سباكة",
+    "phone": "01026774326",
+    "description": "خدمات سباكة.",
+    "status": "مرشح من منشور مجتمعي؛ ننتظر موافقة صاحب الرقم قبل النشر العام.",
+    "sourceType": "user_shared_facebook_comments",
+    "sourceTitle": "قائمة مقدمي خدمات مرشحين من صور وتعليقات منشور فيسبوك",
+    "checkedAt": "2026-11-05",
+    "businessOwnerVerified": false,
+    "providerManaged": false
+  },
+  {
+    "id": "lead-bahy-plumber",
+    "name": "باهي",
+    "category": "سباكة",
+    "phone": "01145454484",
+    "description": "خدمات سباكة.",
+    "status": "مرشح من منشور مجتمعي؛ ننتظر موافقة صاحب الرقم قبل النشر العام.",
+    "sourceType": "user_shared_facebook_comments",
+    "sourceTitle": "قائمة مقدمي خدمات مرشحين من صور وتعليقات منشور فيسبوك",
+    "checkedAt": "2026-11-05",
+    "businessOwnerVerified": false,
+    "providerManaged": false
+  },
+  {
+    "id": "lead-ashraf-kamal-carpenter-plumber",
+    "name": "أشرف كمال",
+    "category": "سباكة ونجارة",
+    "phone": "01121525215",
+    "description": "نجار وسباك.",
+    "status": "مرشح من منشور مجتمعي؛ ننتظر موافقة صاحب الرقم قبل النشر العام.",
+    "sourceType": "user_shared_facebook_comments",
+    "sourceTitle": "قائمة مقدمي خدمات مرشحين من صور وتعليقات منشور فيسبوك",
+    "checkedAt": "2026-11-05",
+    "businessOwnerVerified": false,
+    "providerManaged": false
+  },
+  {
+    "id": "lead-bishoy-carpenter",
+    "name": "بيشوي — نجار الكيان",
+    "category": "نجارة وأبواب",
+    "phone": "01093013453",
+    "description": "خدمات نجارة.",
+    "status": "مرشح من منشور مجتمعي؛ ننتظر موافقة صاحب الرقم قبل النشر العام.",
+    "sourceType": "user_shared_facebook_comments",
+    "sourceTitle": "قائمة مقدمي خدمات مرشحين من صور وتعليقات منشور فيسبوك",
+    "checkedAt": "2026-11-05",
+    "businessOwnerVerified": false,
+    "providerManaged": false
+  },
+  {
+    "id": "lead-shimaa-armored-doors",
+    "name": "شيماء — أبواب مصفحة",
+    "category": "نجارة وأبواب",
+    "phone": "01152118932",
+    "description": "أبواب مصفحة.",
+    "status": "مرشح من منشور مجتمعي؛ ننتظر موافقة صاحب الرقم قبل النشر العام.",
+    "sourceType": "user_shared_facebook_comments",
+    "sourceTitle": "قائمة مقدمي خدمات مرشحين من صور وتعليقات منشور فيسبوك",
+    "checkedAt": "2026-11-05",
+    "businessOwnerVerified": false,
+    "providerManaged": false
+  },
+  {
+    "id": "lead-ahmed-curtains-upholstery",
+    "name": "أحمد — ستاير وتنجيد",
+    "category": "ستاير وتنجيد",
+    "phone": "01145950294",
+    "description": "ستاير وتنجيد.",
+    "status": "مرشح من منشور مجتمعي؛ ننتظر موافقة صاحب الرقم قبل النشر العام.",
+    "sourceType": "user_shared_facebook_comments",
+    "sourceTitle": "قائمة مقدمي خدمات مرشحين من صور وتعليقات منشور فيسبوك",
+    "checkedAt": "2026-11-05",
+    "businessOwnerVerified": false,
+    "providerManaged": false
+  },
+  {
+    "id": "lead-abu-elfotouh-curtains",
+    "name": "مركّبة ستاير — شركة أبو الفتوح",
+    "category": "ستاير وتنجيد",
+    "phone": "01040317985",
+    "description": "تركيب ستاير.",
+    "status": "مرشح من منشور مجتمعي؛ ننتظر موافقة صاحب الرقم قبل النشر العام.",
+    "sourceType": "user_shared_facebook_comments",
+    "sourceTitle": "قائمة مقدمي خدمات مرشحين من صور وتعليقات منشور فيسبوك",
+    "checkedAt": "2026-11-05",
+    "businessOwnerVerified": false,
+    "providerManaged": false
+  },
+  {
+    "id": "lead-mohamed-elwazir-upholstery",
+    "name": "محمد الوزير",
+    "category": "ستاير وتنجيد",
+    "description": "منجّد؛ لا يوجد رقم في المصدر المشارك.",
+    "status": "مرشح من تعليق مجتمعي بدون رقم؛ ننتظر موافقة صاحب الخدمة.",
+    "sourceType": "user_shared_facebook_comments",
+    "sourceTitle": "قائمة مقدمي خدمات مرشحين من صور وتعليقات منشور فيسبوك",
+    "checkedAt": "2026-11-05",
+    "businessOwnerVerified": false,
+    "providerManaged": false
+  },
+  {
+    "id": "lead-almotamyez-gallery-curtains",
+    "name": "المتميز جاليري",
+    "category": "ستاير وتنجيد",
+    "description": "ستاير؛ يبدو إعلانًا في المصدر المشارك.",
+    "status": "إعلان مرشح بدون رقم مؤكد؛ ننتظر موافقة صاحب الخدمة.",
+    "sourceType": "user_shared_facebook_comments",
+    "sourceTitle": "قائمة مقدمي خدمات مرشحين من صور وتعليقات منشور فيسبوك",
+    "checkedAt": "2026-11-05",
+    "businessOwnerVerified": false,
+    "providerManaged": false
+  },
+  {
+    "id": "lead-emad-refrigerators",
+    "name": "بشمهندس عماد",
+    "category": "أجهزة منزلية",
+    "phone": "01200128244",
+    "description": "صيانة تلاجات.",
+    "status": "مرشح من منشور مجتمعي؛ ننتظر موافقة صاحب الرقم قبل النشر العام.",
+    "sourceType": "user_shared_facebook_comments",
+    "sourceTitle": "قائمة مقدمي خدمات مرشحين من صور وتعليقات منشور فيسبوك",
+    "checkedAt": "2026-11-05",
+    "businessOwnerVerified": false,
+    "providerManaged": false
+  },
+  {
+    "id": "lead-isnawy-washing-machines",
+    "name": "مركز الإسناوي — محمود حسنين",
+    "category": "أجهزة منزلية",
+    "phone": "01156742000 / 01002938817",
+    "description": "صيانة غسالات أوتوماتيك؛ المصدر يذكر حلوان.",
+    "status": "مرشح من منشور مجتمعي؛ نطاق الخدمة يحتاج تأكيدًا.",
+    "sourceType": "user_shared_facebook_comments",
+    "sourceTitle": "قائمة مقدمي خدمات مرشحين من صور وتعليقات منشور فيسبوك",
+    "checkedAt": "2026-11-05",
+    "businessOwnerVerified": false,
+    "providerManaged": false
+  },
+  {
+    "id": "lead-ali-taha-car-diagnostics",
+    "name": "م/ علي طه",
+    "category": "كشف أعطال عربيات",
+    "phone": "01200601016 / 01127843570",
+    "description": "كشف أعطال عربيات بالكمبيوتر؛ إعلان يحتاج موافقة.",
+    "status": "إعلان مرشح؛ ننتظر موافقة صاحب الرقم قبل النشر العام.",
+    "sourceType": "user_shared_facebook_comments",
+    "sourceTitle": "قائمة مقدمي خدمات مرشحين من صور وتعليقات منشور فيسبوك",
+    "checkedAt": "2026-11-05",
+    "businessOwnerVerified": false,
+    "providerManaged": false
+  },
+  {
+    "id": "lead-qenawy-dish",
+    "name": "قناوي دش",
+    "category": "دش وكاميرات",
+    "phone": "01006940247",
+    "description": "خدمات دش.",
+    "status": "مرشح من منشور مجتمعي؛ ننتظر موافقة صاحب الرقم قبل النشر العام.",
+    "sourceType": "user_shared_facebook_comments",
+    "sourceTitle": "قائمة مقدمي خدمات مرشحين من صور وتعليقات منشور فيسبوك",
+    "checkedAt": "2026-11-05",
+    "businessOwnerVerified": false,
+    "providerManaged": false
+  },
+  {
+    "id": "lead-qenawy-dish-2",
+    "name": "قناوي دش ٢",
+    "category": "دش وكاميرات",
+    "phone": "01110043365",
+    "description": "خدمات دش؛ رقم مختلف عن قناوي دش.",
+    "status": "مرشح من منشور مجتمعي؛ ننتظر تأكيد ما إذا كان نشاطًا مستقلًا.",
+    "sourceType": "user_shared_facebook_comments",
+    "sourceTitle": "قائمة مقدمي خدمات مرشحين من صور وتعليقات منشور فيسبوك",
+    "checkedAt": "2026-11-05",
+    "businessOwnerVerified": false,
+    "providerManaged": false
+  },
+  {
+    "id": "lead-egyptian-surveillance-cameras",
+    "name": "المصرية لكاميرات المراقبة — م/ محمد الوكيل",
+    "category": "دش وكاميرات",
+    "phone": "01114570992 / 01098740490",
+    "description": "كاميرات مراقبة وإنتركم.",
+    "status": "مرشح من منشور مجتمعي؛ ننتظر موافقة صاحب النشاط قبل النشر العام.",
+    "sourceType": "user_shared_facebook_comments",
+    "sourceTitle": "قائمة مقدمي خدمات مرشحين من صور وتعليقات منشور فيسبوك",
+    "checkedAt": "2026-11-05",
+    "businessOwnerVerified": false,
+    "providerManaged": false
+  },
+  {
+    "id": "lead-almasa-cleaning",
+    "name": "شركة الماسة",
+    "category": "تنظيف منزلي",
+    "phone": "01060416838",
+    "description": "تنظيف منزلي؛ إعلان يحتاج موافقة.",
+    "status": "إعلان مرشح؛ ننتظر موافقة صاحب الرقم قبل النشر العام.",
+    "sourceType": "user_shared_facebook_comments",
+    "sourceTitle": "قائمة مقدمي خدمات مرشحين من صور وتعليقات منشور فيسبوك",
+    "checkedAt": "2026-11-05",
+    "businessOwnerVerified": false,
+    "providerManaged": false
+  },
+  {
+    "id": "directory-caramia",
+    "name": "Caramia — كاراميا",
+    "category": "حلويات",
+    "address": "كيان سيتي — العنوان التفصيلي يحدده صاحب النشاط",
+    "phone": "01043507917",
+    "description": "كاراميا للحلويات: قشطوطة، كيكات كافيهات، تشيز كيك، إكلير، سينابون، إنجلش كيك، كيكات السعادة، ميني تارت، وتورت بالطلب. السينابون والإنجلش كيك والتورت بالحجز المسبق؛ القشطوطة والماتيلدا والهاني كيك عليهم سحب. إجازة المحل يوم الاتنين.",
+    "source": "https://wa.me/201043507917",
+    "status": "المنيو والصور والمواعيد من صاحب المحل (٥ نوفمبر ٢٠٢٦): إجازة يوم الاتنين. العنوان التفصيلي يحدده صاحب النشاط.",
+    "checkedAt": "2026-11-05",
+    "sourceDate": null,
+    "menuStatus": "owner_provided",
+    "menuCheckedAt": "2026-11-05",
+    "menuNote": "منيو مقدم من صاحب المحل. السينابون والإنجلش كيك والتورت بالحجز المسبق، والقشطوطة والماتيلدا والهاني كيك عليهم سحب فاحجز بدري، وباقي الأصناف متاحة أحيانًا. أكد التوفر والإجمالي قبل الطلب.",
+    "aliases": [
+      "Caramia",
+      "كاراميا",
+      "كراميا",
+      "كارميا"
+    ],
+    "keywords": [
+      "حلويات",
+      "قشطوطة",
+      "تشيز كيك",
+      "إكلير",
+      "سينابون",
+      "ميني تارت",
+      "كيك",
+      "ديزرت",
+      "تورت",
+      "ماتيلدا",
+      "هاني كيك"
+    ],
+    "schemaType": "Bakery",
+    "menuUrl": "https://jowwa-kayan.vercel.app/menus/caramia/page-1.jpg",
+    "image": "/social/directory-caramia.png",
+    "cardPhotos": [
+      "/menus/caramia/photo-12.jpg",
+      "/menus/caramia/photo-1.jpg",
+      "/menus/caramia/photo-8.jpg"
+    ],
+    "weeklyDayOff": "الاتنين",
+    "logo": "/logos/directory-caramia.webp"
+  },
+  {
+    "id": "community-fov-market",
+    "name": "FOV Market — فوف ماركت",
+    "category": "بقالة",
+    "address": "بنزينة وطنية — أمام الأكاديمية العسكرية",
+    "mapId": "directory-coffee-castle",
+    "mapLabel": "موقع البنزينة التقريبي",
+    "phone": "01205590623",
+    "description": "سوبر ماركت.",
+    "status": "رقم من دليل مجتمعي منشور؛ أكّد المواعيد والتوفر مع المكان قبل ما تتحرك.",
+    "aliases": [
+      "FOV Market",
+      "فوف ماركت"
+    ],
+    "keywords": [
+      "سوبر ماركت",
+      "ماركت",
+      "بقالة"
+    ],
+    "schemaType": "GroceryStore",
+    "sourceType": "user_shared_community_post",
+    "sourceTitle": "دليل خدمات مدينة النرجس والياسمين 2026 — منشور مجتمعي أرسله أدمن جوه",
+    "checkedAt": "2026-11-05",
+    "businessOwnerVerified": false,
+    "providerManaged": false
+  },
+  {
+    "id": "community-hyper-one",
+    "name": "هايبر وان",
+    "category": "بقالة",
+    "address": "كيان سيتي",
+    "phone": "01004023757",
+    "description": "سوبر ماركت.",
+    "status": "رقم من دليل مجتمعي منشور؛ أكّد المواعيد والتوفر مع المكان قبل ما تتحرك.",
+    "aliases": [
+      "Hyper One"
+    ],
+    "keywords": [
+      "سوبر ماركت",
+      "هايبر",
+      "بقالة"
+    ],
+    "schemaType": "GroceryStore",
+    "sourceType": "user_shared_community_post",
+    "sourceTitle": "دليل خدمات مدينة النرجس والياسمين 2026 — منشور مجتمعي أرسله أدمن جوه",
+    "checkedAt": "2026-11-05",
+    "businessOwnerVerified": false,
+    "providerManaged": false
+  },
+  {
+    "id": "community-yasmin-market",
+    "name": "ماركت الياسمين",
+    "category": "بقالة",
+    "address": "الياسمين — كيان سيتي",
+    "phone": "01067283836",
+    "description": "سوبر ماركت في الياسمين.",
+    "status": "رقم من دليل مجتمعي منشور؛ أكّد المواعيد والتوفر مع المكان قبل ما تتحرك.",
+    "keywords": [
+      "سوبر ماركت",
+      "ماركت",
+      "بقالة"
+    ],
+    "schemaType": "GroceryStore",
+    "sourceType": "user_shared_community_post",
+    "sourceTitle": "دليل خدمات مدينة النرجس والياسمين 2026 — منشور مجتمعي أرسله أدمن جوه",
+    "checkedAt": "2026-11-05",
+    "businessOwnerVerified": false,
+    "providerManaged": false
+  },
+  {
+    "id": "community-sun-market",
+    "name": "صن ماركت",
+    "category": "بقالة",
+    "address": "صن مول الياسمين",
+    "mapId": "poi-1021898717",
+    "mapLabel": "موقع المول",
+    "description": "سوبر ماركت.",
+    "status": "الدليل المجتمعي ذكر المكان من غير رقم تواصل؛ لو عندك الرقم الصحيح ابعته لجوه.",
+    "aliases": [
+      "Sun Market"
+    ],
+    "keywords": [
+      "سوبر ماركت",
+      "ماركت"
+    ],
+    "schemaType": "GroceryStore",
+    "sourceType": "user_shared_community_post",
+    "sourceTitle": "دليل خدمات مدينة النرجس والياسمين 2026 — منشور مجتمعي أرسله أدمن جوه",
+    "checkedAt": "2026-11-05",
+    "businessOwnerVerified": false,
+    "providerManaged": false
+  },
+  {
+    "id": "community-stouta-dairy",
+    "name": "ألبان ستوتة",
+    "category": "بقالة",
+    "address": "صن مول الياسمين",
+    "mapId": "poi-1021898717",
+    "mapLabel": "موقع المول",
+    "phone": "01038151163",
+    "description": "ألبان ومنتجاتها.",
+    "status": "رقم من دليل مجتمعي منشور؛ أكّد المواعيد والتوفر مع المكان قبل ما تتحرك.",
+    "aliases": [
+      "ستوتة"
+    ],
+    "keywords": [
+      "ألبان",
+      "لبن",
+      "جبن",
+      "زبادي"
+    ],
+    "schemaType": "GroceryStore",
+    "sourceType": "user_shared_community_post",
+    "sourceTitle": "دليل خدمات مدينة النرجس والياسمين 2026 — منشور مجتمعي أرسله أدمن جوه",
+    "checkedAt": "2026-11-05",
+    "businessOwnerVerified": false,
+    "providerManaged": false
+  },
+  {
+    "id": "community-rokn-elkheir-produce",
+    "name": "ركن الخير للخضروات والفاكهة",
+    "category": "بقالة",
+    "address": "كيان سيتي",
+    "phone": "01012918718",
+    "description": "خضروات وفاكهة.",
+    "status": "رقم من دليل مجتمعي منشور؛ أكّد المواعيد والتوفر مع المكان قبل ما تتحرك.",
+    "aliases": [
+      "ركن الخير"
+    ],
+    "keywords": [
+      "خضار",
+      "خضروات",
+      "فاكهة"
+    ],
+    "schemaType": "GroceryStore",
+    "sourceType": "user_shared_community_post",
+    "sourceTitle": "دليل خدمات مدينة النرجس والياسمين 2026 — منشور مجتمعي أرسله أدمن جوه",
+    "checkedAt": "2026-11-05",
+    "businessOwnerVerified": false,
+    "providerManaged": false
+  },
+  {
+    "id": "community-fresh-meat-poultry",
+    "name": "Fresh — للطيور واللحوم البلدية",
+    "category": "بقالة",
+    "address": "كيان سيتي",
+    "phone": "01226576576",
+    "description": "لحوم بلدي وطيور.",
+    "status": "رقم من دليل مجتمعي منشور؛ أكّد المواعيد والتوفر مع المكان قبل ما تتحرك.",
+    "aliases": [
+      "Fresh",
+      "فريش"
+    ],
+    "keywords": [
+      "لحمة",
+      "لحوم",
+      "فراخ",
+      "طيور",
+      "دواجن",
+      "جزارة"
+    ],
+    "schemaType": "GroceryStore",
+    "sourceType": "user_shared_community_post",
+    "sourceTitle": "دليل خدمات مدينة النرجس والياسمين 2026 — منشور مجتمعي أرسله أدمن جوه",
+    "checkedAt": "2026-11-05",
+    "businessOwnerVerified": false,
+    "providerManaged": false
+  },
+  {
+    "id": "community-baladi-bakery",
+    "name": "فرن العيش البلدي",
+    "category": "مخابز",
+    "address": "كيان سيتي",
+    "description": "فرن عيش بلدي.",
+    "status": "الرقم من نسخة أقدم من نفس الدليل المجتمعي؛ أكّد المواعيد قبل ما تتحرك.",
+    "aliases": [
+      "الفرن",
+      "فرن بلدي"
+    ],
+    "keywords": [
+      "عيش",
+      "خبز",
+      "فرن",
+      "مخبز"
+    ],
+    "schemaType": "Bakery",
+    "sourceType": "user_shared_community_post",
+    "sourceTitle": "دليل خدمات مدينة النرجس والياسمين 2026 — منشور مجتمعي أرسله أدمن جوه",
+    "checkedAt": "2026-11-05",
+    "businessOwnerVerified": false,
+    "providerManaged": false,
+    "phone": "01226576573"
+  },
+  {
+    "id": "community-tablia",
+    "name": "طبلية",
+    "category": "مطاعم",
+    "address": "النرجس — كيان سيتي",
+    "phone": "01070135991",
+    "description": "مطعم في النرجس.",
+    "status": "رقم من دليل مجتمعي منشور؛ أكّد المواعيد والتوفر مع المكان قبل ما تتحرك.",
+    "aliases": [
+      "Tablia"
+    ],
+    "keywords": [
+      "مطعم",
+      "أكل"
+    ],
+    "schemaType": "Restaurant",
+    "sourceType": "user_shared_community_post",
+    "sourceTitle": "دليل خدمات مدينة النرجس والياسمين 2026 — منشور مجتمعي أرسله أدمن جوه",
+    "checkedAt": "2026-11-05",
+    "businessOwnerVerified": false,
+    "providerManaged": false
+  },
+  {
+    "id": "community-estakoza-fish",
+    "name": "استاكوزا للأسماك",
+    "category": "مطاعم",
+    "address": "صن مول الياسمين",
+    "mapId": "poi-1021898717",
+    "mapLabel": "موقع المول",
+    "phone": "01067716803",
+    "description": "مطعم أسماك ومأكولات بحرية.",
+    "status": "رقم من دليل مجتمعي منشور؛ أكّد المواعيد والتوفر مع المكان قبل ما تتحرك.",
+    "aliases": [
+      "استاكوزا"
+    ],
+    "keywords": [
+      "سمك",
+      "أسماك",
+      "جمبري",
+      "مأكولات بحرية"
+    ],
+    "schemaType": "Restaurant",
+    "sourceType": "user_shared_community_post",
+    "sourceTitle": "دليل خدمات مدينة النرجس والياسمين 2026 — منشور مجتمعي أرسله أدمن جوه",
+    "checkedAt": "2026-11-05",
+    "businessOwnerVerified": false,
+    "providerManaged": false
+  },
+  {
+    "id": "community-forno-pizza",
+    "name": "Forno — فورنو للبيتزا والفطائر",
+    "category": "مطاعم",
+    "address": "بنزينة وطنية — أمام الأكاديمية العسكرية",
+    "mapId": "directory-coffee-castle",
+    "mapLabel": "موقع البنزينة التقريبي",
+    "phone": "01010154053",
+    "description": "بيتزا وفطائر.",
+    "status": "رقم من دليل مجتمعي منشور؛ أكّد المواعيد والتوفر مع المكان قبل ما تتحرك.",
+    "aliases": [
+      "Forno",
+      "فورنو",
+      "Forno99"
+    ],
+    "keywords": [
+      "بيتزا",
+      "فطائر",
+      "فطير"
+    ],
+    "schemaType": "Restaurant",
+    "sourceType": "user_shared_community_post",
+    "sourceTitle": "دليل خدمات مدينة النرجس والياسمين 2026 — منشور مجتمعي أرسله أدمن جوه",
+    "checkedAt": "2026-11-05",
+    "businessOwnerVerified": false,
+    "providerManaged": false
+  },
+  {
+    "id": "community-bolika",
+    "name": "بوليكا",
+    "category": "مطاعم",
+    "address": "بنزينة وطنية — أمام الأكاديمية العسكرية",
+    "mapId": "directory-coffee-castle",
+    "mapLabel": "موقع البنزينة التقريبي",
+    "description": "مطعم في البنزينة.",
+    "status": "الدليل المجتمعي نشر رقمًا ناقصًا (0127775948 — ١٠ أرقام بس)، فماحطّيناهوش. لو عندك الرقم الصحيح ابعته لجوه.",
+    "aliases": [
+      "Bolika"
+    ],
+    "keywords": [
+      "مطعم"
+    ],
+    "schemaType": "Restaurant",
+    "sourceType": "user_shared_community_post",
+    "sourceTitle": "دليل خدمات مدينة النرجس والياسمين 2026 — منشور مجتمعي أرسله أدمن جوه",
+    "checkedAt": "2026-11-05",
+    "businessOwnerVerified": false,
+    "providerManaged": false
+  },
+  {
+    "id": "community-cook-door",
+    "name": "كوك دور",
+    "category": "مطاعم",
+    "address": "بنزينة وطنية — أمام الأكاديمية العسكرية",
+    "mapId": "directory-coffee-castle",
+    "mapLabel": "موقع البنزينة التقريبي",
+    "phone": "16999",
+    "description": "سندوتشات ووجبات سريعة. 16999 خط ساخن.",
+    "status": "رقم من دليل مجتمعي منشور؛ أكّد المواعيد والتوفر مع المكان قبل ما تتحرك.",
+    "aliases": [
+      "Cook Door",
+      "كوك دوور"
+    ],
+    "keywords": [
+      "سندوتشات",
+      "وجبات سريعة",
+      "برجر"
+    ],
+    "schemaType": "Restaurant",
+    "sourceType": "user_shared_community_post",
+    "sourceTitle": "دليل خدمات مدينة النرجس والياسمين 2026 — منشور مجتمعي أرسله أدمن جوه",
+    "checkedAt": "2026-11-05",
+    "businessOwnerVerified": false,
+    "providerManaged": false
+  },
+  {
+    "id": "community-shahbashtino",
+    "name": "شحبشتينو",
+    "category": "كافيهات وبن",
+    "address": "صن مول الياسمين",
+    "mapId": "poi-1021898717",
+    "mapLabel": "موقع المول",
+    "phone": "01055393100",
+    "description": "كافيه.",
+    "status": "رقم من دليل مجتمعي منشور؛ أكّد المواعيد والتوفر مع المكان قبل ما تتحرك.",
+    "aliases": [
+      "Shahbashtino"
+    ],
+    "keywords": [
+      "كافيه",
+      "قهوة",
+      "مشروبات"
+    ],
+    "schemaType": "CafeOrCoffeeShop",
+    "sourceType": "user_shared_community_post",
+    "sourceTitle": "دليل خدمات مدينة النرجس والياسمين 2026 — منشور مجتمعي أرسله أدمن جوه",
+    "checkedAt": "2026-11-05",
+    "businessOwnerVerified": false,
+    "providerManaged": false
+  },
+  {
+    "id": "community-yasmin-hotel-cafeteria",
+    "name": "كافتيريا فندق الياسمين",
+    "category": "كافيهات وبن",
+    "address": "فندق الياسمين — كارما 2",
+    "mapId": "poi-1039007557",
+    "mapLabel": "موقع الفندق",
+    "description": "كافتيريا داخل فندق الياسمين (كارما 2).",
+    "status": "الدليل المجتمعي ذكر المكان من غير رقم تواصل؛ لو عندك الرقم الصحيح ابعته لجوه.",
+    "keywords": [
+      "كافتيريا",
+      "كافيه",
+      "فندق"
+    ],
+    "schemaType": "CafeOrCoffeeShop",
+    "sourceType": "user_shared_community_post",
+    "sourceTitle": "دليل خدمات مدينة النرجس والياسمين 2026 — منشور مجتمعي أرسله أدمن جوه",
+    "checkedAt": "2026-11-05",
+    "businessOwnerVerified": false,
+    "providerManaged": false
+  },
+  {
+    "id": "community-qalaat-elbon",
+    "name": "قلعة البن",
+    "category": "كافيهات وبن",
+    "address": "كيان سيتي",
+    "phone": "01140797940",
+    "description": "قهوة وبن.",
+    "status": "رقم من دليل مجتمعي منشور؛ أكّد المواعيد والتوفر مع المكان قبل ما تتحرك.",
+    "aliases": [
+      "قلعة البن"
+    ],
+    "keywords": [
+      "بن",
+      "قهوة",
+      "تحميص"
+    ],
+    "schemaType": "CafeOrCoffeeShop",
+    "sourceType": "user_shared_community_post",
+    "sourceTitle": "دليل خدمات مدينة النرجس والياسمين 2026 — منشور مجتمعي أرسله أدمن جوه",
+    "checkedAt": "2026-11-05",
+    "businessOwnerVerified": false,
+    "providerManaged": false
+  },
+  {
+    "id": "community-tulip-beauty-salon",
+    "name": "بيوتي صالون تيوليب",
+    "category": "صالونات وتجميل",
+    "address": "صن مول الياسمين",
+    "mapId": "poi-1021898717",
+    "mapLabel": "موقع المول",
+    "phone": "01508229655",
+    "description": "مركز تجميل نسائي.",
+    "status": "رقم من دليل مجتمعي منشور؛ أكّد المواعيد والتوفر مع المكان قبل ما تتحرك.",
+    "aliases": [
+      "تيوليب",
+      "Tulip"
+    ],
+    "keywords": [
+      "كوافير",
+      "تجميل",
+      "صالون حريمي",
+      "ميكب"
+    ],
+    "schemaType": "BeautySalon",
+    "sourceType": "user_shared_community_post",
+    "sourceTitle": "دليل خدمات مدينة النرجس والياسمين 2026 — منشور مجتمعي أرسله أدمن جوه",
+    "checkedAt": "2026-11-05",
+    "businessOwnerVerified": false,
+    "providerManaged": false
+  },
+  {
+    "id": "community-narges-barber",
+    "name": "صالون حلاقة النرجس",
+    "category": "صالونات وتجميل",
+    "address": "النرجس — كيان سيتي",
+    "description": "حلاقة رجالي.",
+    "status": "الدليل المجتمعي ذكر المكان من غير رقم تواصل؛ لو عندك الرقم الصحيح ابعته لجوه.",
+    "keywords": [
+      "حلاق",
+      "حلاقة",
+      "باربر"
+    ],
+    "schemaType": "HairSalon",
+    "sourceType": "user_shared_community_post",
+    "sourceTitle": "دليل خدمات مدينة النرجس والياسمين 2026 — منشور مجتمعي أرسله أدمن جوه",
+    "checkedAt": "2026-11-05",
+    "businessOwnerVerified": false,
+    "providerManaged": false
+  },
+  {
+    "id": "community-yasmin-barber",
+    "name": "صالون حلاقة الياسمين",
+    "category": "صالونات وتجميل",
+    "address": "الياسمين — كيان سيتي",
+    "description": "حلاقة رجالي.",
+    "status": "الدليل المجتمعي ذكر المكان من غير رقم تواصل؛ لو عندك الرقم الصحيح ابعته لجوه.",
+    "keywords": [
+      "حلاق",
+      "حلاقة",
+      "باربر"
+    ],
+    "schemaType": "HairSalon",
+    "sourceType": "user_shared_community_post",
+    "sourceTitle": "دليل خدمات مدينة النرجس والياسمين 2026 — منشور مجتمعي أرسله أدمن جوه",
+    "checkedAt": "2026-11-05",
+    "businessOwnerVerified": false,
+    "providerManaged": false
+  },
+  {
+    "id": "community-aspire-nursery",
+    "name": "Aspire — حضانة أسباير",
+    "category": "حضانات",
+    "address": "النرجس — كيان سيتي",
+    "phone": "01030881188",
+    "description": "حضانة في النرجس.",
+    "status": "رقم من دليل مجتمعي منشور؛ أكّد المواعيد والتوفر مع المكان قبل ما تتحرك.",
+    "aliases": [
+      "Aspire",
+      "أسباير"
+    ],
+    "keywords": [
+      "حضانة"
+    ],
+    "schemaType": "ChildCare",
+    "sourceType": "user_shared_community_post",
+    "sourceTitle": "دليل خدمات مدينة النرجس والياسمين 2026 — منشور مجتمعي أرسله أدمن جوه",
+    "checkedAt": "2026-11-05",
+    "businessOwnerVerified": false,
+    "providerManaged": false
+  },
+  {
+    "id": "community-little-chicks-nursery",
+    "name": "حضانة الياسمين — Little Chicks",
+    "category": "حضانات",
+    "address": "الياسمين — كيان سيتي",
+    "phone": "01067572489",
+    "description": "حضانة في الياسمين.",
+    "status": "رقم من دليل مجتمعي منشور؛ أكّد المواعيد والتوفر مع المكان قبل ما تتحرك.",
+    "aliases": [
+      "Little Chicks",
+      "ليتل تشيكس"
+    ],
+    "keywords": [
+      "حضانة"
+    ],
+    "schemaType": "ChildCare",
+    "sourceType": "user_shared_community_post",
+    "sourceTitle": "دليل خدمات مدينة النرجس والياسمين 2026 — منشور مجتمعي أرسله أدمن جوه",
+    "checkedAt": "2026-11-05",
+    "businessOwnerVerified": false,
+    "providerManaged": false
+  },
+  {
+    "id": "community-labubu-library",
+    "name": "مكتبة لابوبو",
+    "category": "مكتبات",
+    "address": "صن مول الياسمين",
+    "mapId": "poi-1021898717",
+    "mapLabel": "موقع المول",
+    "phone": "01214244662",
+    "description": "مكتبة وأدوات مدرسية.",
+    "status": "رقم من دليل مجتمعي منشور؛ أكّد المواعيد والتوفر مع المكان قبل ما تتحرك.",
+    "aliases": [
+      "لابوبو",
+      "Labubu"
+    ],
+    "keywords": [
+      "مكتبة",
+      "أدوات مدرسية",
+      "كشاكيل",
+      "تصوير"
+    ],
+    "schemaType": "Store",
+    "sourceType": "user_shared_community_post",
+    "sourceTitle": "دليل خدمات مدينة النرجس والياسمين 2026 — منشور مجتمعي أرسله أدمن جوه",
+    "checkedAt": "2026-11-05",
+    "businessOwnerVerified": false,
+    "providerManaged": false
+  },
+  {
+    "id": "community-kayan-library",
+    "name": "مكتبة الكيان",
+    "category": "مكتبات",
+    "address": "بنزينة وطنية — أمام الأكاديمية العسكرية",
+    "mapId": "directory-coffee-castle",
+    "mapLabel": "موقع البنزينة التقريبي",
+    "phone": "01034112423",
+    "description": "مكتبة وأدوات مدرسية.",
+    "status": "رقم من دليل مجتمعي منشور؛ أكّد المواعيد والتوفر مع المكان قبل ما تتحرك.",
+    "keywords": [
+      "مكتبة",
+      "أدوات مدرسية",
+      "كشاكيل",
+      "تصوير"
+    ],
+    "schemaType": "Store",
+    "sourceType": "user_shared_community_post",
+    "sourceTitle": "دليل خدمات مدينة النرجس والياسمين 2026 — منشور مجتمعي أرسله أدمن جوه",
+    "checkedAt": "2026-11-05",
+    "businessOwnerVerified": false,
+    "providerManaged": false
+  },
+  {
+    "id": "community-mawan-yasmin",
+    "name": "موان الياسمين",
+    "category": "تشطيبات وأدوات منزلية",
+    "address": "الياسمين — كيان سيتي",
+    "phone": "01092714892",
+    "description": "أدوات منزلية.",
+    "status": "رقم من دليل مجتمعي منشور؛ أكّد المواعيد والتوفر مع المكان قبل ما تتحرك.",
+    "keywords": [
+      "موان",
+      "أدوات منزلية",
+      "بلاستيك",
+      "منظفات"
+    ],
+    "schemaType": "HomeGoodsStore",
+    "sourceType": "user_shared_community_post",
+    "sourceTitle": "دليل خدمات مدينة النرجس والياسمين 2026 — منشور مجتمعي أرسله أدمن جوه",
+    "checkedAt": "2026-11-05",
+    "businessOwnerVerified": false,
+    "providerManaged": false
+  },
+  {
+    "id": "community-mawan-modern-home",
+    "name": "موان البيت العصري",
+    "category": "تشطيبات وأدوات منزلية",
+    "address": "صن مول الياسمين",
+    "mapId": "poi-1021898717",
+    "mapLabel": "موقع المول",
+    "phone": "01080995965",
+    "description": "أدوات منزلية.",
+    "status": "رقم من دليل مجتمعي منشور؛ أكّد المواعيد والتوفر مع المكان قبل ما تتحرك.",
+    "aliases": [
+      "البيت العصري"
+    ],
+    "keywords": [
+      "موان",
+      "أدوات منزلية"
+    ],
+    "schemaType": "HomeGoodsStore",
+    "sourceType": "user_shared_community_post",
+    "sourceTitle": "دليل خدمات مدينة النرجس والياسمين 2026 — منشور مجتمعي أرسله أدمن جوه",
+    "checkedAt": "2026-11-05",
+    "businessOwnerVerified": false,
+    "providerManaged": false
+  },
+  {
+    "id": "community-tt-boutique",
+    "name": "بوتيك T&T",
+    "category": "ملابس",
+    "address": "بنزينة وطنية — أمام الأكاديمية العسكرية",
+    "mapId": "directory-coffee-castle",
+    "mapLabel": "موقع البنزينة التقريبي",
+    "description": "ملابس وأزياء.",
+    "status": "الرقم من نسخة أقدم من نفس الدليل المجتمعي؛ أكّد المواعيد قبل ما تتحرك.",
+    "aliases": [
+      "T&T",
+      "تي اند تي"
+    ],
+    "keywords": [
+      "ملابس",
+      "هدوم",
+      "أزياء"
+    ],
+    "schemaType": "ClothingStore",
+    "sourceType": "user_shared_community_post",
+    "sourceTitle": "دليل خدمات مدينة النرجس والياسمين 2026 — منشور مجتمعي أرسله أدمن جوه",
+    "checkedAt": "2026-11-05",
+    "businessOwnerVerified": false,
+    "providerManaged": false,
+    "phone": "01105671155"
+  },
+  {
+    "id": "community-yasmin-laundry",
+    "name": "مغسلة ملابس الياسمين",
+    "category": "مغاسل ودراي كلين",
+    "address": "الياسمين — كيان سيتي",
+    "phone": "01064687216",
+    "description": "مغسلة ملابس.",
+    "status": "رقم من دليل مجتمعي منشور؛ أكّد المواعيد والتوفر مع المكان قبل ما تتحرك.",
+    "keywords": [
+      "مغسلة",
+      "غسيل ملابس",
+      "دراي كلين",
+      "مكوجي"
+    ],
+    "schemaType": "DryCleaningOrLaundry",
+    "sourceType": "user_shared_community_post",
+    "sourceTitle": "دليل خدمات مدينة النرجس والياسمين 2026 — منشور مجتمعي أرسله أدمن جوه",
+    "checkedAt": "2026-11-05",
+    "businessOwnerVerified": false,
+    "providerManaged": false
+  },
+  {
+    "id": "community-wataniya-car-wash",
+    "name": "مغسلة السيارات — بنزينة وطنية",
+    "category": "غسيل سيارات",
+    "address": "بنزينة وطنية — أمام الأكاديمية العسكرية",
+    "mapId": "directory-coffee-castle",
+    "mapLabel": "موقع البنزينة التقريبي",
+    "description": "غسيل سيارات.",
+    "status": "الدليل المجتمعي ذكر المكان من غير رقم تواصل؛ لو عندك الرقم الصحيح ابعته لجوه.",
+    "keywords": [
+      "غسيل عربيات",
+      "غسيل سيارات",
+      "مغسلة عربيات"
+    ],
+    "schemaType": "AutoWash",
+    "sourceType": "user_shared_community_post",
+    "sourceTitle": "دليل خدمات مدينة النرجس والياسمين 2026 — منشور مجتمعي أرسله أدمن جوه",
+    "checkedAt": "2026-11-05",
+    "businessOwnerVerified": false,
+    "providerManaged": false
+  },
+  {
+    "id": "community-tailor-mohamed",
+    "name": "الترزي محمد",
+    "category": "خياطة وتفصيل",
+    "address": "كيان سيتي",
+    "phone": "01000878117",
+    "description": "ترزي.",
+    "status": "رقم من دليل مجتمعي منشور؛ أكّد المواعيد والتوفر مع المكان قبل ما تتحرك.",
+    "aliases": [
+      "ترزي"
+    ],
+    "keywords": [
+      "ترزي",
+      "خياطة",
+      "تقصير",
+      "تضييق"
+    ],
+    "schemaType": "LocalBusiness",
+    "sourceType": "user_shared_community_post",
+    "sourceTitle": "دليل خدمات مدينة النرجس والياسمين 2026 — منشور مجتمعي أرسله أدمن جوه",
+    "checkedAt": "2026-11-05",
+    "businessOwnerVerified": false,
+    "providerManaged": false
+  },
+  {
+    "id": "community-leads-sports-club",
+    "name": "Leads Sports Club — نادي ليدز الرياضي",
+    "category": "رياضة",
+    "address": "كيان سيتي",
+    "description": "نادي رياضي.",
+    "status": "الدليل المجتمعي ذكر المكان من غير رقم تواصل؛ لو عندك الرقم الصحيح ابعته لجوه.",
+    "aliases": [
+      "Leads",
+      "ليدز"
+    ],
+    "keywords": [
+      "نادي",
+      "رياضة",
+      "تمرين"
+    ],
+    "schemaType": "SportsClub",
+    "sourceType": "user_shared_community_post",
+    "sourceTitle": "دليل خدمات مدينة النرجس والياسمين 2026 — منشور مجتمعي أرسله أدمن جوه",
+    "checkedAt": "2026-11-05",
+    "businessOwnerVerified": false,
+    "providerManaged": false
+  },
+  {
+    "id": "community-kayan-football-academy",
+    "name": "أكاديمية الكيان لكرة القدم",
+    "category": "رياضة",
+    "address": "كيان سيتي",
+    "phone": "01555130441",
+    "description": "أكاديمية لتأسيس وتعليم فنون كرة القدم بشكل صحيح، من سن 3 لحد 17 سنة. تقدر تبعت طلب حجز لأولادك من جوه، والأكاديمية بترد بالموافقة ورقم التواصل.",
+    "status": "الأكاديمية سجلت على جوه (حساب El kayan Sport Academy). الحجز بيتأكد بموافقة الأكاديمية.",
+    "keywords": [
+      "كورة",
+      "كرة قدم",
+      "تدريب أطفال",
+      "أكاديمية",
+      "رياضة",
+      "تمرين",
+      "حجز"
+    ],
+    "schemaType": "SportsClub",
+    "sourceType": "user_shared_community_post",
+    "sourceTitle": "دليل خدمات مدينة النرجس والياسمين 2026 — منشور مجتمعي أرسله أدمن جوه",
+    "checkedAt": "2026-11-05",
+    "businessOwnerVerified": true,
+    "providerManaged": false,
+    "aliases": [
+      "El Kayan Sport Academy",
+      "الكيان سبورت أكاديمي",
+      "أكاديمية الكيان"
+    ],
+    "facebook": "https://www.facebook.com/elkayansportacademy2",
+    "logo": "/logos/community-kayan-football-academy.webp",
+    "sellerId": "f0c2d068-d103-4b45-95d6-52b8b77b1fb8",
+    "bookings": {
+      "kind": "academy",
+      "minAge": 3,
+      "maxAge": 17
+    }
+  },
+  {
+    "id": "community-kids-area-karma2",
+    "name": "Kids Area — فندق كارما 2",
+    "category": "ترفيه أطفال",
+    "address": "فندق الياسمين — كارما 2",
+    "mapId": "poi-1039007557",
+    "mapLabel": "موقع الفندق",
+    "description": "منطقة ألعاب أطفال في فندق الياسمين (كارما 2).",
+    "status": "الدليل المجتمعي ذكر المكان من غير رقم تواصل؛ لو عندك الرقم الصحيح ابعته لجوه.",
+    "aliases": [
+      "Kids Area"
+    ],
+    "keywords": [
+      "ألعاب أطفال",
+      "ملاهي",
+      "أطفال"
+    ],
+    "schemaType": "AmusementPark",
+    "sourceType": "user_shared_community_post",
+    "sourceTitle": "دليل خدمات مدينة النرجس والياسمين 2026 — منشور مجتمعي أرسله أدمن جوه",
+    "checkedAt": "2026-11-05",
+    "businessOwnerVerified": false,
+    "providerManaged": false
+  },
+  {
+    "id": "community-kids-area-wataniya",
+    "name": "Kids Area — البنزينة",
+    "category": "ترفيه أطفال",
+    "address": "بنزينة وطنية — أمام الأكاديمية العسكرية",
+    "mapId": "directory-coffee-castle",
+    "mapLabel": "موقع البنزينة التقريبي",
+    "description": "منطقة ألعاب أطفال في البنزينة.",
+    "status": "الدليل المجتمعي ذكر المكان من غير رقم تواصل؛ لو عندك الرقم الصحيح ابعته لجوه.",
+    "aliases": [
+      "Kids Area"
+    ],
+    "keywords": [
+      "ألعاب أطفال",
+      "ملاهي",
+      "أطفال"
+    ],
+    "schemaType": "AmusementPark",
+    "sourceType": "user_shared_community_post",
+    "sourceTitle": "دليل خدمات مدينة النرجس والياسمين 2026 — منشور مجتمعي أرسله أدمن جوه",
+    "checkedAt": "2026-11-05",
+    "businessOwnerVerified": false,
+    "providerManaged": false
+  },
+  {
+    "id": "directory-kheir-ardna",
+    "name": "خير أرضنا — زيت زيتون العريش",
+    "aliases": [
+      "خير أرضنا",
+      "خير ارضنا",
+      "من خير أرضنا",
+      "زيت زيتون العريش",
+      "Kheir Ardna"
+    ],
+    "category": "بقالة",
+    "schemaType": "GroceryStore",
+    "mapCategory": "shopping",
+    "district": "narges",
+    "address": "كيان سيتي — النرجس، عمارة ١٢٦",
+    "phone": "01063819675",
+    "description": "زيت زيتون من العريش بشمال سيناء. مقاس واحد: ١ كيلو بسعر ٤٠٠ جنيه. المواعيد بالتنسيق من خلال جوه.",
+    "keywords": [
+      "زيت زيتون",
+      "زيت الزيتون",
+      "العريش",
+      "شمال سيناء",
+      "بقالة",
+      "زيوت",
+      "النرجس",
+      "عمارة 126"
+    ],
+    "mapId": "narges-126",
+    "coordinate": [
+      31.6367669,
+      29.919363
+    ],
+    "precision": "approximate_plan_alignment",
+    "mapLabel": "موقع عمارة ١٢٦ في النرجس على الخريطة",
+    "visitorNote": "المواعيد بالتنسيق — مفيش وقت ثابت. الطلب وتأكيد الميعاد من خلال جوه.",
+    "status": "بيانات النشاط والعنوان ورقم التواصل والمنتج والسعر مؤكدة من إدارة جوه في ٦ نوفمبر ٢٠٢٦.",
+    "source": "https://jowwa-kayan.vercel.app/menus/kheir-ardna/photo-1.jpg",
+    "sourceType": "admin_confirmed_business",
+    "checkedAt": "2026-11-06",
+    "sourceDate": null,
+    "menuStatus": "owner_provided",
+    "menuCheckedAt": "2026-11-06",
+    "menuNote": "منتج واحد بمقاس ١ كيلو بسعر ٤٠٠ جنيه. الكمية والتوفر والميعاد بيتأكدوا مع الطلب من خلال جوه.",
+    "image": "/menus/kheir-ardna/photo-2.jpg",
+    "cardPhotos": [
+      "/menus/kheir-ardna/photo-2.jpg",
+      "/menus/kheir-ardna/photo-1.jpg"
+    ],
+    "logo": "/logos/directory-kheir-ardna.png",
+    "businessOwnerVerified": false
+  },
+  {
+    "id": "printing-paper-kayan",
+    "name": "خدمة طباعة الورق",
+    "category": "مكتبات وطباعة",
+    "phone": "01290099681",
+    "description": "طباعة ورق أبيض وأسود وألوان، وجه أو وجهين. ابعت ملفاتك ومواصفات الطباعة، وراجع عرض السعر قبل التنفيذ.",
+    "keywords": [
+      "مكتبة",
+      "طباعة",
+      "تصوير",
+      "ورق",
+      "أبحاث",
+      "مذكرات"
+    ],
+    "printingType": "paper",
+    "specialization": "printing",
+    "schemaType": "Store",
+    "address": "مكان الاستلام يتحدد مع الطلب",
+    "sourceType": "user_shared_business_message",
+    "sourceTitle": "مراسلة النشاط ونماذج أعماله التي شاركها مالك جوّه",
+    "checkedAt": "2026-11-06",
+    "businessOwnerVerified": false,
+    "providerManaged": false,
+    "status": "بيانات النشاط من رسائله المرفقة. السعر النهائي وميعاد التنفيذ وعنوان الاستلام يتأكدوا داخل الطلب.",
+    "visitorNote": "طلب خاص بالطباعة والهدايا. راجع عرض السعر والمعاينة قبل الموافقة."
+  },
+  {
+    "id": "memorycraft",
+    "name": "MemoryCraft | ميموري كرافت",
+    "category": "هدايا وطباعة",
+    "phone": "01019374388",
+    "description": "مجات وتيشيرتات وبازل وبراويز وأطقم بتصميم العميل. معاينة التصميم والسعر والميعاد تتأكد قبل التنفيذ.",
+    "keywords": [
+      "ميموري كرافت",
+      "MemoryCraft",
+      "هدايا",
+      "طباعة",
+      "مج",
+      "تيشيرت",
+      "بازل",
+      "برواز",
+      "مواليد"
+    ],
+    "printingType": "personalized",
+    "instagram": "https://www.instagram.com/memorycraft1/",
+    "telegram": "https://t.me/MemoryCraft1",
+    "specialization": "printing",
+    "schemaType": "Store",
+    "address": "مكان الاستلام يتحدد مع الطلب",
+    "sourceType": "user_shared_business_message",
+    "sourceTitle": "مراسلة النشاط ونماذج أعماله التي شاركها مالك جوّه",
+    "checkedAt": "2026-11-06",
+    "businessOwnerVerified": false,
+    "providerManaged": false,
+    "status": "بيانات النشاط من رسائله المرفقة. السعر النهائي وميعاد التنفيذ وعنوان الاستلام يتأكدوا داخل الطلب.",
+    "visitorNote": "طلب خاص بالطباعة والهدايا. راجع عرض السعر والمعاينة قبل الموافقة."
   }
 ]
