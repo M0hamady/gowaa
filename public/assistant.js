@@ -27,15 +27,15 @@ export function actionEnvelope(action,now=Date.now()){
 }
 const icons={spark:'✦',arrow:'←',pin:'⌖',bus:'▣',bag:'▧',reset:'↻'};
 const confidence=p=>!p.mapId?'الموقع يحتاج تأكيدًا':p.mapLabel?'موقع تقريبي • راجع التفاصيل':/يحتاج|تحتاج|غير مؤكد|تأكيد|تقريبي/.test(p.status||'')?'راجع التفاصيل قبل التحرك':'موجود في دليل جوه';
-export function mountAssistant({root,onPlace,onBus,onAskOrigin,onPrepareRound,onPrepareRoute,toast,endpoint='/api/assistant',storage=globalThis.sessionStorage,openOnMount=false}){
+export function mountAssistant({root,onPlace,onBus,onAskOrigin,onRouteFromCurrent,onPrepareRound,onPrepareRoute,toast,endpoint='/api/assistant',storage=globalThis.sessionStorage,openOnMount=false}){
  if(!root)return {destroy(){}};
  const restored=readAssistantMemory(storage);
- let context=restored?.context||null,pendingAction=restored?.draftAction||null,answer=null,step='question',pending=false,controller=null,requestId=0;
+ let context=restored?.context||null,pendingAction=restored?.draftAction||null,answer=null,step='question',pending=false,controller=null,requestId=0,lastQuestion='';
  const remember=()=>writeAssistantMemory(storage,context,pendingAction);
  root.classList.add('jowwa-assistant');
  root.innerHTML=`<details class="assistant-drawer"><summary><span aria-hidden="true">${icons.spark}</span><span>اسأل جوه</span><small>اختار · جهّز · راجع</small></summary><div class="assistant-body" aria-live="polite"></div></details>`;
  const drawer=root.querySelector('details'),body=root.querySelector('.assistant-body');drawer.open=!!openOnMount;
- const reset=()=>{requestId++;controller?.abort();controller=null;pending=false;context=null;answer=null;pendingAction=null;clearAssistantMemory(storage);inputView();};
+ const reset=()=>{requestId++;controller?.abort();controller=null;pending=false;context=null;answer=null;pendingAction=null;lastQuestion='';clearAssistantMemory(storage);inputView();};
  const inputView=()=>{
   step='question';
   body.innerHTML=`<form class="assistant-form"><label for="jowwa-assistant-query">${context?'نكمل طلبك؟':'محتاج إيه؟'}</label><div class="assistant-input-row"><input id="jowwa-assistant-query" name="query" type="text" inputmode="text" maxlength="500" minlength="2" autocomplete="off" placeholder="قهوة… مشوار… جهّز سلة" required><button type="submit" aria-label="اسأل جوه" title="اسأل جوه">${icons.arrow}</button></div><small>${context?'فاكر آخر اختياراتك في التبويب ده.':'بلاش تكتب رقمك أو بيانات الدخول.'}</small><div class="assistant-feedback" role="status"></div></form><div class="assistant-chips"><button type="button" data-ask="عايز أضيف منتج">＋ منتج</button><button type="button" data-ask="عايز أضيف خدمة">＋ خدمة</button><button type="button" data-ask="كتالوجاتي">▧ كتالوجاتي</button></div>${context?'<button type="button" class="assistant-reset">↻ امسح الذاكرة وابدأ جديد</button>':''}`;
@@ -45,7 +45,8 @@ export function mountAssistant({root,onPlace,onBus,onAskOrigin,onPrepareRound,on
  };
  const originView=p=>{
   step='origin';context={...context,placeIds:[p.id]};remember();
-  body.innerHTML=`<h3>هتبدأ منين؟</h3><p>${esc(p.name)}</p><button type="button" class="assistant-primary assistant-origin">${icons.pin} اختار البداية</button><button type="button" class="assistant-back">رجوع</button>`;
+  body.innerHTML=`<h3>رايح ${esc(p.name)} منين؟</h3><button type="button" class="assistant-primary assistant-current">${icons.pin} من موقعي الحالي</button><button type="button" class="assistant-origin">اختار محطة أو نقطة بداية</button><small>هنحدد موقعك بإذنك. ولو اخترت محطة، راجع نقطة الركوب ومواعيد الخط.</small><button type="button" class="assistant-back">رجوع</button>`;
+  body.querySelector('.assistant-current').onclick=()=>{if(onRouteFromCurrent)onRouteFromCurrent(p.mapId);else{onPlace?.(p.mapId);onAskOrigin?.();}drawer.open=false;};
   body.querySelector('.assistant-origin').onclick=()=>{onPlace?.(p.mapId);if(!onPlace)onAskOrigin?.();drawer.open=false;};body.querySelector('.assistant-back').onclick=()=>resultView(false);
  };
  const goMarket=action=>{
@@ -92,7 +93,7 @@ export function mountAssistant({root,onPlace,onBus,onAskOrigin,onPrepareRound,on
   ${places.map(p=>`<article class="assistant-card"><span aria-hidden="true">${icons.pin}</span><div><h4>${esc(p.name)}</h4><small>${esc(confidence(p))}</small><div class="assistant-card-actions"><a href="${esc(p.url)}">التفاصيل والمصدر</a>${p.mapId?`<button type="button" data-place="${esc(p.id)}">${icons.pin} الطريق</button>`:''}</div></div></article>`).join('')}
   ${routes.map(r=>`<article class="assistant-card"><span aria-hidden="true">${icons.bus}</span><div><h4>${esc(r.name)}</h4><small>${esc(r.status==='suspended'?'متوقف • راجع التفاصيل':r.status==='published'?'مواعيد منشورة • تأكد قبل التحرك':'بيانات جزئية • راجع التفاصيل')}</small><div class="assistant-card-actions"><a href="${esc(r.url)}">المصدر</a><button type="button" data-route="${esc(r.id)}">${icons.bus} المواعيد</button></div></div></article>`).join('')}
   </div>${!places.length&&!routes.length&&!items.length&&!menus.length?`<p class="assistant-message">${esc(answer.message)}</p>`:''}<div class="assistant-chips">${items.some(p=>p.canOrder===true)?'<button type="button" class="assistant-basket-all">▧ جهّز سلة</button>':''}${places.filter(p=>p.mapId).length>1?'<button type="button" class="assistant-round">⌖ جهّز جولة</button>':''}</div><button type="button" class="assistant-follow">كمّل على الاختيارات ${icons.arrow}</button><button type="button" class="assistant-reset">${icons.reset} ابدأ جديد</button>`;
-  for(const b of body.querySelectorAll('[data-place]'))b.onclick=()=>originView(places.find(p=>p.id===b.dataset.place));
+  for(const b of body.querySelectorAll('[data-place]'))b.onclick=()=>{const place=places.find(p=>p.id===b.dataset.place);if(place?.mapId&&onRouteFromCurrent&&/(?:من\s*(?:موقعي|مكاني)|موقعي\s*الحالي|مكاني\s*الحالي|من\s*هنا)/.test(lastQuestion)){onRouteFromCurrent(place.mapId);drawer.open=false;}else originView(place);};
   for(const b of body.querySelectorAll('[data-route]'))b.onclick=()=>{onBus?.(b.dataset.route);drawer.open=false;};
   for(const b of body.querySelectorAll('[data-basket]'))b.onclick=()=>{context={...context,selectedItemIds:[b.dataset.basket]};remember();basketSelection(items,1,[b.dataset.basket]);};
   body.querySelector('.assistant-basket-all')?.addEventListener('click',()=>basketSelection(items));
@@ -101,6 +102,7 @@ export function mountAssistant({root,onPlace,onBus,onAskOrigin,onPrepareRound,on
  };
  async function ask(question){
   if(pending||question.length<2)return;
+  lastQuestion=question;
   if(!body.querySelector('form'))inputView();
   const form=body.querySelector('form'),input=form.querySelector('input');input.value=question;
   const current=++requestId;pending=true;const activeController=new AbortController();controller=activeController;const timeout=setTimeout(()=>activeController.abort(),28000);
