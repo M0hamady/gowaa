@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - feat/egyptian-everyday-ux-ai
+      - feat/operations-test-workspace
   pull_request:
     branches:
       - main
