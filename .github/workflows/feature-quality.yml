@@ -35,6 +35,7 @@ jobs:
           node --check src/market-discovery-ui.js
           node --check src/server-assistant.mjs
           node --check api/assistant.mjs
+      # Includes isolated PostgreSQL ownership-transfer regression coverage.
       - name: Run all existing and new unit tests
         run: npm test
       - name: Rebuild generated assets
