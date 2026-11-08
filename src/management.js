@@ -15,23 +15,34 @@ export function createManagement(ctx){
  async function notifications(root){const {data,error}=await db.from('notification_outbox').select('id,kind,state,attempts,last_error,created_at,sent_at').order('created_at',{ascending:false}).limit(100);if(error)throw error;let status={configured:false};try{const {data:session}=await db.auth.getSession();status=await fetch('/api/notifications',{headers:{Authorization:'Bearer '+session.session.access_token}}).then(r=>r.json());}catch{}const kinds={registration:'تسجيل جديد برقم مؤكد',daily_summary:'ملخص الزيارات اليومي',visit:'زيارة — سجل فقط',order:'طلب جديد — سجل فقط',order_accepted:'قبول طلب — سجل فقط',order_completed:'اكتمال طلب — سجل فقط',order_cancelled:'إلغاء طلب — سجل فقط',order_rejected:'اعتذار عن طلب — سجل فقط',round_invitation:'دعوة راوند'};const states={pending:'بانتظار الإرسال',sending:'بدأ الإرسال — لا تكرار تلقائي',sent:'قبله مزود الرسائل',uncertain:'إرسال غير مؤكد — لا تكرار',failed:'لم يرسل',cancelled:'موقوف'};root.innerHTML=`<h2>تنبيهات الموبايل</h2><p dir="ltr">${esc(status.recipient||'رقم الإدارة')}</p><div class="notifications-status">${status.configured?'خدمة SMS متصلة. قبول المزود لا يؤكد وصول الرسالة للهاتف.':'إرسال SMS غير متاح حاليًا؛ راجع الربط.'}</div><p class="data-note">فوريًا: تسجيل مستخدم جديد بعد تأكيد رقم موبايله، مرة واحدة للحساب. لا رسائل لكل زيارة أو طلب. ملخص واحد لزيارات اليوم بعد منتصف الليل بتوقيت القاهرة، خلال الساعة الأولى شتاءً أو الثانية صيفًا؛ الموعد تقريبي حسب الخطة المجانية. الأرقام تشمل الاستخدام المسجّل بالإحصاء فقط. رموز الدخول ودعوات المشاوير مستمرة.</p><p class="data-note">${status.cronConfigured?'الجدولة اليومية مجهزة.':'الجدولة اليومية تنتظر تفعيل إعدادها الآمن.'}</p><button id="notifications-send" class="secondary">إرسال تسجيلات معلّقة</button>${data.map(n=>{const legacy=!['registration','daily_summary','round_invitation'].includes(n.kind);return `<article class="admin-card"><b>${esc(kinds[n.kind]||n.kind)}</b> • ${esc(legacy?(n.state==='sent'?'أُرسل قبل تغيير السياسة':'محفوظ في السجل، بدون SMS'):states[n.state]||n.state)}<small> ${new Date(n.created_at).toLocaleString('ar-EG',{timeZone:'Africa/Cairo'})}</small>${n.last_error?`<p>${esc(n.last_error)}</p>`:''}</article>`;}).join('')}`;$('notifications-send').onclick=async()=>{$('notifications-send').disabled=true;await ctx.commerce.flushNotifications();toast('تم طلب إرسال التسجيلات المعلّقة فقط. حدّث القائمة لمراجعة النتيجة.');};}
 
  async function ownership(root){
-  const {data,error}=await db.from('sellers').select('id,name,phone,status,archived,created_at').order('name').limit(500);
-  if(error)throw error;
-  const sellers=data||[];
-  root.innerHTML='<h2>ملكية المتاجر</h2><p class="data-note">من هنا تقدر تنقل ملكية أي متجر لحساب آخر. اكتب رقم الموبايل الجديد؛ قاعدة البيانات لن تقبل إلا حسابًا موجودًا ورقمه مؤكَّدًا بالفعل. المنتجات والطلبات وسجل النشاط تظل محفوظة.</p><input id="ownership-search" type="search" placeholder="ابحث باسم المتجر أو رقم التواصل" aria-label="ابحث في المتاجر"><div id="ownership-rows"></div>';
+  const [sellerResult,claimResult]=await Promise.all([
+   db.from('sellers').select('id,name,phone,status,archived,created_at').order('name').limit(500),
+   db.rpc('jowwa_admin_service_claims')
+  ]);
+  if(sellerResult.error)throw sellerResult.error;
+  if(claimResult.error)throw claimResult.error;
+  const sellers=sellerResult.data||[],claims=claimResult.data?.claims||[],claimsBySeller=new Map();
+  for(const claim of claims){const list=claimsBySeller.get(claim.sellerId)||[];list.push(claim);claimsBySeller.set(claim.sellerId,list);}
+  root.innerHTML='<h2>ملكية المتاجر</h2><p class="data-note">من هنا تقدر تنقل ملكية حساب المتجر إلى حساب آخر. اكتب رقم الموبايل الجديد؛ قاعدة البيانات لن تقبل إلا حسابًا موجودًا ورقمه مؤكَّدًا بالفعل. المنتجات والطلبات وسجل النشاط تظل محفوظة.</p><input id="ownership-search" type="search" placeholder="ابحث باسم المتجر أو رقم التواصل" aria-label="ابحث في المتاجر"><div id="ownership-rows"></div>';
   const render=()=>{
    const term=$('ownership-search').value.trim().toLowerCase();
-   $('ownership-rows').innerHTML=sellers.filter(s=>(s.name+' '+(s.phone||'')).toLowerCase().includes(term)).map(s=>'<article class="admin-card"><b>'+esc(s.name)+'</b><p>'+esc(s.phone||'لا يوجد رقم تواصل معلن')+' • '+esc(s.status||'')+(s.archived?' • مخفي':'')+'</p><button type="button" data-transfer-owner="'+esc(s.id)+'">تغيير المالك</button></article>').join('')||'<p>لا توجد متاجر مطابقة.</p>';
+   $('ownership-rows').innerHTML=sellers.filter(s=>(s.name+' '+(s.phone||'')).toLowerCase().includes(term)).map(s=>{
+    const linked=claimsBySeller.get(s.id)||[],names=linked.map(c=>c.publishedDraft?.name||c.draft?.name||c.source?.name||c.directoryId);
+    return '<article class="admin-card"><b>'+esc(s.name)+'</b><p>'+esc(s.phone||'لا يوجد رقم تواصل معلن')+' • '+esc(s.status||'')+(s.archived?' • مخفي':'')+'</p>'+(linked.length?'<p>'+linked.length+' خدمة مرتبطة: '+esc(names.join('، '))+'</p>':'')+'<button type="button" data-transfer-owner="'+esc(s.id)+'">تغيير المالك</button></article>';
+   }).join('')||'<p>لا توجد متاجر مطابقة.</p>';
    $('ownership-rows').querySelectorAll('[data-transfer-owner]').forEach(button=>button.onclick=()=>transfer(sellers.find(s=>s.id===button.dataset.transferOwner)));
   };
   async function transfer(seller){
    if(!seller)return;
-   modal('<h2>تغيير مالك '+esc(seller.name)+'</h2><form id="transfer-owner-form" class="market-form"><label>رقم الموبايل للحساب الجديد<input name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="01xxxxxxxxx" required minlength="8" maxlength="20"></label><p class="data-note">لا يحتاج صاحب الحساب إلى إعادة التوثيق هنا؛ يجب أن يكون الرقم مؤكَّدًا على حسابه بالفعل. بعد النقل سيصبح الحساب الجديد مسؤولًا عن المتجر وطلباته.</p><p class="data-note">لأمان الطلبات، سيتم إيقاف استقبال الطلبات مؤقتًا حتى يؤكد المالك الجديد إعدادات الاستقبال من حسابه.</p><p class="form-error" role="alert"></p><button type="submit" class="primary">تأكيد نقل الملكية</button></form>');
+   const linked=claimsBySeller.get(seller.id)||[],names=linked.map(c=>c.publishedDraft?.name||c.draft?.name||c.source?.name||c.directoryId);
+   const scopeNote=linked.length>1?'<p class="data-note">تنبيه: الحساب ده مرتبط بـ '+linked.length+' خدمات ('+esc(names.join('، '))+'). النقل هيحوّل ملكية الحساب وكل الخدمات والطلبات المرتبطة به، مش خدمة واحدة فقط.</p>':'<p class="data-note">سيتم نقل ملكية المتجر والخدمات والطلبات المرتبطة به.</p>';
+   modal('<h2>تغيير مالك '+esc(seller.name)+'</h2><form id="transfer-owner-form" class="market-form"><label>رقم الموبايل للحساب الجديد<input name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="01xxxxxxxxx" required minlength="8" maxlength="20"></label><p class="data-note">لا يحتاج صاحب الحساب إلى إعادة التوثيق هنا؛ يجب أن يكون الرقم مؤكَّدًا على حسابه بالفعل. بعد النقل سيصبح الحساب الجديد مسؤولًا عن المتجر وطلباته.</p>'+scopeNote+'<p class="data-note">لأمان الطلبات، سيتم إيقاف استقبال الطلبات مؤقتًا حتى يؤكد المالك الجديد إعدادات الاستقبال من حسابه.</p><p class="form-error" role="alert"></p><button type="submit" class="primary">تأكيد نقل الملكية</button></form>');
    const form=$('transfer-owner-form');
    form.onsubmit=async event=>{
     event.preventDefault();
     const phone=form.elements.phone.value.trim(),button=form.querySelector('[type="submit"]'),errorBox=form.querySelector('.form-error');
-    if(!confirm('تأكيد نقل ملكية «'+seller.name+'» إلى الحساب المرتبط بالرقم '+phone+'؟'))return;
+    const scope=linked.length>1?' وكل الخدمات المرتبطة بالحساب':'';
+    if(!confirm('تأكيد نقل ملكية «'+seller.name+'»'+scope+' إلى الحساب المرتبط بالرقم '+phone+'؟'))return;
     button.disabled=true;errorBox.textContent='';
     try{
      const result=await db.rpc('jowwa_admin_transfer_seller',{target_seller_id:seller.id,new_owner_phone:phone});
