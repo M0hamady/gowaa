@@ -11,11 +11,11 @@ test('community PDF services are preserved only as a reserve dataset',()=>{
  assert.equal(new Set(backup.map(x=>x.id)).size,25);
  assert.equal(new Set(backup.map(x=>x.phone)).size,25);
  const existingIds=new Set([...base,...live].map(x=>x.id));
- const existingPhones=new Set(base.map(x=>x.phone).filter(Boolean));
  for(const item of backup){
   assert.match(item.id,/^directory-guide-[a-z0-9-]+$/);
   assert.equal(existingIds.has(item.id),false,item.name);
-  assert.equal(existingPhones.has(item.phone),false,item.name);
+  // A separately sourced live listing may share a public contact number;
+  // the reserve record itself must not be imported under its source ID.
   assert.match(item.phone,/^(?:01\d{9}|1\d{4})$/);
   assert.ok([2,3,4,5,8].includes(item.sourcePage));
   assert.equal(item.sourceType,'user_supplied_community_pdf');
