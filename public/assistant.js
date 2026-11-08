@@ -32,6 +32,7 @@ const confidence=p=>!p.mapId?'الموقع يحتاج تأكيدًا':p.mapLabel
 const asksForCurrentOrigin=query=>/(?:من\s*(?:موقعي|مكاني)|موقعي\s*الحالي|مكاني\s*الحالي|من\s*هنا|my\s+location)/i.test(String(query||''));
 export function assistantActionPlan(answer,query=''){
  const action=answer?.action;
+ if(action?.type==='prepare_route'&&action.mapIds?.length===1&&asksForCurrentOrigin(query))return {type:'current-origin',mapId:action.mapIds[0]};
  if(action?.type==='prepare_basket')return {type:'basket',action};
  if(action?.type==='prepare_round')return {type:'round',action};
  if(action?.type==='prepare_route')return {type:'route',action};
@@ -122,7 +123,7 @@ export function mountAssistant({root,onPlace,onBus,onAskOrigin,onRouteFromCurren
    if(plan.type==='round'){if(onPrepareRound&&plan.action.mapIds?.length){onPrepareRound(plan.action.mapIds);drawer.open=false;return;}toast?.('محتاجين نحدد نقاط الجولة على الخريطة الأول.');return;}
    if(plan.type==='route'){if(plan.action.mapIds?.length===2&&onPrepareRoute){onPrepareRoute(plan.action.mapIds);drawer.open=false;return;}if(plan.action.mapIds?.length===1){onPlace?.(plan.action.mapIds[0]);drawer.open=false;return;}}
    if(plan.type==='market'){goMarket({type:plan.action.type,draft:plan.action.draft||{}});return;}
-   if(plan.type==='current-origin'){if(onRouteFromCurrent){onRouteFromCurrent(plan.mapId);drawer.open=false;return;}}
+   if(plan.type==='current-origin'){const selectedOrigin=getCurrentOrigin();if(selectedOrigin?.coordinate&&selectedOrigin.id&&onPrepareRoute){onPrepareRoute([selectedOrigin.id,plan.mapId]);drawer.open=false;return;}if(onRouteFromCurrent){onRouteFromCurrent(plan.mapId);drawer.open=false;return;}}
    if(plan.type==='choose-origin'){const place=(answer.places||[]).find(item=>item.mapId===plan.mapId);if(place){const selectedOrigin=getCurrentOrigin();if(selectedOrigin?.coordinate&&selectedOrigin.id&&onPrepareRoute){onPrepareRoute([selectedOrigin.id,plan.mapId]);drawer.open=false;return;}return originView(place);}}
    if(plan.type==='bus'){onBus?.(plan.routeId);drawer.open=false;return;}
   }

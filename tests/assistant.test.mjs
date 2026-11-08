@@ -10,6 +10,7 @@ test('assistant routes clear intents to the next useful in-app action without sk
  assert.deepEqual(assistantActionPlan({action:{type:'prepare_basket',quantity:2},items:[]},'هات اتنين'),{type:'basket',action:{type:'prepare_basket',quantity:2}});
  assert.deepEqual(assistantActionPlan({action:{type:'prepare_round',mapIds:['a','b']}},'اعمل راوند'),{type:'round',action:{type:'prepare_round',mapIds:['a','b']}});
  assert.deepEqual(assistantActionPlan({action:{type:'prepare_route',mapIds:['a','b']}},'جهز المشوار'),{type:'route',action:{type:'prepare_route',mapIds:['a','b']}});
+ assert.deepEqual(assistantActionPlan({action:{type:'prepare_route',mapIds:['auc']}},'عايز اروح الجامعة الأمريكية من موقعي'),{type:'current-origin',mapId:'auc'});
  assert.equal(assistantActionPlan({action:{type:'add_product',draft:{title:'قهوة'}}},'ضيف منتج').type,'market');
  assert.deepEqual(assistantActionPlan({intent:'navigate',places:[{mapId:'auc'}]},'عايز اروح الجامعة الأمريكية من موقعي'),{type:'current-origin',mapId:'auc'});
  assert.deepEqual(assistantActionPlan({intent:'navigate',places:[{mapId:'auc'}]},'عايز اروح الجامعة الأمريكية'),{type:'choose-origin',mapId:'auc'});
