@@ -140,3 +140,14 @@ body.home-mode .home-screen.is-guided .home-greeting,body.home-mode .home-screen
 .journey-price-offers li span{font-size:12px;line-height:1.6}
 .journey-price-offers p{font-size:11px;color:#748377;line-height:1.7;margin:10px 0 0}
 @media(max-width:640px){.journey-price-offers li{align-items:flex-start;flex-direction:column;gap:2px}}
+
+/* Keep the quick categories available without competing with the single assistant input. */
+body.home-mode .home-shortcuts{max-width:710px;margin:12px auto 0;border:1px solid #dce8d8;border-radius:15px;background:#fbfdf9;overflow:hidden}
+body.home-mode .home-shortcuts>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;min-height:46px}
+body.home-mode .home-shortcuts>summary::-webkit-details-marker{display:none}
+body.home-mode .home-shortcuts-title h2{font-size:13px;line-height:1.5;margin:0;font-weight:800}
+body.home-mode .home-shortcuts-title small{font-size:10px;color:#748577}
+body.home-mode .home-shortcut-rail{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;padding:0 10px 10px;overflow:visible;scroll-snap-type:none}
+body.home-mode .home-shortcut-rail button{display:flex;align-items:center;justify-content:center;flex:auto;width:100%;max-width:none;min-height:43px;padding:8px 9px;border:1px solid #e0e9da;border-radius:10px;background:#fff;box-shadow:none;font-size:12px;font-weight:700;color:#28563f;text-align:center;white-space:normal}
+body.home-mode .home-shortcut-rail button:hover{transform:none;background:#f0f7eb}
+@media(max-width:380px){body.home-mode .home-shortcuts-title small{max-width:105px;text-align:end}body.home-mode .home-shortcut-rail button{font-size:11px;padding:8px 5px}}
