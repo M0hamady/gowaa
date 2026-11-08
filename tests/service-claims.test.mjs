@@ -140,7 +140,7 @@ test('database enforces business claims, independent drafts and reviewed publica
   const catalogId='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
   const orderId='cccccccc-cccc-4ccc-8ccc-cccccccccccc';
   await db.query("insert into public.catalogs(id,seller_id,name,status) values($1,$2,'كتالوج محفوظ','approved')",[catalogId,owner]);
-  await db.query("insert into public.listings(seller_id,kind,category,title,description,price,track_stock,image_path,status,service_claim_id,catalog_id) values($1,'product','other','منتج محفوظ','وصف المنتج المحفوظ',25,false,$2,'approved',$3,$4)",[owner,owner+'/photo.jpg',fov.id,catalogId]);
+  await db.query("insert into public.listings(seller_id,kind,category,title,description,price,track_stock,image_path,status,catalog_id) values($1,'product','other','منتج محفوظ','وصف المنتج المحفوظ',25,false,$2,'approved',$3)",[owner,owner+'/photo.jpg',catalogId]);
   await db.query("insert into public.shop_orders(id,buyer_id,seller_id,request_id,customer_name,items,total,seller_name,seller_phone) values($1,$2,$3,$4,'عميل محفوظ','[]',25,'متجري القائم','')",[orderId,other,owner,'dddddddd-dddd-4ddd-8ddd-dddddddddddd']);
   await assert.rejects(()=>rpc(owner,'jowwa_admin_transfer_seller',[owner,'01202212788']),e=>e.code==='42501');
   await db.query("update auth.users set phone='01000000000' where id=$1",[unverified]);
