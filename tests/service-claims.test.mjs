@@ -142,6 +142,7 @@ test('database enforces business claims, independent drafts and reviewed publica
   await db.query("insert into public.catalogs(id,seller_id,name,status) values($1,$2,'كتالوج محفوظ','approved')",[catalogId,owner]);
   await db.query("insert into public.listings(seller_id,kind,category,title,description,price,track_stock,image_path,status,service_claim_id,catalog_id) values($1,'product','other','منتج محفوظ','وصف المنتج المحفوظ',25,false,$2,'approved',$3,$4)",[owner,owner+'/photo.jpg',fov.id,catalogId]);
   await db.query("insert into public.shop_orders(id,buyer_id,seller_id,request_id,customer_name,items,total,seller_name,seller_phone) values($1,$2,$3,$4,'عميل محفوظ','[]',25,'متجري القائم','')",[orderId,other,owner,'dddddddd-dddd-4ddd-8ddd-dddddddddddd']);
+  await assert.rejects(()=>rpc(owner,'jowwa_admin_transfer_seller',[owner,'01202212788']),e=>e.code==='42501');
   await assert.rejects(()=>rpc(admin,'jowwa_admin_transfer_seller',[owner,'01000000000']),e=>e.code==='22023');
   const moved=await rpc(admin,'jowwa_admin_transfer_seller',[owner,'01202212788']);
   assert.equal(moved.newOwnerId,newOwner);assert.equal(moved.newOwnerPhone,'+201202212788');
@@ -152,7 +153,10 @@ test('database enforces business claims, independent drafts and reviewed publica
   const listing=(await db.query('select seller_id,image_path,status from public.listings where seller_id=$1',[newOwner])).rows[0];
   assert.equal(listing.seller_id,newOwner);assert.equal(listing.image_path,owner+'/photo.jpg','legacy image object key remains intact');assert.equal(listing.status,'approved','ownership transfer must not reset moderation status');
   assert.equal((await db.query('select seller_id from public.shop_orders where id=$1',[orderId])).rows[0].seller_id,newOwner);
-  assert.equal((await db.query('select owner_id,seller_id,matched_phone from jowwa_private.service_claims where id=$1',[fov.id])).rows[0].owner_id,newOwner);
+  assert.equal((await as('authenticated',newOwner,'select id from public.shop_orders where id=$1',[orderId])).rows.length,1,'new owner receives access to the existing order');
+  assert.equal((await as('authenticated',owner,'select id from public.shop_orders where id=$1',[orderId])).rows.length,0,'old owner loses access to the transferred order');
+  const movedClaim=(await db.query('select owner_id,seller_id,matched_phone from jowwa_private.service_claims where id=$1',[fov.id])).rows[0];
+  assert.equal(movedClaim.owner_id,newOwner);assert.equal(movedClaim.seller_id,newOwner);assert.equal(movedClaim.matched_phone,'+201202212788');
   assert.equal((await db.query("select data->>'sellerId' seller_id from public.site_content where id='directory-fov-cafe'")).rows[0].seller_id,newOwner);
   await assert.rejects(()=>rpc(owner,'jowwa_service_claim_save',[fov.id,fov.version,JSON.stringify(fov.draft)]),e=>e.code==='42501');
   const audit=await db.query("select count(*)::int n from public.admin_audit where target_type='seller_owner_transfer' and target_id=$1",[newOwner]);
