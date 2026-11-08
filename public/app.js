@@ -138,6 +138,23 @@ function setupHome(){
   setSheet('expanded');
   requestAnimationFrame(()=>map?.invalidateSize(false));
  };
+ const actionQueries={
+  navigate:'عايز أروح لمكان',
+  food:'عايز أكل أو شرب',
+  places:'بدور على مكان في كيان',
+  services:'محتاج خدمة في كيان',
+  banks:'فين البنوك والصرافات',
+  market:'عايز أشتري منتج',
+  store:'أنا بائع وعايز أفتح متجري',
+  'add-service':'عايز أضيف خدمة',
+  bus:'مواعيد الباصات في كيان',
+  round:'عايز أعمل راوند على أكتر من مكان'
+ };
+ for(const button of root.querySelectorAll('[data-home-action]'))button.addEventListener('click',()=>{
+  const query=actionQueries[button.dataset.homeAction];if(!query||!assistant?.ask)return;
+  root.querySelector('.home-shortcuts').open=false;
+  assistant.ask(query);
+ });
  back.onclick=()=>{history.pushState({jowwaHome:true},'','/');showHome();};
  window.addEventListener('popstate',()=>{
   const params=new URLSearchParams(location.search);

@@ -4,7 +4,7 @@ import {readFile} from 'node:fs/promises';
 import {PGlite} from '@electric-sql/pglite';
 import {redactPrivate,validateQuestion,mergePublicRecords,buildGrounding,providerMessages,normalizeAnswer,clientHash,boundedLimit,requestModel,requestWithFallback,shortlist} from '../src/server-assistant.mjs';
 import {fastAnswer,extractUserDraft,requestedAction,requestedQuantity,exactPlaces,directoryFallback} from '../src/server-assistant.mjs';
-import {readAssistantMemory,writeAssistantMemory,clearAssistantMemory,actionEnvelope,assistantActionPlan} from '../public/assistant.js';
+import {readAssistantMemory,writeAssistantMemory,clearAssistantMemory,actionEnvelope,assistantActionPlan,dispatchAssistantAction} from '../public/assistant.js';
 
 test('assistant routes clear intents to the next useful in-app action without skipping consent',()=>{
  assert.deepEqual(assistantActionPlan({action:{type:'prepare_basket',quantity:2},items:[]},'هات اتنين'),{type:'basket',action:{type:'prepare_basket',quantity:2}});
@@ -16,6 +16,49 @@ test('assistant routes clear intents to the next useful in-app action without sk
  assert.deepEqual(assistantActionPlan({intent:'navigate',places:[{mapId:'auc'}]},'عايز اروح الجامعة الأمريكية'),{type:'choose-origin',mapId:'auc'});
  assert.deepEqual(assistantActionPlan({intent:'bus',routes:[{id:'line-1'}]},'مواعيد الباص'),{type:'bus',routeId:'line-1'});
  assert.equal(assistantActionPlan({intent:'find_place',places:[{mapId:'auc'}]},'فين الجامعة').type,'results');
+});
+test('assistant action dispatch invokes the real UI handoff callbacks',()=>{
+ const calls=[];
+ const handlers={
+  onBasket:(items,quantity)=>calls.push(['basket',items.map(x=>x.id),quantity]),
+  onPrepareRound:ids=>calls.push(['round',ids]),
+  onPrepareRoute:ids=>calls.push(['route',ids]),
+  onPlace:id=>calls.push(['place',id]),
+  onRouteFromCurrent:id=>calls.push(['current',id]),
+  onBus:id=>calls.push(['bus',id]),
+  onMarket:action=>calls.push(['market',action.type,action.draft.title]),
+  onChooseOrigin:place=>calls.push(['origin',place.id]),
+  getCurrentOrigin:()=>null,
+  onClose:()=>calls.push(['close'])
+ };
+ assert.equal(dispatchAssistantAction({action:{type:'prepare_basket',quantity:2},items:[{id:'p1'}]},'هات اتنين',handlers),true);
+ assert.equal(dispatchAssistantAction({action:{type:'prepare_round',mapIds:['a','b']}},'اعمل راوند',handlers),true);
+ assert.equal(dispatchAssistantAction({action:{type:'prepare_route',mapIds:['a','b']}},'جهز المشوار',handlers),true);
+ assert.equal(dispatchAssistantAction({action:{type:'prepare_route',mapIds:['a']}},'عايز اروح المكان',handlers),true);
+ assert.equal(dispatchAssistantAction({action:{type:'add_product',draft:{title:'قهوة'}}},'ضيف منتج',handlers),true);
+ assert.equal(dispatchAssistantAction({intent:'navigate',places:[{id:'place-a',mapId:'map-a'}]},'عايز اروح المكان',handlers),true);
+ assert.equal(dispatchAssistantAction({intent:'bus',routes:[{id:'line-a'}]},'مواعيد الباص',handlers),true);
+ assert.deepEqual(calls,[
+  ['basket',['p1'],2],
+  ['round',['a','b']],['close'],
+  ['route',['a','b']],['close'],
+  ['place','a'],['close'],
+  ['market','add_product','قهوة'],
+  ['origin','place-a'],
+  ['bus','line-a'],['close']
+ ]);
+});
+test('assistant uses a selected map origin for explicit current-location route requests',()=>{
+ const calls=[];
+ const answer={action:{type:'prepare_route',mapIds:['destination']}};
+ const handled=dispatchAssistantAction(answer,'عايز اروح الجامعة من موقعي',{
+  getCurrentOrigin:()=>({id:'origin',coordinate:[31.1,29.9]}),
+  onPrepareRoute:ids=>calls.push(ids),
+  onRouteFromCurrent:id=>calls.push(['gps',id]),
+  onClose:()=>calls.push(['close'])
+ });
+ assert.equal(handled,true);
+ assert.deepEqual(calls,[['origin','destination'],['close']]);
 });
 const item={orderGate:{canOrder:true,reason:'open'},id:'item-1',title:'قهوة',description:'حبوب قهوة',status:'approved',archived:false,kind:'product',category:'food',price:100,offer_price:80,offer_until:'2099-01-01',price_mode:'fixed',available:true,track_stock:true,quantity:3,sellers:{id:'seller-1',name:'البائع',status:'approved',archived:false}};
 const ground=()=>buildGrounding({places:[{id:'sunmall',name:'صن مول',mapId:'sunmall',description:'اتصل 01010060011',status:'الموقع موثق'}],routes:[{id:'abb',name:'العباسية',status:'published'},{id:'queen',name:'كوين',status:'suspended',statusLabel:'متوقف'}],items:[item]});

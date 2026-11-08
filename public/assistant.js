@@ -45,6 +45,43 @@ export function assistantActionPlan(answer,query=''){
  return {type:'results'};
 }
 
+export function dispatchAssistantAction(answer,query='',handlers={}){
+ const plan=assistantActionPlan(answer,query),close=()=>handlers.onClose?.();
+ if(plan.type==='basket'){handlers.onBasket?.(answer.items||[],plan.action.quantity);return true;}
+ if(plan.type==='round'){
+  if(plan.action.mapIds?.length&&handlers.onPrepareRound){handlers.onPrepareRound(plan.action.mapIds);close();return true;}
+  handlers.toast?.('محتاجين نحدد نقاط الجولة على الخريطة الأول.');return true;
+ }
+ if(plan.type==='route'){
+  if(plan.action.mapIds?.length===2&&handlers.onPrepareRoute){handlers.onPrepareRoute(plan.action.mapIds);close();return true;}
+  if(plan.action.mapIds?.length===1&&handlers.onPlace){handlers.onPlace(plan.action.mapIds[0]);close();return true;}
+  return false;
+ }
+ if(plan.type==='market'){
+  if(!handlers.onMarket)return false;
+  handlers.onMarket({type:plan.action.type,draft:plan.action.draft||{}});return true;
+ }
+ if(plan.type==='current-origin'){
+  const origin=handlers.getCurrentOrigin?.();
+  if(origin?.coordinate&&origin.id&&handlers.onPrepareRoute){handlers.onPrepareRoute([origin.id,plan.mapId]);close();return true;}
+  if(handlers.onRouteFromCurrent){handlers.onRouteFromCurrent(plan.mapId);close();return true;}
+  return false;
+ }
+ if(plan.type==='choose-origin'){
+  const place=(answer.places||[]).find(item=>item.mapId===plan.mapId);
+  if(!place)return false;
+  const origin=handlers.getCurrentOrigin?.();
+  if(origin?.coordinate&&origin.id&&handlers.onPrepareRoute){handlers.onPrepareRoute([origin.id,plan.mapId]);close();return true;}
+  if(handlers.onChooseOrigin){handlers.onChooseOrigin(place);return true;}
+  return false;
+ }
+ if(plan.type==='bus'){
+  if(!handlers.onBus)return false;
+  handlers.onBus(plan.routeId);close();return true;
+ }
+ return false;
+}
+
 export function mountAssistant({root,onPlace,onBus,onAskOrigin,onRouteFromCurrent,onPrepareRound,onPrepareRoute,onTransportMap,getCurrentOrigin=()=>null,getMapContext=()=>null,toast,endpoint='/api/assistant',storage=globalThis.sessionStorage,openOnMount=false,servicesLoader=()=>import('./assistant-actions.js')}){
  if(!root)return {destroy(){}};
  const restored=readAssistantMemory(storage);
@@ -117,16 +154,12 @@ export function mountAssistant({root,onPlace,onBus,onAskOrigin,onRouteFromCurren
  };
  const resultView=(showAction=true)=>{
   if(answer.travel||answer.responseMode==='conversation'||answer.requestDraft){step=answer.travel?'travel':answer.requestDraft?'request-review':'conversation';return renderAssistantConversation(body,answer,{ask,reset,openJourneys,openRequests,saveJourney:async plan=>(await(await servicesLoader()).assistantServices()).journeys.save(plan),submitRequest:async (draft,options)=>(await(await servicesLoader()).assistantServices()).submitRequest(draft,options),...(asksForCurrentOrigin(lastQuestion)?{onRoute:mapId=>{if(onRouteFromCurrent){onRouteFromCurrent(mapId);drawer.open=false;}}}:{})});}
-  if(showAction){
-   const plan=assistantActionPlan(answer,lastQuestion);
-   if(plan.type==='basket')return basketSelection(answer.items,plan.action.quantity);
-   if(plan.type==='round'){if(onPrepareRound&&plan.action.mapIds?.length){onPrepareRound(plan.action.mapIds);drawer.open=false;return;}toast?.('محتاجين نحدد نقاط الجولة على الخريطة الأول.');return;}
-   if(plan.type==='route'){if(plan.action.mapIds?.length===2&&onPrepareRoute){onPrepareRoute(plan.action.mapIds);drawer.open=false;return;}if(plan.action.mapIds?.length===1){onPlace?.(plan.action.mapIds[0]);drawer.open=false;return;}}
-   if(plan.type==='market'){goMarket({type:plan.action.type,draft:plan.action.draft||{}});return;}
-   if(plan.type==='current-origin'){const selectedOrigin=getCurrentOrigin();if(selectedOrigin?.coordinate&&selectedOrigin.id&&onPrepareRoute){onPrepareRoute([selectedOrigin.id,plan.mapId]);drawer.open=false;return;}if(onRouteFromCurrent){onRouteFromCurrent(plan.mapId);drawer.open=false;return;}}
-   if(plan.type==='choose-origin'){const place=(answer.places||[]).find(item=>item.mapId===plan.mapId);if(place){const selectedOrigin=getCurrentOrigin();if(selectedOrigin?.coordinate&&selectedOrigin.id&&onPrepareRoute){onPrepareRoute([selectedOrigin.id,plan.mapId]);drawer.open=false;return;}return originView(place);}}
-   if(plan.type==='bus'){onBus?.(plan.routeId);drawer.open=false;return;}
-  }
+  if(showAction&&dispatchAssistantAction(answer,lastQuestion,{
+   onBasket:(items,quantity)=>basketSelection(items,quantity),
+   onPrepareRound, onPrepareRoute, onPlace, onRouteFromCurrent, onBus,
+   onMarket:goMarket, onChooseOrigin:originView, getCurrentOrigin, toast,
+   onClose:()=>{drawer.open=false;}
+  }))return;
   step='results';const places=answer.places||[],routes=answer.routes||[],items=answer.items||[],menus=answer.menus||[];
   body.innerHTML=`<p class="assistant-reply">${esc(answer.message)}</p><h3>${items.length||menus.length?'أنهي اختيار مناسب لك؟':places.length||routes.length?'تحب تفتح أنهي نتيجة؟':'نجرّب سؤال تاني؟'}</h3><div class="assistant-cards">
   ${items.map(p=>`<article class="assistant-card"><span aria-hidden="true">${icons.bag}</span><div><h4><a class="assistant-result-shop" href="${esc(p.sellerUrl)}">${esc(p.seller)}</a><span aria-hidden="true"> · </span><a href="${esc(p.url)}">${esc(p.name)}</a></h4><small>${esc(p.category)}</small><p><b>${esc(p.price)}</b> · ${esc(p.stock)}</p><div class="assistant-card-actions">${p.canOrder?`<button type="button" data-basket="${esc(p.id)}">＋ للسلة</button>`:`<small>${esc(p.orderLabel||'راجع استقبال الطلبات')}</small>`}<a href="${esc(p.url)}">التفاصيل</a></div></div></article>`).join('')}
