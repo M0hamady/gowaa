@@ -30,6 +30,20 @@ export function actionEnvelope(action,now=Date.now()){
 const icons={spark:'✦',arrow:'←',pin:'⌖',bus:'▣',bag:'▧',reset:'↻'};
 const confidence=p=>!p.mapId?'الموقع يحتاج تأكيدًا':p.mapLabel?'موقع تقريبي • راجع التفاصيل':/يحتاج|تحتاج|غير مؤكد|تأكيد|تقريبي/.test(p.status||'')?'راجع التفاصيل قبل التحرك':'موجود في دليل جوه';
 const asksForCurrentOrigin=query=>/(?:من\s*(?:موقعي|مكاني)|موقعي\s*الحالي|مكاني\s*الحالي|من\s*هنا|my\s+location)/i.test(String(query||''));
+export function assistantActionPlan(answer,query=''){
+ const action=answer?.action;
+ if(action?.type==='prepare_basket')return {type:'basket',action};
+ if(action?.type==='prepare_round')return {type:'round',action};
+ if(action?.type==='prepare_route')return {type:'route',action};
+ if(['add_product','add_service','manage_catalog'].includes(action?.type))return {type:'market',action};
+ if(answer?.intent==='navigate'){
+  const mapped=(answer.places||[]).filter(place=>place?.mapId);
+  if(mapped.length===1)return {type:asksForCurrentOrigin(query)?'current-origin':'choose-origin',mapId:mapped[0].mapId};
+ }
+ if(answer?.intent==='bus'&&(answer.routes||[]).length===1)return {type:'bus',routeId:answer.routes[0].id};
+ return {type:'results'};
+}
+
 export function mountAssistant({root,onPlace,onBus,onAskOrigin,onRouteFromCurrent,onPrepareRound,onPrepareRoute,onTransportMap,getCurrentOrigin=()=>null,getMapContext=()=>null,toast,endpoint='/api/assistant',storage=globalThis.sessionStorage,openOnMount=false,servicesLoader=()=>import('./assistant-actions.js')}){
  if(!root)return {destroy(){}};
  const restored=readAssistantMemory(storage);
@@ -52,7 +66,8 @@ export function mountAssistant({root,onPlace,onBus,onAskOrigin,onRouteFromCurren
  const shortcuts=()=>{for(const b of body.querySelectorAll('[data-my-journeys]'))b.onclick=openJourneys;for(const b of body.querySelectorAll('[data-my-requests]'))b.onclick=openRequests;};
  const inputView=()=>{
   step='question';
-  body.innerHTML=`<form class="assistant-form"><label for="jowwa-assistant-query">${context?'نكمل طلبك؟':'محتاج إيه؟'}</label><div class="assistant-input-row"><input id="jowwa-assistant-query" name="query" type="text" inputmode="text" maxlength="500" minlength="2" autocomplete="off" placeholder="عايز أروح… محتاج خدمة…" required><button type="submit" aria-label="اسأل جوه" title="اسأل جوه">${icons.arrow}</button></div><small>${context?'فاكر آخر اختياراتك في التبويب ده.':'بلاش تكتب رقمك أو بيانات الدخول.'}</small><div class="assistant-feedback" role="status"></div></form><div class="assistant-chips"><button type="button" data-ask="عايز أروح الجامعة الأمريكية">▣ مشوار بالأتوبيس</button><button type="button" data-ask="عايز توصيل خاص">⌖ توصيل خاص</button><button type="button" data-ask="محتاج خدمة">الخدمات</button><button type="button" data-ask="عايز أضيف منتج">＋ أضيف منتج</button><button type="button" data-ask="عايز أضيف خدمة">＋ أضيف خدمة</button></div><div class="assistant-shortcuts"><button type="button" data-my-journeys>مشاويري</button><button type="button" data-my-requests>طلباتي للإدارة</button></div>${context?'<button type="button" class="assistant-reset">↻ امسح الذاكرة وابدأ جديد</button>':''}`;
+  body.innerHTML=`<form class="assistant-form"><label for="jowwa-assistant-query">${context?'نكمل طلبك؟':'محتاج إيه؟'}</label><div class="assistant-input-row"><input id="jowwa-assistant-query" name="query" type="text" inputmode="text" maxlength="500" minlength="2" autocomplete="off" placeholder="مثلاً: عايز أروح… أو محتاج سباك… أو أطلب أكل" required><button type="submit" aria-label="ابدأ مع جوه" title="ابدأ مع جوه">${icons.arrow}</button></div><small>${context?'فاكر اختياراتك ونقدر نكمل من مكان ما وقفنا.':'اكتب أو احكي طلبك بالمصري، ومش لازم تعرف اسم الخدمة.'}</small><div class="assistant-feedback" role="status"></div></form><div class="assistant-chips"><button type="button" data-ask="عايز أروح الجامعة الأمريكية من موقعي">مشوار</button><button type="button" data-ask="عايز أطلب أكل">أكل وشراء</button><button type="button" data-ask="محتاج سباك يصلح تسريب">خدمة</button></div>${context?'<button type="button" class="assistant-reset">↻ ابدأ طلب جديد</button>':''}`;
+
   body.querySelector('form').onsubmit=e=>{e.preventDefault();ask(e.currentTarget.querySelector('input').value.trim());};
   for(const b of body.querySelectorAll('[data-ask]'))b.onclick=()=>ask(b.dataset.ask);
   body.querySelector('.assistant-reset')?.addEventListener('click',reset);
@@ -101,7 +116,16 @@ export function mountAssistant({root,onPlace,onBus,onAskOrigin,onRouteFromCurren
  };
  const resultView=(showAction=true)=>{
   if(answer.travel||answer.responseMode==='conversation'||answer.requestDraft){step=answer.travel?'travel':answer.requestDraft?'request-review':'conversation';return renderAssistantConversation(body,answer,{ask,reset,openJourneys,openRequests,saveJourney:async plan=>(await(await servicesLoader()).assistantServices()).journeys.save(plan),submitRequest:async (draft,options)=>(await(await servicesLoader()).assistantServices()).submitRequest(draft,options),...(asksForCurrentOrigin(lastQuestion)?{onRoute:mapId=>{if(onRouteFromCurrent){onRouteFromCurrent(mapId);drawer.open=false;}}}:{})});}
-  if(showAction&&answer.action){if(answer.action.type==='prepare_basket')return basketSelection(answer.items,answer.action.quantity);return prepareActionView(answer.action);}
+  if(showAction){
+   const plan=assistantActionPlan(answer,lastQuestion);
+   if(plan.type==='basket')return basketSelection(answer.items,plan.action.quantity);
+   if(plan.type==='round'){if(onPrepareRound&&plan.action.mapIds?.length){onPrepareRound(plan.action.mapIds);drawer.open=false;return;}toast?.('محتاجين نحدد نقاط الجولة على الخريطة الأول.');return;}
+   if(plan.type==='route'){if(plan.action.mapIds?.length===2&&onPrepareRoute){onPrepareRoute(plan.action.mapIds);drawer.open=false;return;}if(plan.action.mapIds?.length===1){onPlace?.(plan.action.mapIds[0]);drawer.open=false;return;}}
+   if(plan.type==='market'){goMarket({type:plan.action.type,draft:plan.action.draft||{}});return;}
+   if(plan.type==='current-origin'){if(onRouteFromCurrent){onRouteFromCurrent(plan.mapId);drawer.open=false;return;}}
+   if(plan.type==='choose-origin'){const place=(answer.places||[]).find(item=>item.mapId===plan.mapId);if(place){const selectedOrigin=getCurrentOrigin();if(selectedOrigin?.coordinate&&selectedOrigin.id&&onPrepareRoute){onPrepareRoute([selectedOrigin.id,plan.mapId]);drawer.open=false;return;}return originView(place);}}
+   if(plan.type==='bus'){onBus?.(plan.routeId);drawer.open=false;return;}
+  }
   step='results';const places=answer.places||[],routes=answer.routes||[],items=answer.items||[],menus=answer.menus||[];
   body.innerHTML=`<p class="assistant-reply">${esc(answer.message)}</p><h3>${items.length||menus.length?'أنهي اختيار مناسب لك؟':places.length||routes.length?'تحب تفتح أنهي نتيجة؟':'نجرّب سؤال تاني؟'}</h3><div class="assistant-cards">
   ${items.map(p=>`<article class="assistant-card"><span aria-hidden="true">${icons.bag}</span><div><h4><a class="assistant-result-shop" href="${esc(p.sellerUrl)}">${esc(p.seller)}</a><span aria-hidden="true"> · </span><a href="${esc(p.url)}">${esc(p.name)}</a></h4><small>${esc(p.category)}</small><p><b>${esc(p.price)}</b> · ${esc(p.stock)}</p><div class="assistant-card-actions">${p.canOrder?`<button type="button" data-basket="${esc(p.id)}">＋ للسلة</button>`:`<small>${esc(p.orderLabel||'راجع استقبال الطلبات')}</small>`}<a href="${esc(p.url)}">التفاصيل</a></div></div></article>`).join('')}

@@ -11,7 +11,6 @@ import {transitState,renderTransitCard,departureDetails} from './transit.js';
 import {makeGraph,findRoute,estimateMinutes,normalize,cairoParts,nextDepartures,haversine,planRoute,outsideMapsLink} from './routing.js';
 import {placeResults,addRecent,shareRouteUrl,clusterPlaces} from './ux.js';
 import {icon} from './ui-icons.js';
-import {mountWelcomeJourney,welcomeActions} from './welcome-journey.js';
 import {isPublicContactPlace,providerRequestUrl,customerContactText} from './provider-contact-policy.js';
 const $=id=>document.getElementById(id), escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const symbols={office:'▤',school:'▱',nursery:'♧',university:'▱',health:'✚',hotel:'▥',club:'⚑',mosque:'◈',fuel:'▧',bus:'▣',shopping:'▦',sports:'⚑',park:'♧',restaurant:'♨',atm:'▣'};
@@ -128,49 +127,26 @@ function locate({afterLocate}={}){if(!navigator.geolocation||!window.isSecureCon
 function followLocation(){if(watchId!==null){navigator.geolocation.clearWatch(watchId);watchId=null;if($('follow-location'))$('follow-location').textContent='◎ متابعة موقعي أثناء الحركة';toast('توقفت متابعة الموقع.');return;}if(!navigator.geolocation||!isSecureContext){toast('متابعة الموقع تحتاج HTTPS وإذن الموقع.');return;}watchId=navigator.geolocation.watchPosition(p=>plotPosition(p),e=>{locationError(e);navigator.geolocation.clearWatch(watchId);watchId=null;},{enableHighAccuracy:true,timeout:15000,maximumAge:5000});toast('الموقع يظهر على جهازك فقط. المتابعة ليست تتبعًا للباص أو السائق.');}
 function sources(){dialog(`<h2>خريطة واحدة. مصادر واضحة.</h2><div class="stat-row"><div><b>624</b><span>رقم عمارة من المخططات</span></div><div><b>${data.pois.length}</b><span>خدمات ومعالم محددة الموقع</span></div></div><h3>التغطية الحالية</h3><p>${data.coverage.scope}</p><p>${data.coverage.alignment}</p><p>${data.coverage.routing}</p><h3>المصادر</h3>${data.sources.map(s=>`<div class="source-row"><a href="${escape(s.url)}" target="_blank" rel="noreferrer">${escape(s.title)} ↗</a></div>`).join('')}<h3>دليل الباصات</h3><p><a href="/buses">مراجعة خطوط العباسية والجامعة والحجاز وباقي الخدمات ومصادرها ←</a></p><h3>مصدر باص الجامعة</h3><p>الصورتان منشورتان في 23 مارس 2026. دليل الإدارة بتاريخ 3 نوفمبر 2026 يحيل إليهما. لا نعتبر تاريخ الإحالة تاريخ إصدار جدول جديد، ولا نعرض رسائل الركاب كتتبع حي.</p><h3>كيف نحسب الوقت؟</h3><p>تقدير الحركة: مشي 4.5 كم/س، دراجة 12 كم/س، عربية 20 كم/س، مع نطاق زيادة 30%. هذه افتراضات تخطيطية، بلا زحام حي أو انتظار سائق أو بوابة. الطرق الداخلية تعامل في الاتجاهين طبقًا لوصفك، والطرق الخارجية تحتفظ بالاتجاه المسجل.</p><h3>الخصوصية والتشغيل</h3><p>الموقع بإذنك ويظل في المتصفح؛ المشاوير والمسودات تحفظ محليًا. خلفية OpenStreetMap والخط قد تتصل بالإنترنت. لا يوجد إرسال طلبات أو دفع أو سائقون متصلون في هذه النسخة.</p><a href="data/map.json" download="jowwa-map-data.json">تحميل بيانات الخريطة ↧</a> • <a href="data/bus.json" download="jowwa-bus-data.json">تحميل بيانات الباص ↧</a><p>البيانات المشتقة من OpenStreetMap تحت ODbL؛ مخططات الترقيم مصدرها الملفات التي قدمتها. آخر تجميع: 3 نوفمبر 2026.</p>`);}
 function wire(){initSearch();$('route-button').onclick=route;$('swap').onclick=()=>{[from,to]=[to,from];$('from').value=from?.name||'';$('to').value=to?.name||'';invalidate();drawEndpoints();if(from&&to)route();};document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>setMode(b.dataset.mode,true));for(const w of ['from','to'])$('pick-'+w).onclick=()=>startPick(w);$('use-location').onclick=locate;$('map-location').onclick=locate;$('fit-all').onclick=fitAll;$('zoom-in').onclick=()=>map.zoomIn();$('zoom-out').onclick=()=>map.zoomOut();document.querySelectorAll('[data-district]').forEach(b=>b.onclick=()=>{const d=data.districts.find(d=>d.id===b.dataset.district);setSheet('collapsed');fitView(d.polygon,17);});$('layers-button').onclick=()=>$('layers-panel').hidden=!$('layers-panel').hidden;$('layer-buildings').onchange=refreshBuildings;for(const [id,layer] of [['services',serviceLayer],['tiles',tiles],['roads',roadLayer]])$('layer-'+id).onchange=e=>e.target.checked?map.addLayer(layer):map.removeLayer(layer);$('saved-button').onclick=showSaved;$('sources-button').onclick=sources;$('help-map').onclick=sources;$('bus-date').value=cairoParts().iso;$('bus-date').onchange=renderBus;$('day-type').onchange=renderBus;document.querySelectorAll('[data-direction]').forEach(b=>b.onclick=()=>{busDirection=b.dataset.direction;document.querySelectorAll('[data-direction]').forEach(x=>x.classList.toggle('active',x===b));renderBus();});$('example-internal').onclick=()=>{setEndpoint('from',objects.get('yasmin-318'));setEndpoint('to',objects.get('poi-1021898717'));setMode('walk');route();};$('example-cross').onclick=()=>{setEndpoint('from',objects.get('narges-182'));setEndpoint('to',objects.get('yasmin-1'));setMode('car');route();};window.addEventListener('pagehide',()=>{if(watchId!==null)navigator.geolocation.clearWatch(watchId);});}
-function setupHome(directory=[]){
- const root=$('home-screen'),back=$('home-back'),rail=root.querySelector('.home-shortcut-rail');
- const journey=mountWelcomeJourney({
-  root,stage:$('home-journey-stage'),
-  places:[...objects.values()],
-  directory,
-  busRoutes:transit.routes,
-  onRoute:({from:origin,to:destination,mode:travelMode})=>{
-   if(!origin?.coordinate||!destination?.coordinate){toast('اختار بداية ووصول معروفين على الخريطة.');return;}
-   toggleRound(false);setEndpoint('from',origin);setEndpoint('to',destination);setMode(travelMode);tab('trip');tripWizard.show('ready',true);route();
-  },
-  onPickMap:which=>{toggleRound(false);tab('trip');tripWizard.show(which,true);startPick(which);},
-  onRound:()=>{toggleRound(true);tab('trip');},
-  onBus:id=>{
-   if(!transit.routes.some(line=>line.id===id)){toast('الخط ده مش موجود في الجدول المنشور.');return;}
-   $('bus-line').value=id;tab('bus');renderBus();document.querySelector('.bus-schedule-drawer').open=true;
-  },
-  onAsk:query=>{assistant?.ask(query);},
-  notify:toast
- });
- const open=action=>journey.open(action);
- for(const button of rail.querySelectorAll('[data-home-action]')){
-  const entry=welcomeActions.find(item=>item.id===button.dataset.homeAction),symbol=button.querySelector('span');
-  if(symbol)symbol.innerHTML=icon(entry?.glyph||'grid');
-  button.addEventListener('click',()=>open(button.dataset.homeAction));
- }
- for(const button of root.querySelectorAll('[data-rail-shift]')){
-  button.onclick=()=>rail.scrollBy({left:(button.dataset.railShift==='next'?-1:1)*Math.max(rail.clientWidth*.75,240),behavior:'smooth'});
- }
+function setupHome(){
+ const root=$('home-screen'),back=$('home-back');
  document.querySelector('.tabs').before(back);
  const showHome=()=>{
   transportMapInstance?.close();
-  document.body.classList.add('home-mode');root.hidden=false;back.hidden=true;journey.reset();setSheet('expanded');
+  document.body.classList.add('home-mode');
+  root.hidden=false;
+  back.hidden=true;
+  setSheet('expanded');
   requestAnimationFrame(()=>map?.invalidateSize(false));
  };
  back.onclick=()=>{history.pushState({jowwaHome:true},'','/');showHome();};
  window.addEventListener('popstate',()=>{
-  const params=new URLSearchParams(location.search);if(params.get('transport')==='1'){openTransportMap({stationId:params.get('station'),mode:params.get('transportMode')||'all',query:params.get('transportQuery')||''});return;}
+  const params=new URLSearchParams(location.search);
+  if(params.get('transport')==='1'){openTransportMap({stationId:params.get('station'),mode:params.get('transportMode')||'all',query:params.get('transportQuery')||''});return;}
   const screen=location.hash.slice(1);
   if(['trip','bus','places'].includes(screen))tab(screen);
   else if(!location.search)showHome();
  });
- return journey;
+ return {reset(){}};
 }
 async function init(){try{const [a,b]=await Promise.all([fetch('data/map.json'),fetch('data/bus.json')]);if(!a.ok||!b.ok)throw Error('Data unavailable');[data,bus]=await Promise.all([a.json(),b.json()]);transit=await fetch('/data/transit.json').then(r=>{if(!r.ok)throw Error('Transit unavailable');return r.json();});await applyContent(data,transit);$('bus-line').innerHTML=transit.routes.map(r=>`<option value="${r.id}">${escape(r.name)} — ${escape(r.statusLabel)}</option>`).join('');$('bus-line').onchange=renderBus;const directory=await fetch('/data/directory.json').then(r=>r.ok?r.json():[]).catch(()=>[]);for(const p of directory){const parent=data.pois.find(x=>x.id===p.mapId);if(parent&&p.id!==parent.id)data.pois.push({...p,parentId:parent.id,coordinate:parent.coordinate,category:p.mapCategory||(p.category==='مطاعم'?'restaurant':'atm'),status:p.status+' • نقطة الوصول: '+parent.name+'، وليست مدخل الخدمة المؤكد'});else if(parent)Object.assign(parent,{phone:p.phone,status:p.status,source:p.source});else if(p.id==='directory-fuel-near-sunmall'&&!p.mapId&&Array.isArray(p.coordinate)&&p.coordinate.length===2&&p.coordinate.every(Number.isFinite))data.pois.push({...p,category:'fuel',status:(p.status||'')+' • موضع النقطة مشارك من المستخدم وليس تأكيدًا للدخول أو التشغيل'});}placeCatalog=directoryPlaces(directory,data);buildMap();$('place-search').oninput=renderPlaces;wire();wireUX();tripWizard=mountTripSteps({root:$('direct-builder'),getState:()=>({from,to}),onRoute:route});document.querySelector('.intro').hidden=true;setupRounds();setupNavigation();setupBusJourney();setupAssistant();setupTransportMap();setupHome(directory);renderBus();renderPlaces();$('loading-screen').hidden=true;document.body.classList.add('home-mode');$('home-screen').hidden=false;setInterval(renderBus,60000);const params=new URLSearchParams(location.search);if(params.get('transport')==='1')openTransportMap({stationId:params.get('station'),mode:params.get('transportMode')||'all',query:params.get('transportQuery')||''});if(params.get('tab')==='round'||params.has('round')||params.get('rounds')==='1'){toggleRound(true);roundPlanner.restoreLink(params);tab('trip');}if(params.get('tab')==='bus'){if(transit.routes.some(r=>r.id===params.get('line')))$('bus-line').value=params.get('line');tab('bus');renderBus();if(params.get('line'))document.querySelector('.bus-schedule-drawer').open=true;if(params.get('areas')==='1'){showTransitPoints(selectedLine(),busDirection);setSheet('collapsed');}}if(objects.has(params.get('from'))&&objects.has(params.get('to'))){setEndpoint('from',objects.get(params.get('from')));setEndpoint('to',objects.get(params.get('to')));setMode(['walk','bike','car','bus'].includes(params.get('mode'))?params.get('mode'):'walk');tab('trip');route();}else if(objects.has(params.get('to'))){const selected=objects.get(params.get('to'));setEndpoint('to',selected);tab('trip');tripWizard.show('from',true);if(selected.coordinate)fitView([selected.coordinate],17);toast('اختار بداية المشوار للوصول للمكان.');}window.jowwa={data,bus,transit,map,getState:()=>({from,to,mode,lastRoute}),select:(f,t,m='walk')=>{setEndpoint('from',objects.get(f));setEndpoint('to',objects.get(t));setMode(m);route();}};}catch(e){console.error(e);$('loading-screen').innerHTML='<strong>تعذر تحميل الخريطة</strong><p>تأكد من الاتصال وحاول مرة تانية.</p><button id=retry-load>إعادة المحاولة</button>';$('retry-load').onclick=()=>location.reload();$('coverage-count').textContent='تعذر تحميل البيانات';$('route-result').innerHTML='<div class="error-state">تعذر فتح بيانات الخريطة. أعد تحميل الصفحة أو تأكد من تشغيل التطبيق.</div>';}}
 
@@ -220,7 +196,7 @@ function setupBusJourney(){const root=document.createElement('div');root.id='bus
 function setupAssistant(){
  const root=document.createElement('div');root.id='jowwa-assistant';$('home-ai').append(root);const css=document.createElement('link');css.rel='stylesheet';css.href='/assistant.css';document.head.append(css);
  const askOrigin=()=>{toggleRound(false);tab('trip');tripWizard.show('from',true);};
- assistant=mountAssistant({root,openOnMount:false,getCurrentOrigin:()=>from,getMapContext:currentTransportContext,onTransportMap:openTransportMap,onPrepareRound:ids=>{toggleRound(true);if(!roundPlanner.prepareStops(ids)){toast('تعذر تجهيز هذه النقاط؛ اختار الأماكن من الخريطة.');return;}tab('trip');setSheet('expanded');toast('الوقفات جاهزة كمسودة؛ اختار البداية وراجع المواعيد.');},onPrepareRoute:ids=>{if(!Array.isArray(ids)||ids.length!==2||ids[0]===ids[1]||ids.some(id=>!objects.get(id)?.coordinate||objects.get(id).external)){toast('اختار نقطتين معروفتين على الخريطة.');return;}toggleRound(false);setEndpoint('from',objects.get(ids[0]));setEndpoint('to',objects.get(ids[1]));setMode('walk');tab('trip');tripWizard.show('mode',true);},onPlace:id=>{const place=objects.get(id);if(!place){toast('المكان موجود في الدليل؛ نقطة الوصول لم تتأكد على الخريطة بعد.');return;}toggleRound(false);setEndpoint('to',place);setMode('walk');askOrigin();},onRouteFromCurrent:id=>{const place=objects.get(id);if(!place?.coordinate){toast('موقع الوجهة غير محدد على الخريطة بعد.');return;}toggleRound(false);setEndpoint('to',place);setMode('walk');tab('trip');locate({afterLocate:()=>tripWizard?.show('mode',true)});},onBus:id=>{if(!transit.routes.some(r=>r.id===id)){toast('الخط غير متاح حاليًا.');return;}$('bus-line').value=id;document.querySelector('.bus-schedule-drawer').open=true;tab('bus');renderBus();},onAskOrigin:askOrigin,toast});
+ assistant=mountAssistant({root,openOnMount:true,getCurrentOrigin:()=>from,getMapContext:currentTransportContext,onTransportMap:openTransportMap,onPrepareRound:ids=>{toggleRound(true);if(!roundPlanner.prepareStops(ids)){toast('تعذر تجهيز هذه النقاط؛ اختار الأماكن من الخريطة.');return;}tab('trip');setSheet('expanded');toast('الوقفات جاهزة كمسودة؛ اختار البداية وراجع المواعيد.');},onPrepareRoute:ids=>{if(!Array.isArray(ids)||ids.length!==2||ids[0]===ids[1]||ids.some(id=>!objects.get(id)?.coordinate||objects.get(id).external)){toast('اختار نقطتين معروفتين على الخريطة.');return;}toggleRound(false);setEndpoint('from',objects.get(ids[0]));setEndpoint('to',objects.get(ids[1]));setMode('walk');tab('trip');tripWizard.show('mode',true);},onPlace:id=>{const place=objects.get(id);if(!place){toast('المكان موجود في الدليل؛ نقطة الوصول لم تتأكد على الخريطة بعد.');return;}toggleRound(false);setEndpoint('to',place);setMode('walk');askOrigin();},onRouteFromCurrent:id=>{const place=objects.get(id);if(!place?.coordinate){toast('موقع الوجهة غير محدد على الخريطة بعد.');return;}toggleRound(false);setEndpoint('to',place);setMode('walk');tab('trip');locate({afterLocate:()=>tripWizard?.show('mode',true)});},onBus:id=>{if(!transit.routes.some(r=>r.id===id)){toast('الخط غير متاح حاليًا.');return;}$('bus-line').value=id;document.querySelector('.bus-schedule-drawer').open=true;tab('bus');renderBus();},onAskOrigin:askOrigin,toast});
  root.querySelector('details').addEventListener('toggle',event=>{document.querySelector('.sidebar').classList.toggle('assistant-open',event.currentTarget.open);if(event.currentTarget.open)setSheet('expanded');});
 }
 
@@ -237,7 +213,7 @@ function syncTransportControls(state={}){
  const enabled=state.enabled===true,choice=state.selectedStation?.name||transportModes[state.mode]||'المحطات والمواقف';
  const shortcut=$('transport-map-button');if(shortcut){shortcut.setAttribute('aria-pressed',String(enabled));shortcut.setAttribute('aria-expanded',String(state.panelOpen===true));shortcut.title=enabled?'ظاهر على الخريطة: '+choice:'اعرض المحطات والمواقف';}
  const toggle=$('layer-transport');if(toggle)toggle.checked=enabled;
- const home=$('home-transport-map');if(home){home.dataset.transportEnabled=String(enabled);home.querySelector('small').textContent=enabled?'اختيارك: '+choice:state.mode?'اختيارك محفوظ: '+choice+' • المحطات مخفية':'قطارات · مترو · LRT · باصات';}
+ 
 }
 function askFromTransport(query,context){
  transportMapInstance?.close();map.closePopup();$('home-back').click();
@@ -270,7 +246,6 @@ async function setTransportEnabled(enabled){
  try{const instance=await ensureTransportMap();if(version!==transportControlVersion)return;await instance.show();}catch{syncTransportControls({enabled:false});toast('تعذر إظهار المحطات. جرّب تاني.');}
 }
 function setupTransportMap(){
- $('home-transport-map').onclick=()=>openTransportMap();
  const shortcut=document.createElement('button');shortcut.id='transport-map-button';shortcut.type='button';shortcut.textContent='محطات ومواقف';shortcut.setAttribute('aria-controls','transport-map-panel');shortcut.setAttribute('aria-pressed','false');shortcut.setAttribute('aria-expanded','false');shortcut.onclick=()=>openTransportMap();document.querySelector('.map-shortcuts').append(shortcut);
  const toggle=document.createElement('label');toggle.innerHTML='<input id="layer-transport" type="checkbox"> المحطات والمواقف';toggle.querySelector('input').onchange=event=>setTransportEnabled(event.target.checked);$('layers-panel').append(toggle);
  const layerButton=document.createElement('button');layerButton.type='button';layerButton.textContent='محطات القطار والمترو والباص';layerButton.onclick=()=>openTransportMap();$('layers-panel').append(layerButton);

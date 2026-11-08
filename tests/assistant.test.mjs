@@ -4,8 +4,18 @@ import {readFile} from 'node:fs/promises';
 import {PGlite} from '@electric-sql/pglite';
 import {redactPrivate,validateQuestion,mergePublicRecords,buildGrounding,providerMessages,normalizeAnswer,clientHash,boundedLimit,requestModel,requestWithFallback,shortlist} from '../src/server-assistant.mjs';
 import {fastAnswer,extractUserDraft,requestedAction,requestedQuantity,exactPlaces,directoryFallback} from '../src/server-assistant.mjs';
-import {readAssistantMemory,writeAssistantMemory,clearAssistantMemory,actionEnvelope} from '../public/assistant.js';
+import {readAssistantMemory,writeAssistantMemory,clearAssistantMemory,actionEnvelope,assistantActionPlan} from '../public/assistant.js';
 
+test('assistant routes clear intents to the next useful in-app action without skipping consent',()=>{
+ assert.deepEqual(assistantActionPlan({action:{type:'prepare_basket',quantity:2},items:[]},'هات اتنين'),{type:'basket',action:{type:'prepare_basket',quantity:2}});
+ assert.deepEqual(assistantActionPlan({action:{type:'prepare_round',mapIds:['a','b']}},'اعمل راوند'),{type:'round',action:{type:'prepare_round',mapIds:['a','b']}});
+ assert.deepEqual(assistantActionPlan({action:{type:'prepare_route',mapIds:['a','b']}},'جهز المشوار'),{type:'route',action:{type:'prepare_route',mapIds:['a','b']}});
+ assert.equal(assistantActionPlan({action:{type:'add_product',draft:{title:'قهوة'}}},'ضيف منتج').type,'market');
+ assert.deepEqual(assistantActionPlan({intent:'navigate',places:[{mapId:'auc'}]},'عايز اروح الجامعة الأمريكية من موقعي'),{type:'current-origin',mapId:'auc'});
+ assert.deepEqual(assistantActionPlan({intent:'navigate',places:[{mapId:'auc'}]},'عايز اروح الجامعة الأمريكية'),{type:'choose-origin',mapId:'auc'});
+ assert.deepEqual(assistantActionPlan({intent:'bus',routes:[{id:'line-1'}]},'مواعيد الباص'),{type:'bus',routeId:'line-1'});
+ assert.equal(assistantActionPlan({intent:'find_place',places:[{mapId:'auc'}]},'فين الجامعة').type,'results');
+});
 const item={orderGate:{canOrder:true,reason:'open'},id:'item-1',title:'قهوة',description:'حبوب قهوة',status:'approved',archived:false,kind:'product',category:'food',price:100,offer_price:80,offer_until:'2099-01-01',price_mode:'fixed',available:true,track_stock:true,quantity:3,sellers:{id:'seller-1',name:'البائع',status:'approved',archived:false}};
 const ground=()=>buildGrounding({places:[{id:'sunmall',name:'صن مول',mapId:'sunmall',description:'اتصل 01010060011',status:'الموقع موثق'}],routes:[{id:'abb',name:'العباسية',status:'published'},{id:'queen',name:'كوين',status:'suspended',statusLabel:'متوقف'}],items:[item]});
 test('assistant rejects huge questions and strips contact data, Arabic digits, URLs and GPS',()=>{
