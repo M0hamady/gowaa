@@ -19,7 +19,7 @@ export function normalizeDirectoryCatalog(payload){
  const seen=new Set();return (Array.isArray(payload?.items)?payload.items:[]).flatMap(v=>{
   if(!v||typeof v.id!=='string'||!/^directory-menu-[a-z0-9-]{1,100}$/.test(v.id)||seen.has(v.id)||!v.title||!v.sellerName)return [];
   const sourceUrl=publicLink(v.sourceUrl),menuUrl=publicLink(v.menuUrl);if(!sourceUrl&&!menuUrl)return [];
-  seen.add(v.id);return [{...v,title:String(v.title).slice(0,180),sellerName:String(v.sellerName).slice(0,120),description:String(v.description||'').slice(0,2500),category:categories[v.category]?v.category:'other',kind:'product',sourceKind:'directory',stockStatus:'unknown',available:null,price:amount(v.price),imageUrl:catalogImage(v.imageUrl),sourceUrl:sourceUrl||menuUrl,menuUrl:menuUrl||sourceUrl}];
+  seen.add(v.id);return [{...v,title:String(v.title).slice(0,180),sellerName:String(v.sellerName).slice(0,120),description:String(v.description||'').slice(0,2500),category:categories[v.category]?v.category:'other',kind:'product',sourceKind:'directory',stockStatus:'unknown',available:null,price:amount(v.price),imageUrl:catalogImage(v.imageUrl),sourceUrl:sourceUrl||menuUrl,menuUrl:menuUrl||sourceUrl,pricePublishedAt:typeof v.pricePublishedAt==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(v.pricePublishedAt)?v.pricePublishedAt:null}];
  });
 }
 export function discover(items,filters={}){
