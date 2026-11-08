@@ -21,7 +21,7 @@ alter table public.listings alter constraint listing_catalog_owner deferrable in
 
 -- A transfer changes only ownership keys. Do not turn approved catalog rows
 -- back into pending moderation merely because their seller_id was rebound.
-create or replace function public.jowwa_before_write() returns trigger language plpgsql security definer set search_path='' as $
+create or replace function public.jowwa_before_write() returns trigger language plpgsql security definer set search_path='' as $$
 begin
  if current_setting('jowwa.owner_transfer',true)='on' then
   if tg_op='UPDATE' then new.updated_at=now(); end if;
@@ -38,7 +38,7 @@ begin
  if tg_op='INSERT' and tg_table_name='listings' then if (select count(*) from public.listings where seller_id=new.seller_id)>=200 then raise exception 'Listing limit reached';end if;end if;
  if tg_op='INSERT' and tg_table_name='reports' then if (select count(*) from public.reports where reporter_id=new.reporter_id and created_at>now()-interval '1 day')>=10 then raise exception 'Daily report limit reached';end if;end if;
  return new;
-end; $;
+end; $$;
 
 create or replace function public.jowwa_admin_transfer_seller(target_seller_id uuid,new_owner_phone text)
 returns jsonb language plpgsql security definer set search_path='' as $$
