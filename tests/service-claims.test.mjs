@@ -147,9 +147,10 @@ test('database enforces business claims, independent drafts and reviewed publica
   assert.equal(moved.newOwnerId,newOwner);assert.equal(moved.newOwnerPhone,'+201202212788');
   assert.equal((await db.query('select id,name from public.sellers where id=$1',[newOwner])).rows[0].name,'متجري القائم');
   assert.equal((await db.query('select count(*)::int n from public.sellers where id=$1',[owner])).rows[0].n,0);
-  assert.equal((await db.query('select seller_id from public.catalogs where id=$1',[catalogId])).rows[0].seller_id,newOwner);
-  const listing=(await db.query('select seller_id,image_path from public.listings where seller_id=$1',[newOwner])).rows[0];
-  assert.equal(listing.seller_id,newOwner);assert.equal(listing.image_path,owner+'/photo.jpg','legacy image object key remains intact');
+  const catalog=(await db.query('select seller_id,status from public.catalogs where id=$1',[catalogId])).rows[0];
+  assert.equal(catalog.seller_id,newOwner);assert.equal(catalog.status,'approved','ownership transfer must not reset moderation status');
+  const listing=(await db.query('select seller_id,image_path,status from public.listings where seller_id=$1',[newOwner])).rows[0];
+  assert.equal(listing.seller_id,newOwner);assert.equal(listing.image_path,owner+'/photo.jpg','legacy image object key remains intact');assert.equal(listing.status,'approved','ownership transfer must not reset moderation status');
   assert.equal((await db.query('select seller_id from public.shop_orders where id=$1',[orderId])).rows[0].seller_id,newOwner);
   assert.equal((await db.query('select owner_id,seller_id,matched_phone from jowwa_private.service_claims where id=$1',[fov.id])).rows[0].owner_id,newOwner);
   assert.equal((await db.query("select data->>'sellerId' seller_id from public.site_content where id='directory-fov-cafe'")).rows[0].seller_id,newOwner);
