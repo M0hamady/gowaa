@@ -20,7 +20,9 @@ test('home has one assistant entry and keeps optional quick categories collapsed
 
 test('home quick actions reuse the assistant instead of creating another input',()=>{
  const html=read('public/index.html'),app=read('public/app.js');
- assert.equal((html.match(/<input\b/g)||[]).filter(x=>x).length,0);
+ const home=html.match(/<section id="home-screen"[\s\S]*?<\/section>/)?.[0]||'';
+ assert.equal((home.match(/<input\b/g)||[]).length,0);
+ assert.equal((home.match(/id="home-ai"/g)||[]).length,1);
  assert.match(app,/assistant\?\.ask/);
  assert.match(app,/root\.querySelector\('\.home-shortcuts'\)\.open=false/);
 });
