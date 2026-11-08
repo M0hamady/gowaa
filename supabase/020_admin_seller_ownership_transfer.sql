@@ -20,6 +20,8 @@ alter table public.catalogs add constraint catalogs_image_path_check
  check(image_path='' or image_path ~ '^[0-9a-fA-F-]{36}/.+\.(jpg|png|webp)$');
 
 alter table public.listings drop constraint if exists listings_image_path_check;
+-- The original migration created this check without an explicit name.
+alter table public.listings drop constraint if exists listings_check4;
 alter table public.listings add constraint listings_image_path_check
  check(image_path ~ '^[0-9a-fA-F-]{36}/.+\.(jpg|png|webp)$');
 
