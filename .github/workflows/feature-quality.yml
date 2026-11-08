@@ -38,7 +38,6 @@ jobs:
         run: npm test
       - name: Rebuild generated assets
         run: npm run build
-        env:
       - name: Check generated marketplace bundle
         run: |
           test -s public/market.js

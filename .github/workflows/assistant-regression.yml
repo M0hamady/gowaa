@@ -38,4 +38,3 @@ jobs:
         run: node --test tests/assistant*.test.mjs tests/home-assistant-entry.test.mjs
       - name: Build production assets
         run: npm run build
-        env:
