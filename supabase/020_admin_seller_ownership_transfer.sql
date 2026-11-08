@@ -13,15 +13,15 @@ revoke all on jowwa_private.owner_transfer_context from public,anon,authenticate
 -- paths remain valid after transfer.
 alter table public.sellers drop constraint if exists sellers_image_path_check;
 alter table public.sellers add constraint sellers_image_path_check
- check(image_path='' or image_path ~ '^[0-9a-fA-F-]{36}/[^[:space:]]+\\.(jpg|png|webp)$');
+ check(image_path='' or image_path ~ '^[0-9a-fA-F-]{36}/.+\\.(jpg|png|webp)$');
 
 alter table public.catalogs drop constraint if exists catalogs_image_path_check;
 alter table public.catalogs add constraint catalogs_image_path_check
- check(image_path='' or image_path ~ '^[0-9a-fA-F-]{36}/[^[:space:]]+\\.(jpg|png|webp)$');
+ check(image_path='' or image_path ~ '^[0-9a-fA-F-]{36}/.+\\.(jpg|png|webp)$');
 
 alter table public.listings drop constraint if exists listings_image_path_check;
 alter table public.listings add constraint listings_image_path_check
- check(image_path ~ '^[0-9a-fA-F-]{36}/[^[:space:]]+\\.(jpg|png|webp)$');
+ check(image_path ~ '^[0-9a-fA-F-]{36}/.+\\.(jpg|png|webp)$');
 
 -- Catalog ownership and listing ownership are moved in one transaction.
 alter table public.listings alter constraint listing_catalog_owner deferrable initially deferred;
