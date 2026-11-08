@@ -96,7 +96,8 @@ begin
  insert into public.sellers
  select (jsonb_populate_record(null::public.sellers,to_jsonb(old_seller)||jsonb_build_object('id',target_user.id))).*;
 
- set constraints listing_catalog_owner deferred;
+ -- The FK is initially deferred above, so catalog and listing owner keys
+ -- can be rebound atomically at transaction commit without an explicit SET.
 
  update jowwa_private.service_claims
  set owner_id=target_user.id,seller_id=target_user.id,matched_phone=normalized_phone,version=version+1,updated_at=now()
