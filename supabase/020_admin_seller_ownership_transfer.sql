@@ -19,6 +19,27 @@ alter table public.listings add constraint listings_image_path_check
 -- Catalog ownership and listing ownership are moved in one transaction.
 alter table public.listings alter constraint listing_catalog_owner deferrable initially deferred;
 
+-- A transfer changes only ownership keys. Do not turn approved catalog rows
+-- back into pending moderation merely because their seller_id was rebound.
+create or replace function public.jowwa_before_write() returns trigger language plpgsql security definer set search_path='' as $
+begin
+ if current_setting('jowwa.owner_transfer',true)='on' then
+  if tg_op='UPDATE' then new.updated_at=now(); end if;
+  return new;
+ end if;
+ if tg_op='UPDATE' then
+  new.updated_at=now();
+  if tg_table_name='listings' then
+   if (to_jsonb(new)-array['quantity','available','archived','updated_at','status','review_note']) is distinct from (to_jsonb(old)-array['quantity','available','archived','updated_at','status','review_note']) then new.status='pending';new.review_note='';end if;
+  elsif (to_jsonb(new)-array['archived','updated_at','status','review_note']) is distinct from (to_jsonb(old)-array['archived','updated_at','status','review_note']) then
+   new.status='pending';new.review_note='';
+  end if;
+ end if;
+ if tg_op='INSERT' and tg_table_name='listings' then if (select count(*) from public.listings where seller_id=new.seller_id)>=200 then raise exception 'Listing limit reached';end if;end if;
+ if tg_op='INSERT' and tg_table_name='reports' then if (select count(*) from public.reports where reporter_id=new.reporter_id and created_at>now()-interval '1 day')>=10 then raise exception 'Daily report limit reached';end if;end if;
+ return new;
+end; $;
+
 create or replace function public.jowwa_admin_transfer_seller(target_seller_id uuid,new_owner_phone text)
 returns jsonb language plpgsql security definer set search_path='' as $$
 declare
@@ -48,6 +69,8 @@ begin
  if exists(select 1 from public.reviews where seller_id=old_seller.id and reviewer_id=target_user.id) then
   raise exception 'The new owner has already reviewed this shop; resolve that review before transfer' using errcode='22023';
  end if;
+
+ perform set_config('jowwa.owner_transfer','on',true);
 
  before_snapshot=jsonb_build_object(
   'seller',to_jsonb(old_seller),
@@ -83,6 +106,11 @@ begin
  if to_regclass('jowwa_ops.businesses') is not null then
   execute 'update jowwa_ops.businesses set seller_id=$1 where seller_id=$2'
    using target_user.id,old_seller.id;
+ end if;
+ if to_regclass('jowwa_ops.staff') is not null then
+  execute 'update jowwa_ops.staff st set active=false
+    where st.user_id=$1 and exists(select 1 from jowwa_ops.businesses b where b.id=st.business_id and b.seller_id=$2)'
+   using old_seller.id,target_user.id;
  end if;
 
  update public.site_content
