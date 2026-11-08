@@ -1,5 +1,12 @@
 begin;
 
+create table jowwa_private.owner_transfer_context(
+ transaction_id bigint primary key,
+ actor_id uuid not null references auth.users(id),
+ created_at timestamptz not null default now()
+);
+revoke all on jowwa_private.owner_transfer_context from public,anon,authenticated;
+
 -- Ownership transfer keeps the seller profile and all linked records while
 -- rebinding the business to an already phone-verified account.
 -- Image objects retain their original storage keys, so legacy owner-prefixed
@@ -23,7 +30,7 @@ alter table public.listings alter constraint listing_catalog_owner deferrable in
 -- back into pending moderation merely because their seller_id was rebound.
 create or replace function public.jowwa_before_write() returns trigger language plpgsql security definer set search_path='' as $$
 begin
- if current_setting('jowwa.owner_transfer',true)='on' then
+ if exists(select 1 from jowwa_private.owner_transfer_context c where c.transaction_id=txid_current() and c.actor_id=auth.uid()) then
   if tg_op='UPDATE' then new.updated_at=now(); end if;
   return new;
  end if;
@@ -77,7 +84,7 @@ begin
   raise exception 'The new owner has already reviewed this shop; resolve that review before transfer' using errcode='22023';
  end if;
 
- perform set_config('jowwa.owner_transfer','on',true);
+ insert into jowwa_private.owner_transfer_context(transaction_id,actor_id) values(txid_current(),auth.uid()) on conflict(transaction_id) do nothing;
 
  before_snapshot=jsonb_build_object(
   'seller',to_jsonb(old_seller),
@@ -125,6 +132,7 @@ begin
  where kind='places' and data->>'sellerId'=old_seller.id::text;
 
  delete from public.sellers where id=old_seller.id;
+ delete from jowwa_private.owner_transfer_context where transaction_id=txid_current() and actor_id=auth.uid();
 
  after_snapshot=jsonb_build_object(
   'sellerId',target_user.id,
