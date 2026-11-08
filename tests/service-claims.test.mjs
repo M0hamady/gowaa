@@ -4,7 +4,7 @@ import {readFile} from 'node:fs/promises';
 import {PGlite} from '@electric-sql/pglite';
 import {claimOperation,createClaimsHandler,verifiedBusinessPhone} from '../api/service-claims.mjs';
 
-const owner='11111111-1111-4111-8111-111111111111',other='22222222-2222-4222-8222-222222222222',admin='33333333-3333-4333-8333-333333333333',unverified='44444444-4444-4444-8444-444444444444',nursery='55555555-5555-4555-8555-555555555555',coffeeA='66666666-6666-4666-8666-666666666666',coffeeB='77777777-7777-4777-8777-777777777777';
+const owner='11111111-1111-4111-8111-111111111111',other='22222222-2222-4222-8222-222222222222',admin='33333333-3333-4333-8333-333333333333',unverified='44444444-4444-4444-8444-444444444444',nursery='55555555-5555-4555-8555-555555555555',coffeeA='66666666-6666-4666-8666-666666666666',coffeeB='77777777-7777-4777-8777-777777777777',newOwner='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 test('claims require server-confirmed phone and discard forged ownership/approval input',()=>{
  const user={id:owner,phone:'٠١١٠٨٥٨٨٦٤٦',phone_confirmed_at:'2026-11-04'};
  assert.equal(verifiedBusinessPhone(user),'+201108588646');
@@ -39,10 +39,10 @@ test('database enforces business claims, independent drafts and reviewed publica
  grant usage on schema auth to anon,authenticated;grant execute on function auth.uid() to anon,authenticated;
  create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);create table storage.objects(id uuid default gen_random_uuid(),bucket_id text,name text);alter table storage.objects enable row level security;
  grant usage on schema storage to anon,authenticated;grant select,insert on storage.objects to authenticated;grant select on storage.objects to anon;create function storage.foldername(text) returns text[] language sql as $$select string_to_array($1,'/')$$;`);
- for(const file of ['001_market.sql','002_admin_identity.sql','003_media_visibility.sql','004_service_actions.sql','005_commerce.sql','006_management_analytics.sql','007_phone_identity.sql','013_service_claims.sql','017_curated_business_claims.sql'])await db.exec(await readFile(new URL('../supabase/'+file,import.meta.url),'utf8'));
+ for(const file of ['001_market.sql','002_admin_identity.sql','003_media_visibility.sql','004_service_actions.sql','005_commerce.sql','006_management_analytics.sql','007_phone_identity.sql','013_service_claims.sql','017_curated_business_claims.sql','020_admin_seller_ownership_transfer.sql'])await db.exec(await readFile(new URL('../supabase/'+file,import.meta.url),'utf8'));
  await db.exec(`insert into auth.users(id,phone,phone_confirmed_at,raw_user_meta_data) values
  ('${owner}','00201108588646',now(),'{}'),('${other}','+201102104640',now(),'{}'),('${admin}',null,null,'{}'),
- ('${unverified}','01108588646',null,'{"phone_verified":true,"phone_confirmed_at":"2026-11-04"}'),('${nursery}','٠١٥٥٩٠١٠٣١٤',now(),'{}'),('${coffeeA}','201010060011',now(),'{}'),('${coffeeB}','+201010060011',now(),'{}');
+ ('${unverified}','01108588646',null,'{"phone_verified":true,"phone_confirmed_at":"2026-11-04"}'),('${nursery}','٠١٥٥٩٠١٠٣١٤',now(),'{}'),('${coffeeA}','201010060011',now(),'{}'),('${coffeeB}','+201010060011',now(),'{}'),('${newOwner}','+201202212788',now(),'{}');
  insert into public.jowwa_admin_users(user_id) values('${admin}');
  insert into public.sellers(id,name,description,district,status) values('${owner}','متجري القائم','بيانات متجر قائمة يجب عدم استبدالها','other','approved');`);
  const as=(role,id,sql,args=[])=>db.transaction(async tx=>{await tx.exec('set local role '+role);await tx.query("select set_config('request.jwt.claim.sub',$1,true)",[id||'']);return tx.query(sql,args);});
@@ -135,5 +135,26 @@ test('database enforces business claims, independent drafts and reviewed publica
   await db.query("update public.site_content set archived=true where id='directory-fov-cafe'");
   fov=await rpc(owner,'jowwa_service_claim_submit',[fov.id,fov.version]);await assert.rejects(()=>rpc(admin,'jowwa_admin_review_service_claim',[fov.id,fov.version,'approved','']),e=>e.code==='22023');
   assert.equal((await db.query("select archived from public.site_content where id='directory-fov-cafe'")).rows[0].archived,true);
+ });
+ await t.test('admin transfers a shop to an existing verified phone and preserves commerce data',async()=>{
+  const catalogId='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+  const orderId='cccccccc-cccc-4ccc-8ccc-cccccccccccc';
+  await db.query("insert into public.catalogs(id,seller_id,name,status) values($1,$2,'كتالوج محفوظ','approved')",[catalogId,owner]);
+  await db.query("insert into public.listings(seller_id,kind,category,title,description,price,track_stock,image_path,status,service_claim_id,catalog_id) values($1,'product','other','منتج محفوظ','وصف المنتج المحفوظ',25,false,$2,'approved',$3,$4)",[owner,owner+'/photo.jpg',fov.id,catalogId]);
+  await db.query("insert into public.shop_orders(id,buyer_id,seller_id,request_id,customer_name,items,total,seller_name,seller_phone) values($1,$2,$3,$4,'عميل محفوظ','[]',25,'متجري القائم','')",[orderId,other,owner,'dddddddd-dddd-4ddd-8ddd-dddddddddddd']);
+  await assert.rejects(()=>rpc(admin,'jowwa_admin_transfer_seller',[owner,'01000000000']),e=>e.code==='22023');
+  const moved=await rpc(admin,'jowwa_admin_transfer_seller',[owner,'01202212788']);
+  assert.equal(moved.newOwnerId,newOwner);assert.equal(moved.newOwnerPhone,'+201202212788');
+  assert.equal((await db.query('select id,name from public.sellers where id=$1',[newOwner])).rows[0].name,'متجري القائم');
+  assert.equal((await db.query('select count(*)::int n from public.sellers where id=$1',[owner])).rows[0].n,0);
+  assert.equal((await db.query('select seller_id from public.catalogs where id=$1',[catalogId])).rows[0].seller_id,newOwner);
+  const listing=(await db.query('select seller_id,image_path from public.listings where seller_id=$1',[newOwner])).rows[0];
+  assert.equal(listing.seller_id,newOwner);assert.equal(listing.image_path,owner+'/photo.jpg','legacy image object key remains intact');
+  assert.equal((await db.query('select seller_id from public.shop_orders where id=$1',[orderId])).rows[0].seller_id,newOwner);
+  assert.equal((await db.query('select owner_id,seller_id,matched_phone from jowwa_private.service_claims where id=$1',[fov.id])).rows[0].owner_id,newOwner);
+  assert.equal((await db.query("select data->>'sellerId' seller_id from public.site_content where id='directory-fov-cafe'")).rows[0].seller_id,newOwner);
+  await assert.rejects(()=>rpc(owner,'jowwa_service_claim_save',[fov.id,fov.version,JSON.stringify(fov.draft)]),e=>e.code==='42501');
+  const audit=await db.query("select count(*)::int n from public.admin_audit where target_type='seller_owner_transfer' and target_id=$1",[newOwner]);
+  assert.equal(audit.rows[0].n,1);
  });
 });
