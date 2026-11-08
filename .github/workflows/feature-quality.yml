@@ -37,6 +37,7 @@ jobs:
           node --check api/assistant.mjs
       # Includes isolated PostgreSQL ownership-transfer regression coverage.
       # Validate canonical directory, menu metadata and public media URL safety.
+      # Ensure all published menu entries resolve to a canonical public place.
       - name: Run all existing and new unit tests
         run: npm test
       - name: Rebuild generated assets
