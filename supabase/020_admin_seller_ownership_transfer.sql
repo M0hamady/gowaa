@@ -46,6 +46,7 @@ declare
  old_seller public.sellers;
  target_user auth.users;
  normalized_phone text;
+ verified_matches integer;
  before_snapshot jsonb;
  after_snapshot jsonb;
 begin
@@ -56,12 +57,18 @@ begin
  select * into old_seller from public.sellers where id=target_seller_id for update;
  if not found then raise exception 'Shop not found' using errcode='22023'; end if;
 
+ select count(*) into verified_matches
+ from auth.users u
+ where u.phone_confirmed_at is not null
+   and jowwa_private.claim_phone(u.phone)=normalized_phone;
+ if verified_matches=0 then raise exception 'No account with this verified phone number' using errcode='22023'; end if;
+ if verified_matches<>1 then raise exception 'Phone number matches more than one verified account' using errcode='22023'; end if;
  select * into target_user
  from auth.users u
  where u.phone_confirmed_at is not null
    and jowwa_private.claim_phone(u.phone)=normalized_phone
  for update;
- if not found then raise exception 'No account with this verified phone number' using errcode='22023'; end if;
+ if not found then raise exception 'Verified account changed; retry the transfer' using errcode='40001'; end if;
  if target_user.id=old_seller.id then raise exception 'This account already owns the shop' using errcode='22023'; end if;
  if exists(select 1 from public.sellers where id=target_user.id) then
   raise exception 'The new account already owns another seller profile; merge is not automatic' using errcode='22023';
