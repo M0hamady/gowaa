@@ -28,3 +28,127 @@
 /* Explicit visibility when leaving the home screen; preserve collapsed map mode. */
 body:not(.home-mode):not(.sheet-collapsed) .panel:not([hidden]){display:block!important}
 .home-back[hidden]{display:none!important}
+
+
+/* Full-screen Jowwa assistant home: the conversation is the destination, not a small drawer. */
+body.home-mode main{
+ display:block;
+ height:calc(100dvh - 88px);
+ min-height:0;
+}
+body.home-mode .map-area{display:none!important}
+body.home-mode .sidebar{
+ width:100%;
+ height:100%;
+ min-height:0;
+ max-height:none;
+ overflow:hidden;
+ border:0;
+ display:flex;
+}
+body.home-mode .home-screen{
+ width:100%;
+ max-width:1080px;
+ height:100%;
+ min-height:0;
+ margin:0 auto;
+ padding:clamp(16px,2.4vh,28px) clamp(16px,3vw,36px) max(14px,env(safe-area-inset-bottom));
+ display:flex!important;
+ flex-direction:column;
+ overflow:hidden;
+}
+body.home-mode .home-greeting{flex:0 0 auto}
+body.home-mode .home-greeting h1{font-size:clamp(24px,3vw,34px);margin:0 0 5px}
+body.home-mode .home-greeting p{margin:0 0 10px;font-size:14px}
+body.home-mode .home-ai{
+ flex:1 1 auto;
+ min-height:0;
+ display:flex;
+ flex-direction:column;
+ margin:0;
+}
+body.home-mode .home-ai #jowwa-assistant,
+body.home-mode .home-ai .jowwa-assistant{
+ flex:1 1 auto;
+ min-height:0;
+ display:flex;
+ flex-direction:column;
+}
+body.home-mode .home-ai .assistant-drawer{
+ flex:1 1 auto;
+ min-height:0;
+ display:flex;
+ flex-direction:column;
+ border:1px solid #dce9df;
+ border-radius:22px;
+ background:linear-gradient(160deg,#fbfdf9,#f4f8f1);
+ box-shadow:0 10px 35px #173d320c;
+}
+body.home-mode .home-ai .assistant-drawer>summary{display:none!important}
+body.home-mode .home-ai .assistant-drawer:not([open])>.assistant-body{display:block}
+body.home-mode .home-ai .assistant-body{
+ flex:1 1 auto;
+ min-height:0;
+ overflow-y:auto;
+ overscroll-behavior:contain;
+ padding:clamp(14px,2.2vw,26px);
+ display:flex;
+ flex-direction:column;
+ gap:12px;
+}
+body.home-mode .home-ai .assistant-form{margin-top:auto}
+body.home-mode .home-ai .assistant-form>label{font-size:18px}
+body.home-mode .home-ai .assistant-input-row{
+ position:sticky;
+ bottom:0;
+ z-index:2;
+ padding:5px;
+ border:1px solid #d5e4d8;
+ border-radius:17px;
+ background:#fff;
+ box-shadow:0 8px 24px #173d3210;
+}
+body.home-mode .home-ai .assistant-input-row input{border:0;background:transparent;min-height:52px}
+body.home-mode .home-ai .assistant-input-row>button{flex-basis:52px;min-height:52px}
+body.home-mode .home-ai .assistant-cards{
+ grid-template-columns:repeat(auto-fit,minmax(min(100%,270px),1fr));
+ max-height:none;
+ overflow:visible;
+}
+body.home-mode .home-ai .assistant-card,
+body.home-mode .home-ai .assistant-journey-choice{
+ min-width:0;
+ border-radius:16px;
+ padding:15px;
+ box-shadow:0 3px 14px #173d3208;
+}
+body.home-mode .home-ai .assistant-card h4{font-size:16px}
+body.home-mode .home-ai .assistant-card p,
+body.home-mode .home-ai .assistant-journey-choice p{font-size:13px}
+body.home-mode .home-shortcuts{flex:0 0 auto;margin-top:10px}
+body.home-mode .home-shortcuts-title{cursor:pointer}
+body.home-mode .home-shortcuts-title h2{display:inline;font-size:13px;margin:0}
+body.home-mode .home-shortcuts-title small{margin-inline-start:8px;color:var(--muted);font-size:11px}
+body.home-mode .home-shortcut-rail{padding-bottom:4px}
+body.home-mode .home-shortcut-rail button{flex-basis:88px;min-height:76px}
+body.home-mode .home-privacy-note{flex:0 0 auto;margin:6px 0 0;font-size:10px}
+body.home-mode .home-back{flex:0 0 auto}
+@media(max-width:720px){
+ body.home-mode main{height:calc(100dvh - 64px);height:calc(100dvh - 64px - env(safe-area-inset-bottom))}
+ body.home-mode .sidebar{border-radius:0;padding-bottom:env(safe-area-inset-bottom)}
+ body.home-mode .home-screen{padding:12px 12px max(10px,env(safe-area-inset-bottom))}
+ body.home-mode .home-greeting h1{font-size:23px}
+ body.home-mode .home-greeting p{font-size:12px;margin-bottom:8px}
+ body.home-mode .home-ai .assistant-body{padding:12px;gap:9px}
+ body.home-mode .home-ai .assistant-cards{grid-template-columns:1fr}
+ body.home-mode .home-ai .assistant-input-row input{font-size:16px!important;min-height:48px}
+ body.home-mode .home-ai .assistant-input-row>button{min-height:48px;flex-basis:48px}
+ body.home-mode .home-shortcuts{margin-top:7px}
+ body.home-mode .home-shortcuts-title small{display:none}
+ body.home-mode .home-shortcut-rail{gap:7px}
+ body.home-mode .home-shortcut-rail button{flex-basis:78px;min-height:66px;padding:7px}
+ body.home-mode .home-shortcut-rail button>span{width:32px;height:32px}
+ body.home-mode .home-shortcut-rail button b{font-size:10px}
+ body.home-mode .home-privacy-note{font-size:9px}
+}
+@media(prefers-reduced-motion:reduce){body.home-mode .home-screen{animation:none}}
