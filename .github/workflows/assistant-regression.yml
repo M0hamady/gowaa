@@ -33,6 +33,8 @@ jobs:
           node --check public/assistant.js
           node --check src/server-assistant.mjs
           node --check api/assistant.mjs
+      - name: Regenerate public directory pages
+        run: npm run pretest
       - name: Test assistant actions and simplified home
         run: node --test tests/assistant.test.mjs tests/home-assistant-entry.test.mjs
       - name: Build production assets
