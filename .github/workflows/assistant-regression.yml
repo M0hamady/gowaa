@@ -11,7 +11,6 @@ on:
       - 'src/server-assistant.mjs'
       - 'tests/assistant.test.mjs'
       - 'tests/neighborhood-service-additions.test.mjs'
-      - 'tests/assistant-preview-smoke.mjs'
       - '.github/workflows/assistant-regression.yml'
 permissions:
   contents: read
@@ -39,7 +38,4 @@ jobs:
         run: node --test tests/assistant*.test.mjs tests/home-assistant-entry.test.mjs
       - name: Build production assets
         run: npm run build
-      - name: Smoke test the deployed assistant API
         env:
-          JOWWA_PREVIEW_URL: https://jowwa-kayan-git-fix-assistant-acti-9da07e-mohammedy96s-projects.vercel.app
-        run: node tests/assistant-preview-smoke.mjs

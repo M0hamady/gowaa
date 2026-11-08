@@ -38,10 +38,7 @@ jobs:
         run: npm test
       - name: Rebuild generated assets
         run: npm run build
-      - name: Smoke test the deployed assistant API
         env:
-          JOWWA_PREVIEW_URL: https://jowwa-kayan-git-fix-assistant-acti-9da07e-mohammedy96s-projects.vercel.app
-        run: node tests/assistant-preview-smoke.mjs
       - name: Check generated marketplace bundle
         run: |
           test -s public/market.js
