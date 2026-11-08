@@ -36,7 +36,7 @@ jobs:
       - name: Regenerate public directory pages
         run: npm run pretest
       - name: Test assistant actions and simplified home
-        run: node --test tests/assistant.test.mjs tests/home-assistant-entry.test.mjs
+        run: node --test tests/assistant*.test.mjs tests/home-assistant-entry.test.mjs
       - name: Build production assets
         run: npm run build
       - name: Smoke test the deployed assistant API
