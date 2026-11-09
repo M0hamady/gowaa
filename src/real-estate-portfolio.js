@@ -1,10 +1,13 @@
 import { memberDb, memberState, refreshMember } from './member-access.js';
 import { visibleProjects, clusterProjects, validateProject } from './real-estate-map-core.mjs';
+import { createPhoneAuth } from './phone-auth.js';
 
 const $ = id => document.getElementById(id);
 const BUCKET = 'real-estate-media';
 const FINISH = ['اقتصادي','متوسط','سوبر لوكس','ألترا لوكس'];
-let map, markers, projects=[], selectedProvider='all', areas=[], providers=[], projectFiles=[];
+let map, markers, projects=[], selectedProvider='all', areas=[], providers=[], projectFiles=[], actualUser=null;
+function loginModal(html){const d=$('portfolio-login-dialog');d.querySelector('.login-content').innerHTML=html;if(!d.open)d.showModal();}
+const phoneAuth=createPhoneAuth({db:memberDb,modal:loginModal,close:()=> $('portfolio-login-dialog').close(),toast:say,refreshUser:async()=>{const result=await memberDb.auth.getUser();actualUser=result.data?.user||null;await refreshMember(true);},getUser:()=>actualUser,emailLogin:()=>{location.href='/market';},ready:()=>!!memberDb});
 const esc = value => String(value ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const say = (message, bad=false) => { const node=$('portfolio-message'); if(node){node.textContent=message;node.dataset.error=bad?'true':'false';node.hidden=false;} };
 const signed = async paths => Promise.all((paths||[]).map(async path=>{const {data,error}=await memberDb.storage.from(BUCKET).createSignedUrl(path,3600);return error?'':data?.signedUrl||'';}));
@@ -70,8 +73,8 @@ async function uploadImages(files,ownerId,projectId){
 async function loadOwnerArea(){
  const root=$('owner-area');if(!root)return;
  await refreshMember(true);const state=memberState();
- if(!state.member){root.innerHTML='<p>سجّل دخولك عشان تضيف مشروع أو تدير أعمالك.</p><button id="portfolio-login" class="primary">دخول / تسجيل</button>';root.querySelector('button').onclick=()=>document.getElementById('account-button')?.click();return;}
- const [claimsResult,projectsResult,choices]=await Promise.all([memberDb.from('real_estate_provider_claims').select('*').order('created_at',{ascending:false}),memberDb.from('real_estate_projects').select('*').order('created_at',{ascending:false}),loadProviderChoices()]);
+ if(!state.member){root.innerHTML='<p>سجّل دخولك عشان تضيف مشروع أو تدير أعمالك.</p><button id="portfolio-login" class="primary">دخول / تسجيل</button>';root.querySelector('button').onclick=()=>phoneAuth.open(()=>{refreshMember(true).then(loadOwnerArea);});return;}
+ const [claimsResult,projectsResult,choices]=await Promise.all([memberDb.from('real_estate_provider_claims').select('*').eq('owner_id',state.user.id).order('created_at',{ascending:false}),memberDb.from('real_estate_projects').select('*').eq('owner_id',state.user.id).order('created_at',{ascending:false}),loadProviderChoices()]);
  if(claimsResult.error||projectsResult.error){say('تعذر تحميل إدارة الأعمال.',true);return;}
  const claims=claimsResult.data||[],mine=projectsResult.data||[];
  renderClaimForm(claims,choices);
@@ -101,6 +104,7 @@ async function loadAdminArea(){
  root.querySelectorAll('[data-review]').forEach(b=>b.onclick=async()=>{const type=b.dataset.review,id=b.dataset.id,decision=b.dataset.decision,note=decision==='rejected'?(prompt('سبب الرفض (3 أحرف على الأقل):')||''):'';if(decision==='rejected'&&note.trim().length<3)return;const commission=type==='provider_claims'?Number(root.querySelector('[data-commission="'+id+'"]').value):null;const {error}=await memberDb.rpc('jowwa_re_moderate',{target_type:type,target_id:id,decision,note,commission});if(error){say('تعذر حفظ قرار المراجعة.',true);return;}say('تم حفظ قرار المراجعة.');await loadAdminArea();});
 }
 async function start(){
+ $('portfolio-account')?.addEventListener('click',()=>phoneAuth.open(()=>{refreshMember(true).then(loadOwnerArea);}));
  const filters=['map-finish-filter','map-area-filter','map-provider-filter'];filters.forEach(id=>$(id)?.addEventListener('change',()=>{drawMarkers();renderList();}));
  try{await loadProjects();}catch{say('الخريطة غير متاحة مؤقتًا. حاول مرة تانية.',true);}
  await loadOwnerArea();await loadAdminArea();
