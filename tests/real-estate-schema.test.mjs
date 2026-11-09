@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { PGlite } from '@electric-sql/pglite';
 
-const migration = await readFile(new URL('../supabase/002_real_estate_marketplace.sql', import.meta.url), 'utf8');
+const migration = await readFile(new URL('../supabase/021_real_estate_marketplace.sql', import.meta.url), 'utf8');
 const setup = `
 create role anon;
 create role authenticated;
