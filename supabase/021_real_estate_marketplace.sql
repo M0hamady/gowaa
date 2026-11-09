@@ -297,4 +297,54 @@ create trigger real_estate_request_notifications
 after insert or update of status on public.real_estate_finish_requests
 for each row execute function public.jowwa_re_request_notify();
 
+
+create table public.real_estate_commissions (
+ id uuid primary key default gen_random_uuid(),
+ request_id uuid not null unique references public.real_estate_finish_requests(id) on delete restrict,
+ provider_id text not null references public.real_estate_provider_claims(provider_id),
+ owner_id uuid not null references auth.users(id),
+ gross_amount numeric(12,2) not null check(gross_amount>0),
+ commission_rate numeric(5,2) not null check(commission_rate between 0 and 50),
+ commission_amount numeric(12,2) not null check(commission_amount>=0),
+ status text not null default 'due' check(status in ('due','settled')),
+ settlement_note text not null default '' check(char_length(settlement_note)<=1000),
+ created_at timestamptz not null default now(),
+ settled_at timestamptz
+);
+create index real_estate_commissions_owner_idx on public.real_estate_commissions(owner_id,status,created_at desc);
+alter table public.real_estate_commissions enable row level security;
+revoke all on public.real_estate_commissions from anon,authenticated;
+grant select on public.real_estate_commissions to authenticated;
+create policy re_commissions_read on public.real_estate_commissions for select to authenticated using(owner_id=auth.uid() or public.jowwa_is_admin());
+
+create or replace function public.jowwa_re_record_commission()
+returns trigger language plpgsql security definer set search_path='' as $
+begin
+ if NEW.status='completed' and OLD.status is distinct from NEW.status and NEW.quote_amount is not null and NEW.quote_amount>0 then
+  insert into public.real_estate_commissions(request_id,provider_id,owner_id,gross_amount,commission_rate,commission_amount)
+  select NEW.id,NEW.provider_id,c.owner_id,NEW.quote_amount,c.commission_rate,round(NEW.quote_amount*c.commission_rate/100,2)
+  from public.real_estate_provider_claims c where c.provider_id=NEW.provider_id and c.status='approved'
+  on conflict(request_id) do nothing;
+ end if;
+ return NEW;
+end;$;
+revoke all on function public.jowwa_re_record_commission() from public;
+create trigger real_estate_request_commission
+after update of status on public.real_estate_finish_requests
+for each row execute function public.jowwa_re_record_commission();
+
+create or replace function public.jowwa_re_settle_commission(target_id uuid,settlement_note text default '')
+returns void language plpgsql security definer set search_path='' as $
+declare affected integer;
+begin
+ if not public.jowwa_is_admin() then raise exception 'Forbidden' using errcode='42501'; end if;
+ if char_length(coalesce(settlement_note,''))>1000 then raise exception 'Invalid note'; end if;
+ update public.real_estate_commissions set status='settled',settled_at=now(),settlement_note=coalesce(settlement_note,'')
+ where id=target_id and status='due';
+ get diagnostics affected=row_count;
+ if affected<>1 then raise exception 'Not found or already settled'; end if;
+end;$;
+revoke all on function public.jowwa_re_settle_commission(uuid,text) from public;
+grant execute on function public.jowwa_re_settle_commission(uuid,text) to authenticated;
+
 commit;
