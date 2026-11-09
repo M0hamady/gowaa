@@ -13,7 +13,7 @@ const money = value => new Intl.NumberFormat('ar-EG',{maximumFractionDigits:0}).
 async function loadProjects(){
  const {data,error}=await memberDb.from('real_estate_projects').select('*').eq('status','approved').order('executed_on',{ascending:false}).limit(500);
  if(error)throw error;
- projects=await Promise.all((data||[]).map(async p=>({...p,images:(await signed(p.image_paths)).filter(Boolean),lat:Number(p.latitude),lng:Number(p.longitude),finish:p.finish_type,area:p.compound||p.area,providerId:p.provider_id,provider:p.provider_id})));
+ projects=await Promise.all((data||[]).map(async p=>({...p,images:(await signed(p.image_paths)).filter(Boolean),lat:Number(p.latitude),lng:Number(p.longitude),finish:p.finish_type,area:p.area,providerId:p.provider_id,provider:p.provider_id})));
  areas=[...new Set(projects.map(p=>p.area).filter(Boolean))].sort();
  providers=[...new Set(projects.map(p=>p.provider_id))].sort();
  fillSelect('map-area-filter',areas,'كل المناطق');fillSelect('map-provider-filter',providers,'كل مقدمي الخدمة');
