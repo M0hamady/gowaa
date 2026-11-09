@@ -9,7 +9,7 @@ const STATUS={new:'جديد',contacted:'تم التواصل',visit_scheduled:'ت
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const say=(m,bad=false)=>{const n=$('re-market-message');if(n){n.textContent=m;n.dataset.error=bad?'true':'false';n.hidden=false;}};
 const money=v=>new Intl.NumberFormat('ar-EG').format(Number(v||0));
-const whatsappNumber=value=>{let digits=String(value||'').replace(/\\D/g,'');if(digits.startsWith('00'))digits=digits.slice(2);if(digits.startsWith('20'))return digits;if(digits.startsWith('0'))return '20'+digits.slice(1);return digits;};
+const whatsappNumber=value=>{let digits=String(value||'').replace(/\D/g,'');if(digits.startsWith('00'))digits=digits.slice(2);if(digits.startsWith('20'))return digits;if(digits.startsWith('0'))return '20'+digits.slice(1);return digits;};
 let phoneUser=null;
 function openLogin(html){const d=$('re-market-login');d.querySelector('.login-content').innerHTML=html;if(!d.open)d.showModal();}
 const auth=createPhoneAuth({db:memberDb,modal:openLogin,close:()=> $('re-market-login').close(),toast:say,refreshUser:async()=>{const r=await memberDb.auth.getUser();phoneUser=r.data?.user||null;await refreshMember(true);},getUser:()=>phoneUser,emailLogin:()=>location.href='/market',ready:()=>!!memberDb});
