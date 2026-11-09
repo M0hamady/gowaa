@@ -291,7 +291,7 @@ begin
   from public.real_estate_provider_claims c where c.provider_id=NEW.provider_id and c.status='approved';
  end if;
  return NEW;
-end;$;
+end;$$;
 revoke all on function public.jowwa_re_request_notify() from public;
 create trigger real_estate_request_notifications
 after insert or update of status on public.real_estate_finish_requests
