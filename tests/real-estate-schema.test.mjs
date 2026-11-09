@@ -94,3 +94,30 @@ test('only the approved provider owner can add a project and only admin can mode
  assert.equal(status.rows[0].status,'approved');
  await db.close();
 });
+
+test('finishing request lifecycle cannot skip inspection, quote approval or execution',async()=>{
+ const db=await database();
+ await db.query(`insert into public.real_estate_provider_claims(provider_id,owner_id,status) values('provider-demo','11111111-1111-4111-8111-111111111111','approved')`);
+ const request=await db.query(`insert into public.real_estate_finish_requests(customer_id,provider_id,request_type,compound,building,apartment,area_sqm,phone,contact_window)
+ values('22222222-2222-4222-8222-222222222222','provider-demo','inspection','كمبوند تجريبي','A','12',120,'01012345678','بعد الساعة 5') returning id`);
+ const id=request.rows[0].id;
+ await db.exec(`set role authenticated; select set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',false)`);
+ await assert.rejects(()=>db.query("select public.jowwa_re_request_transition($1,'completed',null,'')",[id]));
+ await db.query("select public.jowwa_re_request_transition($1,'contacted',null,'')",[id]);
+ await db.query("select public.jowwa_re_request_transition($1,'visit_scheduled',null,'')",[id]);
+ await db.query("select public.jowwa_re_request_transition($1,'visited',null,'')",[id]);
+ await db.query("select public.jowwa_re_request_transition($1,'quote_sent',125000,'عرض السعر')",[id]);
+ await db.exec('reset role');
+ await db.exec(`set role authenticated; select set_config('request.jwt.claim.sub','22222222-2222-4222-8222-222222222222',false)`);
+ await db.query("select public.jowwa_re_request_transition($1,'customer_approved',null,'موافق')",[id]);
+ await db.exec('reset role');
+ await db.exec(`set role authenticated; select set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',false)`);
+ await db.query("select public.jowwa_re_request_transition($1,'in_progress',null,'')",[id]);
+ await db.query("select public.jowwa_re_request_transition($1,'completed',null,'تم التنفيذ')",[id]);
+ await assert.rejects(()=>db.query("select public.jowwa_re_request_transition($1,'contacted',null,'')",[id]));
+ await db.exec('reset role');
+ const result=await db.query('select status,quote_amount from public.real_estate_finish_requests where id=$1',[id]);
+ assert.equal(result.rows[0].status,'completed');
+ assert.equal(Number(result.rows[0].quote_amount),125000);
+ await db.close();
+});
