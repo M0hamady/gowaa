@@ -7,7 +7,7 @@ if(key.startsWith('sb_secret_'))throw Error('Secret key cannot be published');
 if(key.startsWith('eyJ')&&JSON.parse(Buffer.from(key.split('.')[1],'base64url').toString()).role!=='anon')throw Error('Expected public anon key');
 await writeFile('public/config.js',`export default ${JSON.stringify({url,key,publicSignup:false,phoneAuth:process.env.JOWWA_PHONE_AUTH==='true'})};\n`);
 await writeFile('src/market-template.mjs','export default '+JSON.stringify(await readFile('public/market.html','utf8'))+';\n');
-for(const name of ['market','round-sync','order-pages','customer'])await build({entryPoints:['src/'+name+'.js'],outfile:'public/'+name+'.js',bundle:true,format:'esm',minify:true,target:'es2022',legalComments:'eof'});
+for(const name of ['market','round-sync','order-pages','customer','real-estate-portfolio'])await build({entryPoints:['src/'+name+'.js'],outfile:'public/'+name+'.js',bundle:true,format:'esm',minify:true,target:'es2022',legalComments:'eof'});
 // Live operations workspace (/work) and customer tracking (/track).
 await build({entryPoints:['src/operations/live-ui.mjs'],outfile:'public/work.js',bundle:true,format:'esm',minify:true,target:'es2022',legalComments:'eof'});
 await build({entryPoints:['src/operations/track-ui.mjs'],outfile:'public/track.js',bundle:true,format:'esm',minify:true,target:'es2022',legalComments:'eof'});
