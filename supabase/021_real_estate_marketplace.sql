@@ -272,7 +272,7 @@ create table public.real_estate_notifications (
 create index real_estate_notifications_user_idx on public.real_estate_notifications(user_id,created_at desc);
 alter table public.real_estate_notifications enable row level security;
 revoke all on public.real_estate_notifications from anon,authenticated;
-grant select,update on public.real_estate_notifications to authenticated;
+grant select,update(read_at) on public.real_estate_notifications to authenticated;
 create policy re_notifications_read on public.real_estate_notifications for select to authenticated using(user_id=auth.uid());
 create policy re_notifications_mark_read on public.real_estate_notifications for update to authenticated using(user_id=auth.uid()) with check(user_id=auth.uid());
 
