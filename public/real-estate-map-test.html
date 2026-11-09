@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#173f35">
+  <title>معرض الأعمال على خريطة مصر | اختبار جوه</title>
+  <link rel="stylesheet" href="/vendor/leaflet.css">
+  <link rel="stylesheet" href="/real-estate-map-test.css">
+  <script src="/vendor/leaflet.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/market">جوه <span>• معرض أعمال التشطيب</span></a>
+    <span class="preview-label">نسخة اختبار مستقلة — بيانات تجريبية</span>
+  </header>
+  <main class="page">
+    <section class="intro">
+      <div><p class="eyebrow">اكتشف المشاريع على الخريطة</p><h1>شوف شغلنا في كل مصر</h1><p>كل علامة على الخريطة تمثل مشروعًا منفذًا. اضغط عليها لمشاهدة صور المشروع وتفاصيله.</p></div>
+      <div class="count-pill"><strong id="project-count">0</strong><span>مشروع معتمد</span></div>
+    </section>
+    <section class="filters" aria-label="تصفية المشاريع">
+      <label>نوع التشطيب<select id="finish-filter"><option value="all">كل الأنواع</option><option>اقتصادي</option><option>متوسط</option><option>سوبر لوكس</option><option>ألترا لوكس</option></select></label>
+      <label>المنطقة<select id="area-filter"><option value="all">كل المناطق</option></select></label>
+      <label>مقدم الخدمة<select id="provider-filter"><option value="all">كل مقدمي الخدمة</option></select></label>
+      <button id="reset-filters" type="button">إعادة ضبط</button>
+    </section>
+    <section class="map-shell">
+      <div class="map-heading"><div><b>خريطة جمهورية مصر العربية</b><span>قرّب الخريطة لمشاهدة المشاريع المتقاربة</span></div><span class="map-legend"><i></i> مشروع منفذ</span></div>
+      <div id="projects-map" role="application" aria-label="خريطة مواقع مشاريع التشطيب في مصر"></div>
+      <aside id="project-card" class="project-card" hidden aria-live="polite"></aside>
+      <div class="map-hint">اضغط على صورة أي مشروع لعرض التفاصيل</div>
+    </section>
+    <section class="below-map"><div><h2>المشاريع المعروضة</h2><p>تظهر هنا المشاريع التي اجتازت مراجعة إدارة جوه فقط.</p></div><div id="project-list" class="project-list"></div></section>
+  </main>
+  <script type="module" src="/real-estate-map-test.js"></script>
+</body>
+</html>
