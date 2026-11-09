@@ -199,7 +199,7 @@ revoke all on function public.jowwa_re_moderate(text,uuid,text,text,numeric) fro
 grant execute on function public.jowwa_re_moderate(text,uuid,text,text,numeric) to authenticated;
 
 create or replace function public.jowwa_re_request_transition(target_id uuid,next_status text,quote numeric default null,note text default '')
-returns void language plpgsql security definer set search_path='' as $$
+returns void language plpgsql security definer set search_path='' as $re_transition$
 declare request_row public.real_estate_finish_requests%rowtype; actor_is_provider boolean:=false; actor_is_customer boolean:=false; actor_is_admin boolean:=false; transition_ok boolean:=false;
 begin
  select * into request_row from public.real_estate_finish_requests where id=target_id for update;
@@ -225,7 +225,7 @@ begin
  if not transition_ok then raise exception 'Invalid status transition'; end if;
  if next_status='quote_sent' and (quote is null or quote<0) then raise exception 'Quote required'; end if;
  update public.real_estate_finish_requests set status=next_status,quote_amount=case when next_status='quote_sent' then quote else quote_amount end,provider_note=left(coalesce(note,''),2000),updated_at=now() where id=target_id;
-end;$;
+end;$re_transition$;
 revoke all on function public.jowwa_re_request_transition(uuid,text,numeric,text) from public;
 grant execute on function public.jowwa_re_request_transition(uuid,text,numeric,text) to authenticated;
 
