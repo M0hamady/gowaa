@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#173f35"><title>سابقة أعمال التشطيب والعقارات | جوه</title>
+<link rel="stylesheet" href="/vendor/leaflet.css"><link rel="stylesheet" href="/real-estate-map-test.css"><link rel="stylesheet" href="/real-estate-portfolio.css">
+<script src="/vendor/leaflet.js"></script>
+<style>
+.portfolio-section{margin:28px 0;padding:22px;background:#fff;border:1px solid #e3e9e5;border-radius:18px}.portfolio-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin:16px 0}.portfolio-form label{display:grid;gap:6px;font-size:14px}.portfolio-form input,.portfolio-form select,.portfolio-form textarea{width:100%;padding:11px;border:1px solid #ccd8d1;border-radius:10px;font:inherit}.portfolio-form textarea{min-height:90px}.portfolio-form button{align-self:end}.owner-projects,.admin-review{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}.owner-projects article,.admin-review{padding:14px;border:1px solid #e3e9e5;border-radius:12px}.owner-projects article>*{display:block;margin:5px 0}.admin-review button{margin:8px 4px}.portfolio-message{padding:12px;border-radius:10px;background:#eef5f0}.portfolio-message[data-error=true]{background:#fff0ed;color:#8a2f20}
+</style>
+</head>
+<body>
+<header class="topbar"><a class="brand" href="/market">جوه <span>• العقارات والتشطيب</span></a><span class="preview-label">مساحة اختبار مستقلة</span><button id="portfolio-account" type="button">دخول / حسابي</button></header>
+<main class="page">
+<section class="intro"><div><p class="eyebrow">سابقة أعمال حقيقية بعد مراجعة الإدارة</p><h1>شوف المشاريع على خريطة مصر</h1><p>اضغط على صورة المشروع، قرّب الخريطة، واكتشف الأعمال حسب نوع التشطيب والمنطقة ومقدم الخدمة.</p></div><div class="count-pill"><strong id="project-count">0</strong><span>مشروع منشور</span></div></section>
+<p id="portfolio-message" class="portfolio-message" hidden role="status"></p>
+<section class="filters" aria-label="تصفية المشاريع"><label>نوع التشطيب<select id="map-finish-filter"><option value="all">كل الأنواع</option><option>اقتصادي</option><option>متوسط</option><option>سوبر لوكس</option><option>ألترا لوكس</option></select></label><label>المنطقة<select id="map-area-filter"><option value="all">كل المناطق</option></select></label><label>مقدم الخدمة<select id="map-provider-filter"><option value="all">كل مقدمي الخدمة</option></select></label></section>
+<section class="map-shell"><div class="map-heading"><div><b>خريطة جمهورية مصر العربية</b><span>المشاريع المتقاربة بتتجمع تلقائيًا</span></div><span class="map-legend"><i></i> مشروع معتمد</span></div><div id="projects-map" role="application" aria-label="خريطة مشاريع التشطيب في مصر"></div><aside id="project-card" class="project-card" hidden aria-live="polite"></aside></section>
+<section class="below-map"><div><h2>المشاريع المعروضة</h2><p>مشاريع معتمدة من إدارة جوه فقط.</p></div><div id="project-list" class="project-list"></div></section>
+<section class="portfolio-section" id="owner-area"><h2>إدارة سابقة أعمالك</h2><p>اربط حسابك بمقدم الخدمة، وبعد اعتماد الربط تقدر تضيف مشاريعك وتتابع المراجعة.</p><div id="provider-claim-area"></div></section>
+
+<section class="portfolio-section" id="re-marketplace">
+<h2>خدمات العقارات والتجهيزات</h2><p>اختار الخدمة اللي محتاجها، أو اعرض عقارك أو الأثاث للبيع.</p>
+<p id="re-market-message" class="portfolio-message" hidden role="status"></p>
+<nav class="re-market-tabs"><button type="button" data-re-tab="packages" class="active">باقات التشطيب</button><button type="button" data-re-tab="properties">بيع وإيجار وتنازل</button><button type="button" data-re-tab="furnishings">الأثاث والفرش</button></nav>
+<section data-re-panel="packages"><div id="re-packages-list" class="re-market-grid"></div><button id="re-custom-request" type="button">طلب معاينة أو تشطيب حسب المواصفات</button></section>
+<section data-re-panel="properties" hidden><div id="re-properties-list" class="re-market-grid"></div></section>
+<section data-re-panel="furnishings" hidden><div id="re-furnishings-list" class="re-market-grid"></div></section>
+<div id="re-provider-requests" class="re-owner-grid"></div><div id="re-owner-market"></div>
+</section>
+<dialog id="re-listing-dialog" class="member-dialog"><button type="button" class="member-close" onclick="this.parentElement.close()">×</button><div class="listing-content"></div></dialog><dialog id="re-request-dialog" class="member-dialog"><button type="button" class="member-close" onclick="this.parentElement.close()">×</button><div class="request-content"></div></dialog>
+<dialog id="re-market-login" class="member-dialog"><button type="button" class="member-close" onclick="this.parentElement.close()">×</button><div class="login-content"></div></dialog>
+<section class="portfolio-section" id="admin-area" hidden></section>
+</main>
+<dialog id="project-edit-dialog" class="member-dialog"><button type="button" class="member-close" onclick="this.parentElement.close()">×</button><div class="edit-content"></div></dialog><dialog id="portfolio-login-dialog" class="member-dialog"><button type="button" class="member-close" onclick="this.parentElement.close()">×</button><div class="login-content"></div></dialog><script type="module" src="/real-estate-portfolio.js"></script><script type="module" src="/real-estate-marketplace.js"></script>
+</body></html>

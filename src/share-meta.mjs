@@ -19,7 +19,14 @@ async function liveOverride(id,env=process.env){
   if(!r.ok)return null;const row=(await r.json())[0];return row&&!row.archived&&row.data&&typeof row.data==='object'?row.data:null;}catch{return null;}
 }
 export const ownerCard=(id,data)=>typeof data?.logoCard==='string'&&LOGO_PATH.test(data.logoCard)?'/api/image?type=place&v=card&id='+encodeURIComponent(id)+'&c='+encodeURIComponent(data.logoCard.split('/').pop().replace(/\..+$/,'')):null;
-const placeCard=p=>safeImage(p?.image)?.startsWith('/social/')?p.image:'/social/'+p.id+'.png';
+const placeCard=p=>{
+ const image=safeImage(p?.image);
+ if(image?.startsWith('/social/'))return image;
+ // Sucréve already has a reviewed social logo asset; keep the preview usable
+ // without requiring the unrelated branch's generated directory card.
+ if(p?.id==='directory-sucreve')return '/social/sucreve-logo.jpg';
+ return '/social/'+p.id+'.png';
+};
 
 export async function shareMeta(path){
  const base={title:'جوه | كيان سيتي',description:'دليل كيان سيتي: خريطة، باصات، أماكن وخدمات وسوق أهل كيان.',image:'/social/places.png',card:true,url:ORIGIN+path};
