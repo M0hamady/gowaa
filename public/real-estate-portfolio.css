@@ -1,0 +1,10 @@
+/* Real estate portfolio map and account workspace */
+#portfolio-account{border:1px solid #cbd8d0;border-radius:999px;padding:9px 16px;background:#fff;color:#174c3b;font:inherit;cursor:pointer}
+#portfolio-login-dialog{border:0;border-radius:18px;padding:24px;max-width:min(440px,calc(100vw - 24px));width:100%;box-shadow:0 16px 60px #0003}
+#portfolio-login-dialog::backdrop{background:#10271f88}
+#portfolio-login-dialog .member-close{float:left;border:0;background:transparent;font-size:24px;cursor:pointer}
+
+.project-detail-link{display:inline-block;margin-top:10px;color:#174c3b;font-weight:700;text-decoration:underline}
+.edit-photos{display:flex;flex-wrap:wrap;gap:10px;align-items:center}.edit-photos label{display:flex;align-items:center;gap:6px}.edit-photos img{width:72px;height:60px;object-fit:cover;border-radius:8px}
+
+.re-market-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}.re-market-tabs button{border:1px solid #ccd8d1;border-radius:999px;padding:10px 16px;background:#fff;cursor:pointer}.re-market-tabs button.active{background:#174c3b;color:white}.re-market-grid,.re-owner-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}.re-market-card,.re-owner-grid article{background:#fff;border:1px solid #e3e9e5;border-radius:14px;overflow:hidden;padding:14px}.re-market-card-body{display:grid;gap:8px}.re-market-card p,.re-market-card small{color:#66756d;font-size:13px;line-height:1.7}.re-market-photos{display:flex;gap:4px}.re-market-photos img{width:33.3%;height:110px;object-fit:cover}.re-market-card button,.re-owner-grid button{border:0;border-radius:9px;background:#174c3b;color:white;padding:10px;cursor:pointer}.form-error{color:#9c3024}.member-dialog{border:0;border-radius:18px;padding:22px;max-width:min(640px,calc(100vw - 20px));width:100%;max-height:90vh;overflow:auto}.member-dialog::backdrop{background:#10271f88}

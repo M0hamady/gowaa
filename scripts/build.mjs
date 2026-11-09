@@ -1,13 +1,19 @@
 import {build} from 'esbuild';
 import {writeFile,readFile} from 'node:fs/promises';
+import {execFileSync} from 'node:child_process';
+if(process.env.VERCEL_GIT_COMMIT_REF==='feat/real-estate-portfolio-map-test'){
+ console.log('Running isolated real-estate branch regression suite…');
+ execFileSync('npm',['test'],{stdio:'inherit'});
+}
 const url=process.env.SUPABASE_URL||process.env.NEXT_PUBLIC_SUPABASE_URL||'';
 const key=process.env.SUPABASE_ANON_KEY||process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY||process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY||'';
 // Only the public anon/publishable key is ever shipped to the browser.
 if(key.startsWith('sb_secret_'))throw Error('Secret key cannot be published');
 if(key.startsWith('eyJ')&&JSON.parse(Buffer.from(key.split('.')[1],'base64url').toString()).role!=='anon')throw Error('Expected public anon key');
-await writeFile('public/config.js',`export default ${JSON.stringify({url,key,publicSignup:false,phoneAuth:process.env.JOWWA_PHONE_AUTH==='true'})};\n`);
+await writeFile('public/config.js',`export default ${JSON.stringify({url,key,publicSignup:false,phoneAuth:process.env.JOWWA_PHONE_AUTH==='true',realEstateEnabled:process.env.JOWWA_REAL_ESTATE_ENABLED==='true'})};\n`);
 await writeFile('src/market-template.mjs','export default '+JSON.stringify(await readFile('public/market.html','utf8'))+';\n');
-for(const name of ['market','round-sync','order-pages','customer'])await build({entryPoints:['src/'+name+'.js'],outfile:'public/'+name+'.js',bundle:true,format:'esm',minify:true,target:'es2022',legalComments:'eof'});
+for(const name of ['market','round-sync','order-pages','customer','real-estate-portfolio','real-estate-project','real-estate-marketplace','real-estate-provider','real-estate-listing'])await build({entryPoints:['src/'+name+'.js'],outfile:'public/'+name+'.js',bundle:true,format:'esm',minify:true,target:'es2022',legalComments:'eof'});
+await build({entryPoints:['src/real-estate-map-core.mjs'],outfile:'public/real-estate-map-core.js',bundle:true,format:'esm',minify:true,target:'es2022',legalComments:'eof'});
 // Live operations workspace (/work) and customer tracking (/track).
 await build({entryPoints:['src/operations/live-ui.mjs'],outfile:'public/work.js',bundle:true,format:'esm',minify:true,target:'es2022',legalComments:'eof'});
 await build({entryPoints:['src/operations/track-ui.mjs'],outfile:'public/track.js',bundle:true,format:'esm',minify:true,target:'es2022',legalComments:'eof'});
