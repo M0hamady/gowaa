@@ -258,4 +258,42 @@ create policy re_media_insert on storage.objects for insert to authenticated wit
 create policy re_media_read on storage.objects for select using(bucket_id='real-estate-media' and ((storage.foldername(name))[1]=auth.uid()::text or public.jowwa_is_admin() or exists(select 1 from public.real_estate_projects p where p.status='approved' and name=any(p.image_paths)) or exists(select 1 from public.real_estate_properties p where p.status='approved' and name=any(p.image_paths)) or exists(select 1 from public.real_estate_furnishings f where f.status='approved' and name=any(f.image_paths))));
 create policy re_media_delete on storage.objects for delete to authenticated using(bucket_id='real-estate-media' and (storage.foldername(name))[1]=auth.uid()::text);
 
+
+create table public.real_estate_notifications (
+ id uuid primary key default gen_random_uuid(),
+ user_id uuid not null references auth.users(id) on delete cascade,
+ request_id uuid not null references public.real_estate_finish_requests(id) on delete cascade,
+ event text not null check(event in ('new_request','request_status')),
+ title text not null check(char_length(title) between 2 and 120),
+ body text not null default '' check(char_length(body)<=500),
+ created_at timestamptz not null default now(),
+ read_at timestamptz
+);
+create index real_estate_notifications_user_idx on public.real_estate_notifications(user_id,created_at desc);
+alter table public.real_estate_notifications enable row level security;
+revoke all on public.real_estate_notifications from anon,authenticated;
+grant select,update on public.real_estate_notifications to authenticated;
+create policy re_notifications_read on public.real_estate_notifications for select to authenticated using(user_id=auth.uid());
+create policy re_notifications_mark_read on public.real_estate_notifications for update to authenticated using(user_id=auth.uid()) with check(user_id=auth.uid());
+
+create or replace function public.jowwa_re_request_notify()
+returns trigger language plpgsql security definer set search_path='' as $
+begin
+ if TG_OP='INSERT' then
+  insert into public.real_estate_notifications(user_id,request_id,event,title,body)
+  select c.owner_id,NEW.id,'new_request','طلب تشطيب جديد','طلب جديد من '+coalesce(NEW.compound,'')+' — شقة '+coalesce(NEW.apartment,'')
+  from public.real_estate_provider_claims c where c.provider_id=NEW.provider_id and c.status='approved';
+ elsif OLD.status is distinct from NEW.status then
+  insert into public.real_estate_notifications(user_id,request_id,event,title,body)
+  values(NEW.customer_id,NEW.id,'request_status','تحديث طلب التشطيب','الحالة الجديدة: '+NEW.status);
+  insert into public.real_estate_notifications(user_id,request_id,event,title,body)
+  select c.owner_id,NEW.id,'request_status','تحديث حالة طلب التشطيب','الحالة الجديدة: '+NEW.status
+  from public.real_estate_provider_claims c where c.provider_id=NEW.provider_id and c.status='approved';
+ end if;
+ return NEW;
+end;$;
+create trigger real_estate_request_notifications
+after insert or update of status on public.real_estate_finish_requests
+for each row execute function public.jowwa_re_request_notify();
+
 commit;
