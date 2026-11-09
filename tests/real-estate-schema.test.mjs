@@ -124,3 +124,33 @@ test('finishing request lifecycle cannot skip inspection, quote approval or exec
  assert.equal(Number(result.rows[0].quote_amount),125000);
  await db.close();
 });
+
+test('package archive RPC is limited to the provider owner',async()=>{
+ const db=await database();
+ await db.query(`insert into public.real_estate_provider_claims(provider_id,owner_id,status) values('provider-demo','11111111-1111-4111-8111-111111111111','approved')`);
+ const row=await db.query(`insert into public.real_estate_finish_packages(provider_id,owner_id,title,finish_type,price_per_sqm) values('provider-demo','11111111-1111-4111-8111-111111111111','باقة تجريبية','متوسط',2500) returning id`);
+ await db.exec(`set role authenticated; select set_config('request.jwt.claim.sub','22222222-2222-4222-8222-222222222222',false)`);
+ await assert.rejects(()=>db.query('select public.jowwa_re_archive_package($1)',[row.rows[0].id]));
+ await db.exec('reset role');
+ await db.exec(`set role authenticated; select set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',false)`);
+ await db.query('select public.jowwa_re_archive_package($1)',[row.rows[0].id]);
+ await db.exec('reset role');
+ const result=await db.query('select archived from public.real_estate_finish_packages where id=$1',[row.rows[0].id]);
+ assert.equal(result.rows[0].archived,true);
+ await db.close();
+});
+
+test('property and furnishing listings are private until approved and enforce ten owned images',async()=>{
+ const db=await database();
+ await db.exec(`set role authenticated; select set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',false)`);
+ const id='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+ const paths=Array.from({length:10},(_,i)=>'11111111-1111-4111-8111-111111111111/'+id+'/'+('bbbbbbbb-bbbb-4bbb-8bbb-'+String(i).padStart(12,'0'))+'.jpg');
+ const p=await db.query(`insert into public.real_estate_properties(owner_id,listing_type,title,compound,area,area_sqm,bedrooms,bathrooms,finish_type,price,contact_phone,image_paths) values($1,'sale','شقة تجريبية','كمبوند تجريبي','القاهرة الجديدة',120,3,2,'متوسط',1000000,'01012345678',$2) returning id`,['11111111-1111-4111-8111-111111111111',paths]);
+ await assert.rejects(()=>db.query(`update public.real_estate_properties set image_paths=array_append(image_paths,'foreign/path.jpg') where id=$1`,[p.rows[0].id]));
+ await db.exec('reset role');
+ await db.exec(`set role authenticated; select set_config('request.jwt.claim.sub','22222222-2222-4222-8222-222222222222',false)`);
+ const own=await db.query('select count(*)::int as count from public.real_estate_properties');
+ assert.equal(own.rows[0].count,0);
+ await db.exec('reset role');
+ await db.close();
+});
