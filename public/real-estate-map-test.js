@@ -23,10 +23,16 @@ let current = [];
 
 function safeText(value){return String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function renderCard(project){
- const first = project.images[0] || '';
- $('project-card').innerHTML = `<div class="card-image"><img src="${safeText(first)}" alt="${safeText(project.title)}"><button class="card-close" type="button" aria-label="إغلاق">×</button></div><div class="card-content"><h3>${safeText(project.title)}</h3><div class="card-meta"><span>${safeText(project.area)}</span><span>• ${safeText(project.finish)}</span><span>• ${project.size} م²</span></div><p>${safeText(project.description)}</p><div class="card-actions"><a href="/market?portfolioProject=${encodeURIComponent(project.id)}">عرض المشروع بالكامل ↗</a><span class="photo-count">${project.images.length} صور</span></div></div>`;
- $('project-card').hidden=false;
- $('project-card').querySelector('.card-close').onclick=()=>{$('project-card').hidden=true;};
+ let photoIndex=0;
+ const paint=()=>{
+  const image=project.images[photoIndex]||'';
+  $('project-card').innerHTML = `<div class="card-image"><img src="${safeText(image)}" alt="${safeText(project.title)}"><button class="card-close" type="button" aria-label="إغلاق">×</button>${project.images.length>1?`<button class="photo-next" type="button" aria-label="الصورة التالية">‹</button><button class="photo-prev" type="button" aria-label="الصورة السابقة">›</button>`:''}</div><div class="card-content"><h3>${safeText(project.title)}</h3><div class="card-meta"><span>${safeText(project.area)}</span><span>• ${safeText(project.finish)}</span><span>• ${project.size} م²</span></div><p>${safeText(project.description)}</p><div class="card-actions"><span class="photo-count">${photoIndex+1} / ${project.images.length} صورة</span><span class="photo-count">${safeText(project.provider)}</span></div></div>`;
+  $('project-card').hidden=false;
+  $('project-card').querySelector('.card-close').onclick=()=>{$('project-card').hidden=true;};
+  $('project-card').querySelector('.photo-next')?.addEventListener('click',()=>{photoIndex=(photoIndex+1)%project.images.length;paint();});
+  $('project-card').querySelector('.photo-prev')?.addEventListener('click',()=>{photoIndex=(photoIndex-1+project.images.length)%project.images.length;paint();});
+ };
+ paint();
 }
 function iconFor(projectsInCell){
  if(projectsInCell.length>1)return L.divIcon({className:'',html:`<div class="cluster-marker">${projectsInCell.length}</div>`,iconSize:[48,48],iconAnchor:[24,24]});
