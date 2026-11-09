@@ -4,7 +4,7 @@ import { createPhoneAuth } from './phone-auth.js';
 
 const $ = id => document.getElementById(id);
 const BUCKET = 'real-estate-media';
-const FINISH = ['اقتصادي','متوسط','سوبر لوكس','ألترا لوكس'];
+const FINISH = ['اقتصادي','متوسط','سوبر لوكس','ألترا لوكس'];\nlet providerNames=new Map();
 let map, markers, projects=[], selectedProvider='all', areas=[], providers=[], projectFiles=[], actualUser=null;
 function loginModal(html){const d=$('portfolio-login-dialog');d.querySelector('.login-content').innerHTML=html;if(!d.open)d.showModal();}
 const phoneAuth=createPhoneAuth({db:memberDb,modal:loginModal,close:()=> $('portfolio-login-dialog').close(),toast:say,refreshUser:async()=>{const result=await memberDb.auth.getUser();actualUser=result.data?.user||null;await refreshMember(true);},getUser:()=>actualUser,emailLogin:()=>{location.href='/market';},ready:()=>!!memberDb});
@@ -16,13 +16,13 @@ const money = value => new Intl.NumberFormat('ar-EG',{maximumFractionDigits:0}).
 async function loadProjects(){
  const {data,error}=await memberDb.from('real_estate_projects').select('*').eq('status','approved').order('executed_on',{ascending:false}).limit(500);
  if(error)throw error;
- projects=await Promise.all((data||[]).map(async p=>({...p,images:(await signed(p.image_paths)).filter(Boolean),lat:Number(p.latitude),lng:Number(p.longitude),finish:p.finish_type,area:p.area,providerId:p.provider_id,provider:p.provider_id})));
+ const directory=await fetch('/data/places.json',{cache:'no-store'}).then(r=>r.ok?r.json():[]).catch(()=>[]);providerNames=new Map(directory.map(x=>[x.id,x.name||x.id]));\n projects=await Promise.all((data||[]).map(async p=>({...p,provider_name:providerNames.get(p.provider_id)||p.provider_id,images:(await signed(p.image_paths)).filter(Boolean),lat:Number(p.latitude),lng:Number(p.longitude),finish:p.finish_type,area:p.area,providerId:p.provider_id,provider:p.provider_id})));
  areas=[...new Set(projects.map(p=>p.area).filter(Boolean))].sort();
  providers=[...new Set(projects.map(p=>p.provider_id))].sort();
  fillSelect('map-area-filter',areas,'كل المناطق');fillSelect('map-provider-filter',providers,'كل مقدمي الخدمة');
  renderMap();
 }
-function fillSelect(id,values,placeholder){const node=$(id);if(!node)return;const old=node.value;node.innerHTML='<option value="all">'+placeholder+'</option>'+values.map(v=>'<option value="'+esc(v)+'">'+esc(v)+'</option>').join('');if(values.includes(old))node.value=old;}
+function fillSelect(id,values,placeholder,labels=new Map()){const node=$(id);if(!node)return;const old=node.value;node.innerHTML='<option value="all">'+placeholder+'</option>'+values.map(v=>'<option value="'+esc(v)+'">'+esc(labels.get(v)||v)+'</option>').join('');if(values.includes(old))node.value=old;}
 function currentProjects(){return visibleProjects(projects,{finish:$('map-finish-filter')?.value||'all',area:$('map-area-filter')?.value||'all',provider:$('map-provider-filter')?.value||'all'});}
 function markerIcon(group){
  if(group.length>1)return L.divIcon({className:'',html:'<div class="cluster-marker">'+group.length+'</div>',iconSize:[46,46],iconAnchor:[23,23]});
@@ -52,7 +52,7 @@ function renderList(){
 }
 async function loadProviderChoices(){
  const r=await fetch('/data/places.json',{cache:'no-store'});if(!r.ok)return [];
- const data=await r.json();return data.filter(p=>p&&typeof p.id==='string').map(p=>({id:p.id,name:p.name||p.id}));
+ const data=await r.json();return data.filter(p=>p&&typeof p.id==='string'&&!p.directoryGroup).map(p=>({id:p.id,name:p.name||p.id}));
 }
 function renderClaimForm(claims,choices){
  const root=$('provider-claim-area');if(!root)return;
