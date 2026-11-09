@@ -192,20 +192,32 @@ grant execute on function public.jowwa_re_moderate(text,uuid,text,text,numeric) 
 
 create or replace function public.jowwa_re_request_transition(target_id uuid,next_status text,quote numeric default null,note text default '')
 returns void language plpgsql security definer set search_path='' as $$
-declare request_row public.real_estate_finish_requests%rowtype; allowed boolean:=false;
+declare request_row public.real_estate_finish_requests%rowtype; actor_is_provider boolean:=false; actor_is_customer boolean:=false; actor_is_admin boolean:=false; transition_ok boolean:=false;
 begin
  select * into request_row from public.real_estate_finish_requests where id=target_id for update;
  if not found then raise exception 'Not found'; end if;
- if public.jowwa_is_admin() then allowed:=true;
- elsif exists(select 1 from public.real_estate_provider_claims c where c.provider_id=request_row.provider_id and c.owner_id=auth.uid() and c.status='approved') then allowed:=true;
- elsif request_row.customer_id=auth.uid() and request_row.status='quote_sent' and next_status='customer_approved' then allowed:=true;
+ actor_is_admin:=public.jowwa_is_admin();
+ actor_is_provider:=exists(select 1 from public.real_estate_provider_claims c where c.provider_id=request_row.provider_id and c.owner_id=auth.uid() and c.status='approved');
+ actor_is_customer:=request_row.customer_id=auth.uid();
+ if not (actor_is_admin or actor_is_provider or actor_is_customer) then raise exception 'Forbidden' using errcode='42501'; end if;
+ if actor_is_customer and not actor_is_admin and not actor_is_provider then
+  transition_ok:=request_row.status='quote_sent' and next_status='customer_approved';
+ else
+  transition_ok:=case request_row.status
+   when 'new' then next_status in ('contacted','cancelled')
+   when 'contacted' then next_status in ('visit_scheduled','visited','cancelled')
+   when 'visit_scheduled' then next_status in ('visited','cancelled')
+   when 'visited' then next_status in ('quote_sent','cancelled')
+   when 'quote_sent' then next_status in ('cancelled')
+   when 'customer_approved' then next_status in ('in_progress','cancelled')
+   when 'in_progress' then next_status in ('completed','cancelled')
+   else false
+  end;
  end if;
- if not allowed then raise exception 'Forbidden' using errcode='42501'; end if;
- if next_status not in ('contacted','visit_scheduled','visited','quote_sent','customer_approved','in_progress','completed','cancelled') then raise exception 'Invalid status'; end if;
- if request_row.status='completed' or request_row.status='cancelled' then raise exception 'Request is closed'; end if;
+ if not transition_ok then raise exception 'Invalid status transition'; end if;
  if next_status='quote_sent' and (quote is null or quote<0) then raise exception 'Quote required'; end if;
  update public.real_estate_finish_requests set status=next_status,quote_amount=case when next_status='quote_sent' then quote else quote_amount end,provider_note=left(coalesce(note,''),2000),updated_at=now() where id=target_id;
-end;$$;
+end;$;
 revoke all on function public.jowwa_re_request_transition(uuid,text,numeric,text) from public;
 grant execute on function public.jowwa_re_request_transition(uuid,text,numeric,text) to authenticated;
 
