@@ -167,7 +167,6 @@ test('new finishing requests create a provider notification and status changes n
  await db.query("update public.real_estate_finish_requests set status='contacted' where id=$1",[id]);
  const later=await db.query('select user_id,event from public.real_estate_notifications where request_id=$1 order by created_at',[id]);
  assert.equal(later.rows.length,3);
- assert.equal(later[1].user_id,'22222222-2222-4222-8222-222222222222');
- assert.equal(later[2].user_id,'11111111-1111-4111-8111-111111111111');
+ assert.deepEqual(new Set(later.rows.slice(1).map(x=>x.user_id)),new Set(['22222222-2222-4222-8222-222222222222','11111111-1111-4111-8111-111111111111']));
  await db.close();
 });
