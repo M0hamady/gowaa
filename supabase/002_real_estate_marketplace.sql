@@ -212,7 +212,7 @@ grant execute on function public.jowwa_re_request_transition(uuid,text,numeric,t
 insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types)
 values('real-estate-media','real-estate-media',false,5242880,array['image/jpeg','image/png','image/webp'])
 on conflict(id) do nothing;
-create policy re_media_insert on storage.objects for insert to authenticated with check(bucket_id='real-estate-media' and (storage.foldername(name))[1]=auth.uid()::text and public.jowwa_verified() and exists(select 1 from public.real_estate_provider_claims c where c.owner_id=auth.uid() and c.status='approved'));
+create policy re_media_insert on storage.objects for insert to authenticated with check(bucket_id='real-estate-media' and (storage.foldername(name))[1]=auth.uid()::text and public.jowwa_verified());
 create policy re_media_read on storage.objects for select using(bucket_id='real-estate-media' and ((storage.foldername(name))[1]=auth.uid()::text or public.jowwa_is_admin() or exists(select 1 from public.real_estate_projects p where p.status='approved' and name=any(p.image_paths)) or exists(select 1 from public.real_estate_properties p where p.status='approved' and name=any(p.image_paths)) or exists(select 1 from public.real_estate_furnishings f where f.status='approved' and name=any(f.image_paths))));
 create policy re_media_delete on storage.objects for delete to authenticated using(bucket_id='real-estate-media' and (storage.foldername(name))[1]=auth.uid()::text);
 
