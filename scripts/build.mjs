@@ -1,10 +1,5 @@
 import {build} from 'esbuild';
 import {writeFile,readFile} from 'node:fs/promises';
-import {execFileSync} from 'node:child_process';
-if(process.env.VERCEL_GIT_COMMIT_REF==='feat/real-estate-portfolio-map-test'){
- console.log('Running isolated real-estate branch regression suite…');
- execFileSync('npm',['test'],{stdio:'inherit'});
-}
 const url=process.env.SUPABASE_URL||process.env.NEXT_PUBLIC_SUPABASE_URL||'';
 const key=process.env.SUPABASE_ANON_KEY||process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY||process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY||'';
 // Only the public anon/publishable key is ever shipped to the browser.

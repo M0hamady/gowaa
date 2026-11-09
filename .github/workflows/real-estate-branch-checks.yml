@@ -2,10 +2,10 @@ name: Real estate isolated branch checks
 on:
   push:
     branches:
-      - feat/real-estate-portfolio-map-test
+      - feat/real-estate-marketplace-main-clean
   pull_request:
     branches:
-      - feat/operations-test-workspace
+      - main
 jobs:
   test-and-build:
     runs-on: ubuntu-latest

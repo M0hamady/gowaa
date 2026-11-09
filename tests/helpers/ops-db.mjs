@@ -12,7 +12,7 @@ export async function freshDb({upTo='018'}={}){
  create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);create table storage.objects(id uuid default gen_random_uuid(),bucket_id text,name text,owner uuid,metadata jsonb);alter table storage.objects enable row level security;
  grant usage on schema storage to anon,authenticated;grant select,insert on storage.objects to authenticated;grant select on storage.objects to anon;create function storage.foldername(text) returns text[] language sql as $$select string_to_array($1,'/')$$;`);
  const files=(await readdir(new URL('../../supabase/',import.meta.url))).filter(f=>/^\d{3}_.*\.sql$/.test(f)&&f.slice(0,3)<=upTo).sort();
- for(const f of files){try{await db.exec(await readFile(new URL('../../supabase/'+f,import.meta.url),'utf8'));}catch(error){await db.close();throw new Error('Failed to apply supabase/'+f+': '+error.message,{cause:error});}}
+ for(const f of files)await db.exec(await readFile(new URL('../../supabase/'+f,import.meta.url),'utf8'));
  return {db,files};
 }
 export async function apply(db,file){await db.exec(await readFile(new URL('../../supabase/'+file,import.meta.url),'utf8'));}
