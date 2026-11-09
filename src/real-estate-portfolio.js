@@ -1,6 +1,7 @@
 import { memberDb, memberState, refreshMember } from './member-access.js';
 import { visibleProjects, clusterProjects, validateProject } from './real-estate-map-core.mjs';
 import { createPhoneAuth } from './phone-auth.js';
+import config from '../public/config.js';
 
 const $ = id => document.getElementById(id);
 const BUCKET = 'real-estate-media';
@@ -140,6 +141,7 @@ async function loadAdminArea(){
  });
 }
 async function start(){
+ if(!config.realEstateEnabled){say('قسم العقارات جاهز على فرع الاختبار، لكن قاعدة بيانات الاختبار المستقلة لم يتم ربطها بعد. تسجيل الدخول والحفظ متوقفان لحماية بيانات الإنتاج.');$('owner-area').innerHTML='<p>سيتم تفعيل إدارة مقدمي الخدمة بعد ربط قاعدة بيانات اختبار مستقلة.</p>';return;}
  $('portfolio-account')?.addEventListener('click',()=>phoneAuth.open(()=>{refreshMember(true).then(loadOwnerArea);}));
  const filters=['map-finish-filter','map-area-filter','map-provider-filter'];filters.forEach(id=>$(id)?.addEventListener('change',()=>{drawMarkers();renderList();}));
  try{await loadProjects();}catch{say('قاعدة بيانات العقارات التجريبية غير مفعّلة بعد؛ الخريطة ظاهرة لكن بيانات المشاريع هتظهر بعد تجهيز قاعدة الاختبار.',true);projects=[];renderMap();}
