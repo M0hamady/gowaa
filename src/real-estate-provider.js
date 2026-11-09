@@ -1,9 +1,10 @@
 import {memberDb} from './member-access.js';
+import config from '../public/config.js';
 const $=id=>document.getElementById(id),esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const id=new URLSearchParams(location.search).get('id'),bucket='real-estate-media';
 async function signed(paths){return Promise.all((paths||[]).map(async p=>{const r=await memberDb.storage.from(bucket).createSignedUrl(p,3600);return r.data?.signedUrl||'';}));}
 async function start(){
- const root=$('provider-profile');if(!id){root.textContent='مقدم الخدمة غير محدد.';return;}
+ const root=$('provider-profile');if(!config.realEstateEnabled){root.textContent='صفحة مقدم الخدمة ستظهر بعد ربط قاعدة بيانات الاختبار المستقلة.';return;}if(!id){root.textContent='مقدم الخدمة غير محدد.';return;}
  try{
   const [directory,projects,packages]=await Promise.all([
    fetch('/data/places.json',{cache:'no-store'}).then(r=>r.ok?r.json():[]),
