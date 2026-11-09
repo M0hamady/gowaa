@@ -208,7 +208,7 @@ revoke all on function public.jowwa_re_moderate(text,uuid,text,text,numeric) fro
 grant execute on function public.jowwa_re_moderate(text,uuid,text,text,numeric) to authenticated;
 
 create or replace function public.jowwa_re_archive_package(target_id uuid)
-returns void language plpgsql security definer set search_path='' as $
+returns void language plpgsql security definer set search_path='' as $$
 declare affected integer;
 begin
  update public.real_estate_finish_packages p set archived=true,updated_at=now()
@@ -216,7 +216,7 @@ begin
  and exists(select 1 from public.real_estate_provider_claims c where c.provider_id=p.provider_id and c.owner_id=auth.uid() and c.status='approved');
  get diagnostics affected=row_count;
  if affected<>1 then raise exception 'Forbidden or not found' using errcode='42501'; end if;
-end;$;
+end;$$;
 revoke all on function public.jowwa_re_archive_package(uuid) from public;
 grant execute on function public.jowwa_re_archive_package(uuid) to authenticated;
 
