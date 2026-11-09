@@ -131,7 +131,7 @@ returns boolean language sql immutable set search_path='' as $
  and cardinality(paths)=cardinality(array(select distinct p from unnest(paths) p))
  and not exists(
   select 1 from unnest(paths) as item(path)
-  where item.path !~ ('^'||owner_id::text||'/[0-9a-f-]{36}/[0-9a-f-]{36}\\.(jpg|png|webp)
+  where item.path !~ ('^'||owner_id::text||'/[0-9a-f-]{36}/[0-9a-f-]{36}\.(jpg|png|webp)
 alter table public.real_estate_provider_claims enable row level security;
 alter table public.real_estate_projects enable row level security;
 alter table public.real_estate_finish_packages enable row level security;
