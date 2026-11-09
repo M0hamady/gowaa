@@ -21,7 +21,7 @@ async function loadProjects(){
  projects=await Promise.all((data||[]).map(async p=>({...p,provider_name:providerNames.get(p.provider_id)||p.provider_id,images:(await signed(p.image_paths)).filter(Boolean),lat:Number(p.latitude),lng:Number(p.longitude),finish:p.finish_type,area:p.area,providerId:p.provider_id,provider:p.provider_id})));
  areas=[...new Set(projects.map(p=>p.area).filter(Boolean))].sort();
  providers=[...new Set(projects.map(p=>p.provider_id))].sort();
- fillSelect('map-area-filter',areas,'كل المناطق');fillSelect('map-provider-filter',providers,'كل مقدمي الخدمة');
+ fillSelect('map-area-filter',areas,'كل المناطق');fillSelect('map-provider-filter',providers,'كل مقدمي الخدمة',providerNames);
  renderMap();
 }
 function fillSelect(id,values,placeholder,labels=new Map()){const node=$(id);if(!node)return;const old=node.value;node.innerHTML='<option value="all">'+placeholder+'</option>'+values.map(v=>'<option value="'+esc(v)+'">'+esc(labels.get(v)||v)+'</option>').join('');if(values.includes(old))node.value=old;}
