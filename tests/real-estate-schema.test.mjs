@@ -154,3 +154,20 @@ test('property and furnishing listings are private until approved and enforce te
  await db.exec('reset role');
  await db.close();
 });
+
+test('new finishing requests create a provider notification and status changes notify both sides',async()=>{
+ const db=await database();
+ await db.query(`insert into public.real_estate_provider_claims(provider_id,owner_id,status) values('provider-demo','11111111-1111-4111-8111-111111111111','approved')`);
+ const request=await db.query(`insert into public.real_estate_finish_requests(customer_id,provider_id,request_type,compound,building,apartment,area_sqm,phone,contact_window)
+ values('22222222-2222-4222-8222-222222222222','provider-demo','inspection','كمبوند تجريبي','A','12',120,'01012345678','بعد الساعة 5') returning id`);
+ const id=request.rows[0].id;
+ const first=await db.query('select user_id,event from public.real_estate_notifications where request_id=$1',[id]);
+ assert.equal(first.rows.length,1);
+ assert.equal(first.rows[0].user_id,'11111111-1111-4111-8111-111111111111');
+ await db.query("update public.real_estate_finish_requests set status='contacted' where id=$1",[id]);
+ const later=await db.query('select user_id,event from public.real_estate_notifications where request_id=$1 order by created_at',[id]);
+ assert.equal(later.rows.length,3);
+ assert.equal(later[1].user_id,'22222222-2222-4222-8222-222222222222');
+ assert.equal(later[2].user_id,'11111111-1111-4111-8111-111111111111');
+ await db.close();
+});
