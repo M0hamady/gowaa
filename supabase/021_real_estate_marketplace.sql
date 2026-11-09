@@ -339,7 +339,7 @@ declare affected integer;
 begin
  if not public.jowwa_is_admin() then raise exception 'Forbidden' using errcode='42501'; end if;
  if char_length(coalesce(settlement_note,''))>1000 then raise exception 'Invalid note'; end if;
- update public.real_estate_commissions set status='settled',settled_at=now(),settlement_note=coalesce(settlement_note,'')
+ update public.real_estate_commissions set status='settled',settled_at=now(),settlement_note=coalesce(jowwa_re_settle_commission.settlement_note,'')
  where id=target_id and status='due';
  get diagnostics affected=row_count;
  if affected<>1 then raise exception 'Not found or already settled'; end if;
