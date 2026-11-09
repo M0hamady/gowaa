@@ -1,5 +1,6 @@
 import { memberDb, memberState, refreshMember } from './member-access.js';
 import { createPhoneAuth } from './phone-auth.js';
+import config from '../public/config.js';
 
 const $=id=>document.getElementById(id);
 const BUCKET='real-estate-media';
@@ -108,4 +109,4 @@ function activateTabs(){
 document.querySelectorAll('[data-contact]').forEach(()=>{});
 $('re-custom-request')?.addEventListener('click',async()=>{const user=await needUser();if(!user)return;const r=await memberDb.from('real_estate_finish_packages').select('provider_id').eq('status','approved').eq('archived',false).limit(1).single();if(r.error){say('لا يوجد مقدم خدمة متاح لطلب المعاينة حاليًا.',true);return;}requestForm(r.data.provider_id,'','inspection');});
 activateTabs();
-renderAll().catch(()=>say('خدمات العقارات غير مفعّلة بعد على قاعدة الاختبار.',true));
+if(config.realEstateEnabled)renderAll().catch(()=>say('خدمات العقارات غير متاحة على قاعدة الاختبار حاليًا.',true));else say('عرض السوق التجريبي متوقف لحين ربط قاعدة بيانات اختبار مستقلة. لم يتم الاتصال بقاعدة الإنتاج أو تسجيل الدخول.');
