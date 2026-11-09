@@ -318,7 +318,7 @@ grant select on public.real_estate_commissions to authenticated;
 create policy re_commissions_read on public.real_estate_commissions for select to authenticated using(owner_id=auth.uid() or public.jowwa_is_admin());
 
 create or replace function public.jowwa_re_record_commission()
-returns trigger language plpgsql security definer set search_path='' as $
+returns trigger language plpgsql security definer set search_path='' as $$
 begin
  if NEW.status='completed' and OLD.status is distinct from NEW.status and NEW.quote_amount is not null and NEW.quote_amount>0 then
   insert into public.real_estate_commissions(request_id,provider_id,owner_id,gross_amount,commission_rate,commission_amount)
@@ -327,14 +327,14 @@ begin
   on conflict(request_id) do nothing;
  end if;
  return NEW;
-end;$;
+end;$$;
 revoke all on function public.jowwa_re_record_commission() from public;
 create trigger real_estate_request_commission
 after update of status on public.real_estate_finish_requests
 for each row execute function public.jowwa_re_record_commission();
 
 create or replace function public.jowwa_re_settle_commission(target_id uuid,settlement_note text default '')
-returns void language plpgsql security definer set search_path='' as $
+returns void language plpgsql security definer set search_path='' as $$
 declare affected integer;
 begin
  if not public.jowwa_is_admin() then raise exception 'Forbidden' using errcode='42501'; end if;
@@ -343,7 +343,7 @@ begin
  where id=target_id and status='due';
  get diagnostics affected=row_count;
  if affected<>1 then raise exception 'Not found or already settled'; end if;
-end;$;
+end;$$;
 revoke all on function public.jowwa_re_settle_commission(uuid,text) from public;
 grant execute on function public.jowwa_re_settle_commission(uuid,text) to authenticated;
 
