@@ -10,7 +10,7 @@
 </style>
 </head>
 <body>
-<header class="topbar"><a class="brand" href="/market">جوه <span>• العقارات والتشطيب</span></a><span class="preview-label">مساحة اختبار مستقلة</span></header>
+<header class="topbar"><a class="brand" href="/market">جوه <span>• العقارات والتشطيب</span></a><span class="preview-label">مساحة اختبار مستقلة</span><button id="portfolio-account" type="button">دخول / حسابي</button></header>
 <main class="page">
 <section class="intro"><div><p class="eyebrow">سابقة أعمال حقيقية بعد مراجعة الإدارة</p><h1>شوف المشاريع على خريطة مصر</h1><p>اضغط على صورة المشروع، قرّب الخريطة، واكتشف الأعمال حسب نوع التشطيب والمنطقة ومقدم الخدمة.</p></div><div class="count-pill"><strong id="project-count">0</strong><span>مشروع منشور</span></div></section>
 <p id="portfolio-message" class="portfolio-message" hidden role="status"></p>
@@ -20,5 +20,5 @@
 <section class="portfolio-section" id="owner-area"><h2>إدارة سابقة أعمالك</h2><p>اربط حسابك بمقدم الخدمة، وبعد اعتماد الربط تقدر تضيف مشاريعك وتتابع المراجعة.</p><div id="provider-claim-area"></div></section>
 <section class="portfolio-section" id="admin-area" hidden></section>
 </main>
-<script type="module" src="/real-estate-portfolio.js"></script>
+<dialog id="portfolio-login-dialog" class="member-dialog"><button type="button" class="member-close" onclick="this.parentElement.close()">×</button><div class="login-content"></div></dialog><script type="module" src="/real-estate-portfolio.js"></script>
 </body></html>
