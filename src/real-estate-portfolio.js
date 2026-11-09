@@ -99,9 +99,20 @@ async function loadAdminArea(){
  const root=$('admin-area');if(!root)return;await refreshMember(true);if(!memberState().admin){root.hidden=true;return;}root.hidden=false;
  const tables=[['طلبات ربط مقدمي الخدمة','real_estate_provider_claims','provider_claims'],['مشاريع سابقة للمراجعة','real_estate_projects','projects'],['باقات التشطيب','real_estate_finish_packages','packages'],['إعلانات العقارات','real_estate_properties','properties'],['الأثاث والفرش','real_estate_furnishings','furnishings']];
  let html='<h2>مراجعة وإدارة العقارات</h2>';
- for(const [label,table,type] of tables){const {data,error}=await memberDb.from(table).select('*').in('status',['pending']).order('created_at',{ascending:false}).limit(100);if(error)continue;html+='<section><h3>'+label+'</h3>'+(data||[]).map(item=>'<article class="admin-review"><b>'+esc(item.title||item.provider_id||item.id)+'</b><small>'+esc(item.area||item.finish_type||item.status||'')+'</small><button data-review="'+type+'" data-id="'+esc(item.id)+'" data-decision="approved">موافقة</button><button data-review="'+type+'" data-id="'+esc(item.id)+'" data-decision="rejected">رفض</button>'+(type==='provider_claims'?'<label>العمولة %<input data-commission="'+esc(item.id)+'" type="number" min="0" max="50" step=".5" value="'+esc(item.commission_rate)+'"></label>':'')+'</article>').join('')||'<p>لا توجد عناصر معلقة.</p>'+'</section>';}
+ for(const [label,table,type] of tables){
+  const {data,error}=await memberDb.from(table).select('*').in('status',['pending']).order('created_at',{ascending:false}).limit(100);
+  if(error){html+='<section><h3>'+label+'</h3><p>تعذر تحميل القائمة.</p></section>';continue;}
+  const rows=(data||[]).map(item=>'<article class="admin-review"><b>'+esc(item.title||item.provider_id||item.id)+'</b><small>'+esc(item.area||item.finish_type||item.status||'')+'</small><button type="button" data-review="'+type+'" data-id="'+esc(item.id)+'" data-decision="approved">موافقة</button><button type="button" data-review="'+type+'" data-id="'+esc(item.id)+'" data-decision="rejected">رفض</button>'+(type==='provider_claims'?'<label>العمولة %<input data-commission="'+esc(item.id)+'" type="number" min="0" max="50" step=".5" value="'+esc(item.commission_rate)+'"></label>':'')+'</article>').join('');
+  html+='<section><h3>'+label+'</h3>'+(rows||'<p>لا توجد عناصر معلقة.</p>')+'</section>';
+ }
  root.innerHTML=html;
- root.querySelectorAll('[data-review]').forEach(b=>b.onclick=async()=>{const type=b.dataset.review,id=b.dataset.id,decision=b.dataset.decision,note=decision==='rejected'?(prompt('سبب الرفض (3 أحرف على الأقل):')||''):'';if(decision==='rejected'&&note.trim().length<3)return;const commission=type==='provider_claims'?Number(root.querySelector('[data-commission="'+id+'"]').value):null;const {error}=await memberDb.rpc('jowwa_re_moderate',{target_type:type,target_id:id,decision,note,commission});if(error){say('تعذر حفظ قرار المراجعة.',true);return;}say('تم حفظ قرار المراجعة.');await loadAdminArea();});
+ root.querySelectorAll('[data-review]').forEach(b=>b.onclick=async()=>{
+  const type=b.dataset.review,id=b.dataset.id,decision=b.dataset.decision,note=decision==='rejected'?(prompt('سبب الرفض (3 أحرف على الأقل):')||''):'';
+  if(decision==='rejected'&&note.trim().length<3)return;
+  const commission=type==='provider_claims'?Number(root.querySelector('[data-commission="'+id+'"]').value):null;
+  const {error}=await memberDb.rpc('jowwa_re_moderate',{target_type:type,target_id:id,decision,note,commission});
+  if(error){say('تعذر حفظ قرار المراجعة.',true);return;}say('تم حفظ قرار المراجعة.');await loadAdminArea();
+ });
 }
 async function start(){
  $('portfolio-account')?.addEventListener('click',()=>phoneAuth.open(()=>{refreshMember(true).then(loadOwnerArea);}));
