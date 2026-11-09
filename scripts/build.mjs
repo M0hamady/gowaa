@@ -21,6 +21,7 @@ await build({entryPoints:['src/customer.js'],outdir:'public',chunkNames:'assets/
  await build({entryPoints:['src/real-estate-map-core.mjs'],outfile:'public/real-estate-map-core.js',bundle:true,format:'esm',minify:true,target:'es2022',legalComments:'eof'});
  await build({entryPoints:['src/real-estate-marketplace.js'],outfile:'public/real-estate-marketplace.js',bundle:true,format:'esm',minify:true,target:'es2022',legalComments:'eof'});
  await build({entryPoints:['src/real-estate-provider.js'],outfile:'public/real-estate-provider.js',bundle:true,format:'esm',minify:true,target:'es2022',legalComments:'eof'});
+ await build({entryPoints:['src/real-estate-listing.js'],outfile:'public/real-estate-listing.js',bundle:true,format:'esm',minify:true,target:'es2022',legalComments:'eof'});
 // Live operations workspace (/work) and customer tracking (/track).
 await build({entryPoints:['src/operations/live-ui.mjs'],outfile:'public/work.js',bundle:true,format:'esm',minify:true,target:'es2022',legalComments:'eof'});
 await build({entryPoints:['src/operations/track-ui.mjs'],outfile:'public/track.js',bundle:true,format:'esm',minify:true,target:'es2022',legalComments:'eof'});
