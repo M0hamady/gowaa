@@ -3,3 +3,6 @@
 #portfolio-login-dialog{border:0;border-radius:18px;padding:24px;max-width:min(440px,calc(100vw - 24px));width:100%;box-shadow:0 16px 60px #0003}
 #portfolio-login-dialog::backdrop{background:#10271f88}
 #portfolio-login-dialog .member-close{float:left;border:0;background:transparent;font-size:24px;cursor:pointer}
+
+.project-detail-link{display:inline-block;margin-top:10px;color:#174c3b;font-weight:700;text-decoration:underline}
+.edit-photos{display:flex;flex-wrap:wrap;gap:10px;align-items:center}.edit-photos label{display:flex;align-items:center;gap:6px}.edit-photos img{width:72px;height:60px;object-fit:cover;border-radius:8px}
