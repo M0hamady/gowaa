@@ -12,6 +12,7 @@ for(const name of ['market','round-sync','order-pages','place-basket'])await bui
 // auth code lives in one ESM chunk, so lazy editing does not create another client.
 await build({entryPoints:['src/customer.js'],outdir:'public',chunkNames:'assets/customer/[name]-[hash]',bundle:true,splitting:true,format:'esm',minify:true,target:'es2022',legalComments:'eof'});
  await build({entryPoints:['src/real-estate-portfolio.js'],outfile:'public/real-estate-portfolio.js',bundle:true,format:'esm',minify:true,target:'es2022',legalComments:'eof'});
+ await build({entryPoints:['src/real-estate-project.js'],outfile:'public/real-estate-project.js',bundle:true,format:'esm',minify:true,target:'es2022',legalComments:'eof'});
 // Live operations workspace (/work) and customer tracking (/track).
 await build({entryPoints:['src/operations/live-ui.mjs'],outfile:'public/work.js',bundle:true,format:'esm',minify:true,target:'es2022',legalComments:'eof'});
 await build({entryPoints:['src/operations/track-ui.mjs'],outfile:'public/track.js',bundle:true,format:'esm',minify:true,target:'es2022',legalComments:'eof'});
