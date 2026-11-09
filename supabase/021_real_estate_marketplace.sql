@@ -277,7 +277,7 @@ create policy re_notifications_read on public.real_estate_notifications for sele
 create policy re_notifications_mark_read on public.real_estate_notifications for update to authenticated using(user_id=auth.uid()) with check(user_id=auth.uid());
 
 create or replace function public.jowwa_re_request_notify()
-returns trigger language plpgsql security definer set search_path='' as $
+returns trigger language plpgsql security definer set search_path='' as $$
 begin
  if TG_OP='INSERT' then
   insert into public.real_estate_notifications(user_id,request_id,event,title,body)
