@@ -174,7 +174,7 @@ create policy re_properties_owner_delete on public.real_estate_properties for de
 
 create policy re_furnishings_public_read on public.real_estate_furnishings for select using(status='approved' or owner_id=auth.uid() or public.jowwa_is_admin());
 create policy re_furnishings_owner_insert on public.real_estate_furnishings for insert to authenticated with check(owner_id=auth.uid() and status='pending' and public.jowwa_verified());
-create policy re_furnishings_owner_update on public.real_estate_furnishings for update to authenticated using(owner_id=auth.uid()) with check(owner_id=auth.uid() and status='pending');
+create policy re_furnishings_owner_update on public.real_estate_furnishings for update to authenticated using(owner_id=auth.uid()) with check(owner_id=auth.uid() and status in ('pending','paused','sold'));
 create policy re_furnishings_owner_delete on public.real_estate_furnishings for delete to authenticated using(owner_id=auth.uid());
 
 create or replace function public.jowwa_re_moderate(target_type text,target_id uuid,decision text,note text default '',commission numeric default null)
@@ -206,6 +206,19 @@ begin
 end;$$;
 revoke all on function public.jowwa_re_moderate(text,uuid,text,text,numeric) from public;
 grant execute on function public.jowwa_re_moderate(text,uuid,text,text,numeric) to authenticated;
+
+create or replace function public.jowwa_re_archive_package(target_id uuid)
+returns void language plpgsql security definer set search_path='' as $
+declare affected integer;
+begin
+ update public.real_estate_finish_packages p set archived=true,updated_at=now()
+ where p.id=target_id and p.owner_id=auth.uid()
+ and exists(select 1 from public.real_estate_provider_claims c where c.provider_id=p.provider_id and c.owner_id=auth.uid() and c.status='approved');
+ get diagnostics affected=row_count;
+ if affected<>1 then raise exception 'Forbidden or not found' using errcode='42501'; end if;
+end;$;
+revoke all on function public.jowwa_re_archive_package(uuid) from public;
+grant execute on function public.jowwa_re_archive_package(uuid) to authenticated;
 
 create or replace function public.jowwa_re_request_transition(target_id uuid,next_status text,quote numeric default null,note text default '')
 returns void language plpgsql security definer set search_path='' as $$
