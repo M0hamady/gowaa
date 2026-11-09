@@ -41,14 +41,15 @@ function requestForm(provider,packageId='',type='inspection'){
 }
 async function renderOwner(){
  const root=$('re-owner-market');const user=memberState().user;if(!user){root.innerHTML='<p>سجّل الدخول لإدارة إعلاناتك وطلباتك وباقاتك.</p><button id="re-market-login-button">دخول / تسجيل</button>';root.querySelector('button').onclick=()=>auth.open(()=>renderAll());return;}
- const [props,furn,packages,claims,customerRequests]=await Promise.all([
+ const [props,furn,packages,claims,customerRequests,commissions]=await Promise.all([
   memberDb.from('real_estate_properties').select('*').eq('owner_id',user.id).order('created_at',{ascending:false}),
   memberDb.from('real_estate_furnishings').select('*').eq('owner_id',user.id).order('created_at',{ascending:false}),
   memberDb.from('real_estate_finish_packages').select('*').eq('owner_id',user.id).order('created_at',{ascending:false}),
   memberDb.from('real_estate_provider_claims').select('*').eq('owner_id',user.id).eq('status','approved'),
-  memberDb.from('real_estate_finish_requests').select('*').eq('customer_id',user.id).order('created_at',{ascending:false})
+  memberDb.from('real_estate_finish_requests').select('*').eq('customer_id',user.id).order('created_at',{ascending:false}),
+  memberDb.from('real_estate_commissions').select('*').eq('owner_id',user.id).order('created_at',{ascending:false})
  ]);
- const error=[props,furn,packages,claims,customerRequests].find(x=>x.error);if(error)throw error.error;
+ const error=[props,furn,packages,claims,customerRequests,commissions].find(x=>x.error);if(error)throw error.error;
  root.innerHTML='<h2>إعلاناتي</h2><div class="re-owner-grid">'+(props.data||[]).map(x=>ownerRow(x,'property')).join('')+(furn.data||[]).map(x=>ownerRow(x,'furnishing')).join('')+'</div><h2>باقاتي</h2><div class="re-owner-grid">'+(packages.data||[]).map(x=>'<article><b>'+esc(x.title)+'</b><small>'+esc(STATUS[x.status])+' · '+money(x.price_per_sqm)+' جنيه/م²</small>'+(x.status==='pending'?'<button data-edit-package="'+x.id+'">تعديل الباقة</button>':'')+'<button data-archive-package="'+x.id+'">أرشفة الباقة</button></article>').join('')+'</div><h2>طلباتي للتشطيب</h2><div class="re-owner-grid">'+(customerRequests.data||[]).map(x=>'<article><b>'+esc(x.compound)+' · '+esc(x.apartment)+'</b><small>'+esc(STATUS[x.status])+'</small>'+(x.quote_amount?'<strong>عرض السعر: '+money(x.quote_amount)+' جنيه</strong>':'')+(x.status==='quote_sent'?'<button data-approve-quote="'+x.id+'">موافقة على عرض السعر</button>':'')+'</article>').join('')+'</div><h2>إضافة إعلان عقاري</h2>'+propertyForm()+'<h2>إضافة أثاث أو تجهيزات</h2>'+furnishingForm()+(claims.data?.length?'<h2>إضافة باقة تشطيب</h2>'+packageForm(claims.data):'<p>لإضافة باقة تشطيب، يجب أولاً اعتماد حسابك كمقدم خدمة من صفحة سابقة الأعمال.</p>');
  root.querySelectorAll('[data-edit-package]').forEach(b=>b.onclick=()=>editPackage(b.dataset.editPackage,user));
  root.querySelectorAll('[data-archive-package]').forEach(b=>b.onclick=async()=>{const r=await memberDb.rpc('jowwa_re_archive_package',{target_id:b.dataset.archivePackage});if(r.error){say('تعذر أرشفة الباقة.',true);return;}say('تمت أرشفة الباقة.');await renderAll();});
