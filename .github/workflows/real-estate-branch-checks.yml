@@ -5,7 +5,7 @@ on:
       - feat/real-estate-portfolio-map-test
   pull_request:
     branches:
-      - feat/real-estate-portfolio-map-test
+      - feat/operations-test-workspace
 jobs:
   test-and-build:
     runs-on: ubuntu-latest
