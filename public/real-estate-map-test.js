@@ -1,4 +1,4 @@
-import { visibleProjects, clusterProjects } from '../src/real-estate-map-core.mjs';
+import { visibleProjects, clusterProjects } from '/real-estate-map-core.js';
 
 const $ = id => document.getElementById(id);
 const photo = id => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=720&q=80`;
