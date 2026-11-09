@@ -1,8 +1,10 @@
 import { memberDb } from './member-access.js';
+import config from '../public/config.js';
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const id=new URLSearchParams(location.search).get('id');
 async function start(){
+ if(!config.realEstateEnabled){$('project-detail').textContent='تفاصيل المشاريع ستظهر بعد ربط قاعدة بيانات الاختبار المستقلة.';return;}
  if(!id||!/^[0-9a-f-]{36}$/i.test(id)){$('project-detail').textContent='رابط المشروع غير صحيح.';return;}
  try{
   const {data,error}=await memberDb.from('real_estate_projects').select('*').eq('id',id).eq('status','approved').single();
