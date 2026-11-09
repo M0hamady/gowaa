@@ -281,13 +281,13 @@ returns trigger language plpgsql security definer set search_path='' as $
 begin
  if TG_OP='INSERT' then
   insert into public.real_estate_notifications(user_id,request_id,event,title,body)
-  select c.owner_id,NEW.id,'new_request','طلب تشطيب جديد','طلب جديد من '+coalesce(NEW.compound,'')||' — شقة '||coalesce(NEW.apartment,'')
+  select c.owner_id,NEW.id,'new_request','طلب تشطيب جديد','طلب جديد من '||coalesce(NEW.compound,'')||' — شقة '||coalesce(NEW.apartment,'')
   from public.real_estate_provider_claims c where c.provider_id=NEW.provider_id and c.status='approved';
  elsif OLD.status is distinct from NEW.status then
   insert into public.real_estate_notifications(user_id,request_id,event,title,body)
   values(NEW.customer_id,NEW.id,'request_status','تحديث طلب التشطيب','الحالة الجديدة: '||NEW.status);
   insert into public.real_estate_notifications(user_id,request_id,event,title,body)
-  select c.owner_id,NEW.id,'request_status','تحديث حالة طلب التشطيب','الحالة الجديدة: '+NEW.status
+  select c.owner_id,NEW.id,'request_status','تحديث حالة طلب التشطيب','الحالة الجديدة: '||NEW.status
   from public.real_estate_provider_claims c where c.provider_id=NEW.provider_id and c.status='approved';
  end if;
  return NEW;
