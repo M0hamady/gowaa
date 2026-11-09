@@ -59,12 +59,15 @@ test('migration creates separate portfolio, package, request, property and furni
 test('database rejects an eleventh project image and coordinates outside Egypt',async()=>{
  const db=await database();
  await db.query(`insert into public.real_estate_provider_claims(provider_id,owner_id,status) values('provider-demo','11111111-1111-4111-8111-111111111111','approved')`);
- const paths=Array.from({length:10},(_,i)=>'11111111-1111-4111-8111-111111111111/project/'+i+'.jpg');
+ const paths=Array.from({length:10},(_,i)=>'11111111-1111-4111-8111-111111111111/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/00000000-0000-4000-8000-'+String(i).padStart(12,'0')+'.jpg');
  await db.query('insert into public.real_estate_projects(provider_id,owner_id,title,finish_type,area,latitude,longitude,image_paths) values($1,$2,$3,$4,$5,$6,$7,$8)',[
   baseProject.provider_id,baseProject.owner_id,baseProject.title,baseProject.finish_type,baseProject.area,baseProject.latitude,baseProject.longitude,paths
  ]);
  await assert.rejects(()=>db.query('insert into public.real_estate_projects(provider_id,owner_id,title,finish_type,area,latitude,longitude,image_paths) values($1,$2,$3,$4,$5,$6,$7,$8)',[
-  baseProject.provider_id,baseProject.owner_id,'مشروع بصور كثيرة',baseProject.finish_type,baseProject.area,baseProject.latitude,baseProject.longitude,[...paths,'extra.jpg']
+  baseProject.provider_id,baseProject.owner_id,'مشروع بصور كثيرة',baseProject.finish_type,baseProject.area,baseProject.latitude,baseProject.longitude,Array.from({length:11},(_,i)=>'11111111-1111-4111-8111-111111111111/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/00000000-0000-4000-8000-'+String(i).padStart(12,'0')+'.jpg')
+ ]));
+ await assert.rejects(()=>db.query('insert into public.real_estate_projects(provider_id,owner_id,title,finish_type,area,latitude,longitude,image_paths) values($1,$2,$3,$4,$5,$6,$7,$8)',[
+  baseProject.provider_id,baseProject.owner_id,'صورة تخص حسابًا آخر',baseProject.finish_type,baseProject.area,baseProject.latitude,baseProject.longitude,[paths[0].replace(baseProject.owner_id,'22222222-2222-4222-8222-222222222222')]
  ]));
  await assert.rejects(()=>db.query('insert into public.real_estate_projects(provider_id,owner_id,title,finish_type,area,latitude,longitude) values($1,$2,$3,$4,$5,$6,$7)',[
   baseProject.provider_id,baseProject.owner_id,'موقع خارج مصر',baseProject.finish_type,baseProject.area,40,31
