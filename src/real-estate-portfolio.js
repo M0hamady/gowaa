@@ -131,7 +131,10 @@ async function loadAdminArea(){
   const rows=(data||[]).map(item=>'<article class="admin-review"><b>'+esc(item.title||item.provider_id||item.id)+'</b><small>'+esc(item.area||item.finish_type||item.status||'')+'</small><button type="button" data-review="'+type+'" data-id="'+esc(item.id)+'" data-decision="approved">موافقة</button><button type="button" data-review="'+type+'" data-id="'+esc(item.id)+'" data-decision="rejected">رفض</button>'+(type==='provider_claims'?'<label>العمولة %<input data-commission="'+esc(item.id)+'" type="number" min="0" max="50" step=".5" value="'+esc(item.commission_rate)+'"></label>':'')+'</article>').join('');
   html+='<section><h3>'+label+'</h3>'+(rows||'<p>لا توجد عناصر معلقة.</p>')+'</section>';
  }
+ const {data:dues,error:duesError}=await memberDb.from('real_estate_commissions').select('*').eq('status','due').order('created_at',{ascending:false}).limit(200);
+ html+='<section><h3>مستحقات مقدمي الخدمة</h3>'+(duesError?'<p>تعذر تحميل المستحقات.</p>':(dues||[]).map(x=>'<article class="admin-review"><b>'+esc(x.provider_id)+'</b><small>قيمة الشغل '+Number(x.gross_amount).toLocaleString('ar-EG')+' · العمولة '+Number(x.commission_rate)+'% = '+Number(x.commission_amount).toLocaleString('ar-EG')+' جنيه</small><button type="button" data-settle-commission="'+esc(x.id)+'">تأكيد التسوية</button></article>').join('')||'<p>لا توجد مستحقات معلقة.</p>')+'</section>';
  root.innerHTML=html;
+ root.querySelectorAll('[data-settle-commission]').forEach(b=>b.onclick=async()=>{const note=prompt('ملاحظة التسوية (اختياري):')||'';const {error}=await memberDb.rpc('jowwa_re_settle_commission',{target_id:b.dataset.settleCommission,settlement_note:note});if(error){say('تعذر تسجيل التسوية.',true);return;}say('تم تسجيل تسوية العمولة.');await loadAdminArea();});
  root.querySelectorAll('[data-review]').forEach(b=>b.onclick=async()=>{
   const type=b.dataset.review,id=b.dataset.id,decision=b.dataset.decision,note=decision==='rejected'?(prompt('سبب الرفض (3 أحرف على الأقل):')||''):'';
   if(decision==='rejected'&&note.trim().length<3)return;
