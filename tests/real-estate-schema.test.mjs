@@ -50,7 +50,7 @@ test('migration creates separate portfolio, package, request, property and furni
  const db=await database();
  const result=await db.query(`select table_name from information_schema.tables where table_schema='public' and table_name like 'real_estate_%' order by table_name`);
  assert.deepEqual(result.rows.map(r=>r.table_name),[
-  'real_estate_finish_packages','real_estate_finish_requests','real_estate_furnishings','real_estate_notifications','real_estate_projects',
+  'real_estate_commissions','real_estate_finish_packages','real_estate_finish_requests','real_estate_furnishings','real_estate_notifications','real_estate_projects',
   'real_estate_properties','real_estate_provider_claims'
  ]);
  await db.close();
@@ -168,5 +168,28 @@ test('new finishing requests create a provider notification and status changes n
  const later=await db.query('select user_id,event from public.real_estate_notifications where request_id=$1 order by created_at',[id]);
  assert.equal(later.rows.length,3);
  assert.deepEqual(new Set(later.rows.map(x=>x.user_id)),new Set(['22222222-2222-4222-8222-222222222222','11111111-1111-4111-8111-111111111111']));
+ await db.close();
+});
+
+test('completed finishing jobs snapshot provider commission and only admin can settle it',async()=>{
+ const db=await database();
+ await db.query(`insert into public.real_estate_provider_claims(provider_id,owner_id,status,commission_rate) values('provider-demo','11111111-1111-4111-8111-111111111111','approved',12.5)`);
+ const request=await db.query(`insert into public.real_estate_finish_requests(customer_id,provider_id,request_type,compound,building,apartment,area_sqm,phone,contact_window)
+ values('22222222-2222-4222-8222-222222222222','provider-demo','inspection','كمبوند تجريبي','A','12',120,'01012345678','بعد الساعة 5') returning id`);
+ await db.query("update public.real_estate_finish_requests set quote_amount=2000,status='completed' where id=$1",[request.rows[0].id]);
+ const ledger=await db.query('select * from public.real_estate_commissions where request_id=$1',[request.rows[0].id]);
+ assert.equal(ledger.rows.length,1);
+ assert.equal(Number(ledger.rows[0].gross_amount),2000);
+ assert.equal(Number(ledger.rows[0].commission_rate),12.5);
+ assert.equal(Number(ledger.rows[0].commission_amount),250);
+ await db.exec(`set role authenticated; select set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',false)`);
+ await assert.rejects(()=>db.query('select public.jowwa_re_settle_commission($1,$2)',[ledger.rows[0].id,'settled by owner']));
+ await db.exec('reset role');
+ await db.exec(`set role authenticated; select set_config('request.jwt.claim.sub','33333333-3333-4333-8333-333333333333',false)`);
+ await db.query('select public.jowwa_re_settle_commission($1,$2)',[ledger.rows[0].id,'تمت التسوية']);
+ await db.exec('reset role');
+ const settled=await db.query('select status,settlement_note from public.real_estate_commissions where id=$1',[ledger.rows[0].id]);
+ assert.equal(settled.rows[0].status,'settled');
+ assert.equal(settled.rows[0].settlement_note,'تمت التسوية');
  await db.close();
 });
