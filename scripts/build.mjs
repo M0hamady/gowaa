@@ -10,7 +10,7 @@ const key=process.env.SUPABASE_ANON_KEY||process.env.NEXT_PUBLIC_SUPABASE_ANON_K
 // Only the public anon/publishable key is ever shipped to the browser.
 if(key.startsWith('sb_secret_'))throw Error('Secret key cannot be published');
 if(key.startsWith('eyJ')&&JSON.parse(Buffer.from(key.split('.')[1],'base64url').toString()).role!=='anon')throw Error('Expected public anon key');
-await writeFile('public/config.js',`export default ${JSON.stringify({url,key,publicSignup:false,phoneAuth:process.env.JOWWA_PHONE_AUTH==='true'})};\n`);
+await writeFile('public/config.js',`export default ${JSON.stringify({url,key,publicSignup:false,phoneAuth:process.env.JOWWA_PHONE_AUTH==='true',realEstateEnabled:process.env.JOWWA_REAL_ESTATE_ENABLED==='true'})};\n`);
 await writeFile('src/market-template.mjs','export default '+JSON.stringify(await readFile('public/market.html','utf8'))+';\n');
 for(const name of ['market','round-sync','order-pages','place-basket'])await build({entryPoints:['src/'+name+'.js'],outfile:'public/'+name+'.js',bundle:true,format:'esm',minify:true,target:'es2022',legalComments:'eof'});
 // Keep the public customer flow separate from the administrator editor. Shared
