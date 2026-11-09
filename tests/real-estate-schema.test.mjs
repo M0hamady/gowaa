@@ -50,8 +50,8 @@ test('migration creates separate portfolio, package, request, property and furni
  const db=await database();
  const result=await db.query(`select table_name from information_schema.tables where table_schema='public' and table_name like 'real_estate_%' order by table_name`);
  assert.deepEqual(result.rows.map(r=>r.table_name),[
-  'real_estate_finish_packages','real_estate_finish_requests','real_estate_furnishings',
-  'real_estate_properties','real_estate_projects','real_estate_provider_claims'
+  'real_estate_finish_packages','real_estate_finish_requests','real_estate_furnishings','real_estate_projects',
+  'real_estate_properties','real_estate_provider_claims'
  ]);
  await db.close();
 });
