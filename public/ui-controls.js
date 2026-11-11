@@ -1,4 +1,5 @@
 import './customer.js';
+import {mountMobileAppNavigation} from './mobile-app-shell.js';
 import {icon} from './ui-icons.js';
 import './visitor-services.js';
 const esc=v=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -45,3 +46,7 @@ function apply(el,name,label,iconOnly=false){
 export function enhanceControls(root=document){for(const [selector,...spec] of controls){if(root.matches?.(selector))apply(root,...spec);root.querySelectorAll?.(selector).forEach(el=>apply(el,...spec));}}
 enhanceControls();
 new MutationObserver(records=>{for(const r of records){if(r.target.nodeType===1&&r.target.closest('#map,#navigation-ui,.ui-icon'))continue;for(const node of r.addedNodes){if(node.nodeType===1&&!node.classList.contains('ui-icon')&&!node.classList.contains('ui-control-label'))enhanceControls(node);else if(node.nodeType===3&&r.target.matches?.('button'))enhanceControls(r.target);}}}).observe(document.body,{childList:true,subtree:true});
+
+// Shared navigation is progressive and mounted only on public app pages.
+if(!document.querySelector('link[href="/mobile-app-shell.css"]')){const link=document.createElement('link');link.rel='stylesheet';link.href='/mobile-app-shell.css';document.head.append(link);}
+mountMobileAppNavigation();
