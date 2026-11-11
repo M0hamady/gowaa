@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {money,esc,propertyKindLabel,resolvePropertyView,validateStep} from '../public/property-core.js';
 const load=path=>readFileSync(new URL('../public/'+path,import.meta.url),'utf8');
-const valid={kind:'rental',zone:'1',buildingNumber:'194',apartment_number:'5',floor:'3',owner_name:'مالك مباشر',owner_phone:'01511111111',area_m2:'120',price_egp:'7000',finishing:'full',furnished:false};
+const valid={kind:'rental',zone:'1',buildingNumber:'194',apartment_number:'5',floor:'3',owner_name:'مالك مباشر',owner_phone:'01511111111',area_m2:'120',price_egp:'7000',finishing:'full',furnished:false,owner_declaration:true};
 const photo={size:1024,type:'image/jpeg'};
 const files={unit:[photo],view:[photo],entrance:[photo]};
 
@@ -32,6 +32,7 @@ test('18-step validation handles owner and location without invented properties'
  assert.ok(validateStep('area_m2',{...valid,area_m2:'-12'},files));
  assert.ok(validateStep('price_egp',{...valid,price_egp:'Infinity'},files));
  assert.ok(validateStep('finishing',{...valid,finishing:'oops'},files));
+ assert.ok(validateStep('review',{...valid,owner_declaration:false},files));
 });
 
 test('image constraints require interior plus one view and entrance, never more than ten',()=>{
