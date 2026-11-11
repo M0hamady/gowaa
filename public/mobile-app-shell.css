@@ -1,0 +1,25 @@
+/* Mobile app shell. Preserves the original homepage and full-screen map navigation. */
+.jowwa-app-dock{display:none}
+@media(max-width:760px){
+ body:has(.jowwa-app-dock){padding-bottom:calc(76px + env(safe-area-inset-bottom))!important}
+ .jowwa-app-dock{direction:rtl;position:fixed;bottom:0;left:0;right:0;z-index:2600;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:2px;align-items:stretch;background:#ffffffef;backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);border-top:1px solid #dbe7d9;box-shadow:0 -8px 24px #123e321a;padding:8px max(7px,env(safe-area-inset-right)) calc(7px + env(safe-area-inset-bottom)) max(7px,env(safe-area-inset-left));min-height:calc(72px + env(safe-area-inset-bottom))}
+ .jowwa-app-dock>a{min-height:56px;min-width:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:5px;padding:6px 2px;color:#748577;text-decoration:none;border-radius:17px;font-family:inherit;font-weight:700;font-size:10px;white-space:nowrap;line-height:1.3}
+ .jowwa-app-dock>a .ui-icon{width:23px;height:23px;transition:transform .18s ease}
+ .jowwa-app-dock>a.active{background:#e5f1df;color:#174c3b}
+ .jowwa-app-dock>a.active .ui-icon{transform:translateY(-2px)}
+ .jowwa-app-dock>a:focus-visible{outline:3px solid #4a813d;outline-offset:-2px}
+ body.home-mode main{height:calc(100dvh - 68px - 72px - env(safe-area-inset-bottom))!important}
+ body.home-mode .sidebar{padding-bottom:calc(105px + env(safe-area-inset-bottom))!important}
+ body:not(.home-mode) .sidebar{padding-bottom:calc(90px + env(safe-area-inset-bottom))!important}
+ body:not(.home-mode):not(.navigating) .map-area{min-height:280px}
+ body:has(.jowwa-app-dock) .market-main{padding-bottom:28px}
+ body:has(.jowwa-app-dock) .market-footer{margin-bottom:8px}
+ body:has(.jowwa-app-dock) #market-toast{bottom:calc(86px + env(safe-area-inset-bottom))}
+ body:has(.jowwa-app-dock) .place-basket-dock{bottom:calc(88px + env(safe-area-inset-bottom))}
+ body.navigating .jowwa-app-dock{display:none!important}
+ body.navigating{padding-bottom:0!important}
+ body.navigating main{height:100dvh!important}
+ body:has(dialog[open]) .jowwa-app-dock{visibility:hidden;pointer-events:none}
+}
+@media(max-width:350px){.jowwa-app-dock>a{font-size:9px;gap:4px}.jowwa-app-dock>a .ui-icon{width:21px;height:21px}}
+@media(prefers-reduced-motion:reduce){.jowwa-app-dock>a .ui-icon{transition:none}.jowwa-app-dock>a.active .ui-icon{transform:none}}
