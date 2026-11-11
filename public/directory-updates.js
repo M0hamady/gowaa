@@ -1,6 +1,7 @@
 // Reviewed additions to the existing directory. This never imports the reserve dataset.
 // Map coordinates are centers of the Plus Codes exposed by the user's Google Maps links,
 // recovered relative to the existing Kayan map (29.93, 31.63), not the visitor's location.
+import {kayanMeatsProvider} from './kayan-meats.js';
 const mapUpdates={
  'directory-international-garden-kayan':{source:'https://maps.app.goo.gl/QcxrqHDhefkdnmjSA',externalMapUrl:'https://maps.app.goo.gl/QcxrqHDhefkdnmjSA',coordinate:[31.657796875,29.9577625],mapId:'directory-international-garden-kayan',mapCategory:'park',plusCode:'7GXHXM55+443',precision:'shared_map_plus_code_center',visitorNote:'موقع تقريبي؛ تأكد من مواعيد الزيارة وإتاحة الدخول.',status:'الموقع من رابط الخريطة المشارك؛ مركز Plus Code وليس بوابة دخول مؤكدة. التشغيل والمواعيد يحتاجان تأكيدًا.'},
  'directory-fuel-near-sunmall':{source:'https://maps.app.goo.gl/8DNNUzi6uMg6ceDR7',externalMapUrl:'https://maps.app.goo.gl/8DNNUzi6uMg6ceDR7',coordinate:[31.6347077,29.9287987],mapId:'directory-fuel-near-sunmall',mapCategory:'fuel',precision:'user_shared_map_point',visitorNote:'موقع مشارك؛ أنواع الوقود والتشغيل الحالي غير مؤكدين.'},
@@ -24,6 +25,7 @@ export function mergeDirectoryUpdates(records){
   {id:'memorycraft',name:'MemoryCraft | ميموري كرافت',category:'هدايا وطباعة',phone:'01019374388',description:'مجات وتيشيرتات وبازل وبراويز وأطقم بتصميم العميل. معاينة التصميم والسعر والميعاد تتأكد قبل التنفيذ.',keywords:['ميموري كرافت','MemoryCraft','هدايا','طباعة','مج','تيشيرت','بازل','برواز','مواليد'],printingType:'personalized',instagram:'https://www.instagram.com/memorycraft1/',telegram:'https://t.me/MemoryCraft1'}
  ];
  for(const p of printing)if(!result.has(p.id))result.set(p.id,{...p,specialization:'printing',schemaType:'Store',address:'مكان الاستلام يتحدد مع الطلب',sourceType:'user_shared_business_message',sourceTitle:'مراسلة النشاط ونماذج أعماله التي شاركها مالك جوّه',checkedAt:'2026-11-06',businessOwnerVerified:false,providerManaged:false,status:'بيانات النشاط من رسائله المرفقة. السعر النهائي وميعاد التنفيذ وعنوان الاستلام يتأكدوا داخل الطلب.',visitorNote:'طلب خاص بالطباعة والهدايا. راجع عرض السعر والمعاينة قبل الموافقة.'});
+ if(!result.has(kayanMeatsProvider.id))result.set(kayanMeatsProvider.id,{...kayanMeatsProvider});
  const group=result.get('directory-atms-sunmall');
  if(group)for(const [id,name,english] of bankNames){
   if(result.has(id))continue;
