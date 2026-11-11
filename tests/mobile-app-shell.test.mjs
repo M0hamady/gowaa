@@ -45,6 +45,9 @@ test('existing Jowwa homepage is preserved and main navigation uses existing app
  assert.match(ui,/mountMobileAppNavigation\(\)/);
  assert.match(ui,/mobile-app-shell\.css/);
  assert.doesNotMatch(html,/id="jowwa-app-dock"/,'navigation should be progressively mounted, not cloned into home');
+ const app=source('app.js');
+ assert.match(app,/const linkedTab=location\.hash\.slice\(1\)/);
+ assert.match(app,/if\(\['trip','bus','places'\]\.includes\(linkedTab\)\)tab\(linkedTab\)/);
 });
 
 test('safe-area dock cannot cover a live route or modal and keeps touch targets usable',()=>{
