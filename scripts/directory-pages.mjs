@@ -3,6 +3,19 @@ import {resolve,dirname} from 'node:path';
 import {directoryPlaces} from '../public/directory-core.js';
 import {mergeDirectoryUpdates} from '../public/directory-updates.js';
 import {renderPlace,renderDirectory} from '../src/place-render.mjs';
+import {kayanMeatsCatalog} from '../public/kayan-meats.js';
+// Merge catalog idempotently so local, previews and production see the same products.
+const catalogPath='public/data/market-directory.json';
+const catalogText=await readFile(catalogPath,'utf8').catch(error=>{if(error.code==='ENOENT')return null;throw error;});
+// Directory-only fixtures have no product catalog. Production does.
+if(catalogText!==null){
+ const catalog=JSON.parse(catalogText);
+ const sourceRows=Array.isArray(catalog)?catalog:catalog.items;
+ if(!Array.isArray(sourceRows))throw Error('Expected market catalog items');
+ const known=new Set(sourceRows.map(x=>x.id));
+ for(const product of kayanMeatsCatalog)if(!known.has(product.id)){sourceRows.push(product);known.add(product.id);}
+ await writeFile(catalogPath,JSON.stringify(catalog,null,2)+'\n');
+}
 const curated=mergeDirectoryUpdates(JSON.parse(await readFile('public/data/directory.json','utf8')));
 const map=JSON.parse(await readFile('public/data/map.json','utf8'));
 const places=directoryPlaces(curated,map);

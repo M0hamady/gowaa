@@ -25,7 +25,8 @@ test('home removes only the extra colloquial input, keeping AI and service cards
 test('new public directory and generated place catalog agree without duplicating existing map POIs',()=>{
  const rebuilt=directoryPlaces(curated,mapped);
  assert.deepEqual(live,rebuilt);
- assert.equal(live.length,129);
+ assert.equal(live.length,130);
+ assert.ok(live.some(p=>p.id==='directory-kayan-frozen-meats'),'new frozen-meats business is part of the reviewed directory');
  assert.equal(new Set(live.map(p=>p.id)).size,live.length);
  assert.equal(live.filter(p=>p.id==='poi-1122262346').length,1);
 });

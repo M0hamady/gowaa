@@ -36,6 +36,8 @@ if (process.env.VERCEL_ENV === 'production') {
   const {spawnSync} = await import('node:child_process');
   const verify = spawnSync(process.execPath, ['scripts/verify-printing-live.mjs'], {stdio: 'inherit', env: process.env});
   if (verify.status !== 0) throw new Error('Printing verification failed; production deploy stopped.');
+  const checkout = spawnSync(process.execPath, ['scripts/verify-kayan-order-live.mjs'], {stdio:'inherit',env:process.env});
+  if(checkout.status!==0)throw new Error('Kayan checkout verification failed; production deploy stopped.');
 }
 
 await import('./build.mjs');
