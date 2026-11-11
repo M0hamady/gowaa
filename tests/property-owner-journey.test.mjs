@@ -85,7 +85,7 @@ test('approved-property map uses a separate URL and only public listing endpoint
  const js=load('property.js'),vercel=JSON.parse(load('../vercel.json'));
  assert.match(js,/api\('listings\/\?'/);
  assert.match(js,/window\.L\.marker/);
- assert.match(js,/\/property\/map/);
+ assert.match(load('property.html'),/href="\/property\/map"/);
  assert.equal(vercel.rewrites.find(x=>x.source==='/property'),undefined);
  for(const path of ['/property/map','/property/track'])
   assert.equal(vercel.rewrites.find(x=>x.source===path)?.destination,'/property');
