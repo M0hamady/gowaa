@@ -82,7 +82,7 @@ test('property wizard uses server-authored prices and never confirms transfers i
 });
 
 test('approved-property map uses a separate URL and only public listing endpoint',()=>{
- const js=load('property.js'),vercel=JSON.parse(load('vercel.json'));
+ const js=load('property.js'),vercel=JSON.parse(load('../vercel.json'));
  assert.match(js,/api\('listings\/\?'/);
  assert.match(js,/window\.L\.marker/);
  assert.match(js,/\/property\/map/);
