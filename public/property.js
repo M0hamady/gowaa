@@ -6,7 +6,7 @@ import {mountMobileAppNavigation} from './mobile-app-shell.js';
 const API='https://gowwa-backend.vercel.app/api/v1/realestate_finishing/property-ads/';
 const $=id=>document.getElementById(id);
 const view=resolvePropertyView(location.pathname);
-const state={kind:new URLSearchParams(location.search).get('kind')||'rental',zone:'',building:'',buildingNumber:'',apartment_number:'',floor:'',owner_name:'',owner_phone:'',area_m2:'',price_egp:'',finishing:'full',furnished:false,electricity_meter:false,water_meter:false,gas_meter:false,features:'',coupon:''};
+const state={kind:new URLSearchParams(location.search).get('kind')||'rental',zone:'',building:'',buildingNumber:'',apartment_number:'',floor:'',owner_name:'',owner_phone:'',area_m2:'',price_egp:'',finishing:'full',furnished:false,electricity_meter:false,water_meter:false,gas_meter:false,features:'',coupon:'',owner_declaration:false};
 const files={unit:[],view:[],entrance:[]};
 const steps=[
  {key:'kind',title:'هتعلن عن شقتك إزاي؟'},
@@ -105,6 +105,7 @@ function render(){
  });
  const field=$('property-input');if(field)field.addEventListener('input',()=>state[field.name]=field.value);
  const textarea=$('property-features');if(textarea)textarea.addEventListener('input',()=>state.features=textarea.value);
+ const declaration=$('property-declaration');if(declaration)declaration.addEventListener('change',()=>state.owner_declaration=declaration.checked);
  for(const input of $('property-step-body').querySelectorAll('[data-meter]'))input.addEventListener('change',()=>state[input.dataset.meter]=input.checked);
  const fileInput=$('property-photos');if(fileInput)fileInput.addEventListener('change',()=>{
   const selected=[...fileInput.files],limit=key==='unit'?10:1;
@@ -151,7 +152,7 @@ async function createAndUpload(){
  $('property-next').textContent='جاري تجهيز الطلب…';
  try{
   const data={...state,zone:Number(state.zone),building:Number(state.building),floor:state.floor===''?null:Number(state.floor),
-    owner_declaration:true, coupon:state.coupon.trim()};
+    owner_declaration:state.owner_declaration, coupon:state.coupon.trim()};
   delete data.buildingNumber;
   if(!token){
    const created=await api('requests/',{method:'POST',body:data});
