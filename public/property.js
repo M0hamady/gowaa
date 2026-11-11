@@ -1,6 +1,7 @@
 // Guest-first property requests. Server owns prices, coupons, building matches,
 // upload limits, approval and SMS delivery states. No frontend admin controls.
 import {money,esc,propertyKindLabel,resolvePropertyView,validateStep} from './property-core.js';
+import {mountMobileAppNavigation} from './mobile-app-shell.js';
 
 const API='https://gowwa-backend.vercel.app/api/v1/realestate_finishing/property-ads/';
 const $=id=>document.getElementById(id);
@@ -273,6 +274,7 @@ function renderListing(row){
  value.textContent=format(row.price_egp);
  text.append(title,extra,value);card.append(text);return card;
 }
+mountMobileAppNavigation();
 if(view==='track')showTrack();
 else if(view==='map')initMap().catch(e=>{$('property-map-results').textContent=e.message;});
 else initApply();
