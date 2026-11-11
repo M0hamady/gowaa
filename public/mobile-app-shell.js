@@ -10,11 +10,20 @@ export const APP_TABS=Object.freeze([
  {id:'mine',label:'نشاطي',symbol:'user',href:'/market?view=mine'}
 ]);
 
-const path=(p)=>p==='/'||p==='/index.html'?'home':p==='/market'||p==='/market.html'?'market':p==='/places'||p==='/places.html'?'places':p==='/buses'||p==='/buses.html'?'buses':null;
+const path=p=>{
+ if(p==='/'||p==='/index.html')return 'home';
+ if(p==='/market'||p==='/market.html'||/^\/market\/category\/[a-z-]+\/?$/.test(p))return 'market';
+ if(p==='/places'||p==='/places.html')return 'places';
+ if(p==='/buses'||p==='/buses.html')return 'buses';
+ if(/^\/place\/[A-Za-z0-9_-]+(?:\.html)?\/?$/.test(p))return 'place';
+ if(/^\/(?:menu|item|seller|catalog)\/[A-Za-z0-9_-]+(?:\.html)?\/?$/.test(p))return 'product';
+ return null;
+};
 export function activeAppTab({pathname='/',search='',hash='',homeMode=false,activeView=''}={}){
  const page=path(pathname);
  if(page==='home')return homeMode&&!hash?'home':['trip','bus','places'].includes(hash.replace(/^#/,''))?'routes':homeMode?'home':'routes';
- if(page==='places')return 'services';
+ if(page==='places'||page==='place')return 'services';
+ if(page==='product')return 'market';
  if(page==='buses')return 'routes';
  if(page==='market'){
   const selected=activeView||new URLSearchParams(search).get('view')||'browse';
