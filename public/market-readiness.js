@@ -61,7 +61,7 @@ export function recommendationKey(record,{kind='provider',facts,...signals}={}){
 }
 
 export function compareRecommendations(a,b){
- return b.badgeTier-a.badgeTier||b.readiness.level-a.readiness.level||b.priority-a.priority||b.popularity-a.popularity||collator.compare(a.title,b.title)||(a.id<b.id?-1:a.id>b.id?1:0);
+ return b.readiness.level-a.readiness.level||b.badgeTier-a.badgeTier||b.priority-a.priority||b.popularity-a.popularity||collator.compare(a.title,b.title)||(a.id<b.id?-1:a.id>b.id?1:0);
 }
 
 export function sortProviders(providers,{signals=()=>({})}={}){
