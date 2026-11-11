@@ -1,7 +1,7 @@
 // Public link-preview data for pages that sit behind member sign-in.
 // Only what is already public in the directory (name, category, short description,
 // share card). Never phones, addresses beyond the area, or anything private.
-import {readFile} from 'node:fs/promises';
+import {readFile,access} from 'node:fs/promises';
 import {LOGO_PATH} from '../public/place-logo.js';
 
 const ORIGIN='https://jowwa-kayan.vercel.app';
@@ -19,7 +19,14 @@ async function liveOverride(id,env=process.env){
   if(!r.ok)return null;const row=(await r.json())[0];return row&&!row.archived&&row.data&&typeof row.data==='object'?row.data:null;}catch{return null;}
 }
 export const ownerCard=(id,data)=>typeof data?.logoCard==='string'&&LOGO_PATH.test(data.logoCard)?'/api/image?type=place&v=card&id='+encodeURIComponent(id)+'&c='+encodeURIComponent(data.logoCard.split('/').pop().replace(/\..+$/,'')):null;
-const placeCard=p=>safeImage(p?.image)?.startsWith('/social/')?p.image:'/social/'+p.id+'.png';
+// A public link must never return a missing OG image. For recently imported
+// directory entries without a dedicated share card, use the existing 1200x630
+// generic places card until a verified individual image is published.
+async function placeCard(p){
+ const desired=safeImage(p?.image)?.startsWith('/social/')?p.image:'/social/'+p.id+'.png';
+ try{await access(process.cwd()+'/public'+desired);return desired;}
+ catch{return '/social/places.png';}
+}
 
 export async function shareMeta(path){
  const base={title:'جوه | كيان سيتي',description:'دليل كيان سيتي: خريطة، باصات، أماكن وخدمات وسوق أهل كيان.',image:'/social/places.png',card:true,url:ORIGIN+path};
@@ -29,7 +36,7 @@ export async function shareMeta(path){
    const id=decodeURIComponent(m[1]),live=await liveOverride(id);
    const p={...((await json('places.json'))||[]).find(x=>x.id===id),...(live||{})};
    if(!p.name)return base;
-   return {...base,title:`${p.name} — ${p.category||'كيان سيتي'} | جوه`,description:clip(p.description||`تعرف على ${p.name} في كيان سيتي.`,180),image:ownerCard(id,live)||placeCard({...p,id})};
+   return {...base,title:`${p.name} — ${p.category||'كيان سيتي'} | جوه`,description:clip(p.description||`تعرف على ${p.name} في كيان سيتي.`,180),image:ownerCard(id,live)||await placeCard({...p,id})};
   }
   if((m=path.match(/^\/menu\/([a-z0-9-]{1,140})$/))){
    const items=(await json('market-directory.json'))?.items||[];const v=items.find(x=>x.id===m[1]);
@@ -37,7 +44,7 @@ export async function shareMeta(path){
    const p=((await json('places.json'))||[]).find(x=>x.id===v.placeId);
    const price=typeof v.price==='number'?` — ${new Intl.NumberFormat('ar-EG').format(v.price)} جنيه`:'';
    const photo=v.imageKind==='product_photo'?safeImage(v.imageUrl):null;
-   return {...base,title:`${v.title}${price} | ${v.sellerName}`,description:clip(v.description||`${v.title} من ${v.sellerName} في كيان سيتي.`,180),image:photo||(p?placeCard(p):'/social/market.png'),card:!photo};
+   return {...base,title:`${v.title}${price} | ${v.sellerName}`,description:clip(v.description||`${v.title} من ${v.sellerName} في كيان سيتي.`,180),image:photo||(p?await placeCard(p):'/social/market.png'),card:!photo};
   }
   if((m=path.match(/^\/guide\/(.{1,80})$/)))return {...base,title:`${clip(decodeURIComponent(m[1]),60)} في كيان سيتي | جوه`,description:'أماكن وخدمات كيان سيتي مع التواصل ومصدر المعلومة.'};
   if(path==='/places')return {...base,title:'دليل أماكن وخدمات كيان سيتي | جوه'};

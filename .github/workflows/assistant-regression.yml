@@ -10,6 +10,13 @@ on:
       - 'public/welcome.css'
       - 'src/server-assistant.mjs'
       - 'tests/assistant.test.mjs'
+      - 'tests/assistant-*.test.mjs'
+      - 'src/server-assistant-*.mjs'
+      - 'api/assistant.mjs'
+      - 'public/data/rail-network.json'
+      - 'public/data/enr-stations.json'
+      - 'public/data/transit.json'
+      - 'public/data/transport-hubs.json'
       - 'tests/neighborhood-service-additions.test.mjs'
       - '.github/workflows/assistant-regression.yml'
 permissions:
