@@ -1,66 +1,383 @@
 {
- "version":2,"outputDirectory":"public","cleanUrls":true,
- "headers":[
-  {"source":"/(.*)","headers":[{"key":"X-Content-Type-Options","value":"nosniff"},{"key":"Referrer-Policy","value":"strict-origin-when-cross-origin"}]},
-  {"source":"/(work|operations)(\\.html)?","headers":[{"key":"X-Robots-Tag","value":"noindex, nofollow"},{"key":"Cache-Control","value":"no-store"}]},
-  {"source":"/(.*)","headers":[{"key":"Permissions-Policy","value":"camera=(), microphone=(), geolocation=(self), screen-wake-lock=(self)"},{"key":"X-Frame-Options","value":"DENY"}]},
-  {"source":"/order","headers":[{"key":"Cache-Control","value":"private, no-store"},{"key":"X-Robots-Tag","value":"noindex, nofollow"},{"key":"Referrer-Policy","value":"no-referrer"}]},
-  {"source":"/order.html","headers":[{"key":"Cache-Control","value":"private, no-store"},{"key":"X-Robots-Tag","value":"noindex, nofollow"},{"key":"Referrer-Policy","value":"no-referrer"}]},
-  {"source":"/receipt","headers":[{"key":"Cache-Control","value":"private, no-store"},{"key":"X-Robots-Tag","value":"noindex, nofollow"},{"key":"Referrer-Policy","value":"no-referrer"}]},
-  {"source":"/track(\\.html)?","headers":[{"key":"Cache-Control","value":"private, no-store"},{"key":"X-Robots-Tag","value":"noindex, nofollow"},{"key":"Referrer-Policy","value":"no-referrer"}]},
-  {"source":"/receipt.html","headers":[{"key":"Cache-Control","value":"private, no-store"},{"key":"X-Robots-Tag","value":"noindex, nofollow"},{"key":"Referrer-Policy","value":"no-referrer"}]}
- ],
- "buildCommand":"node scripts/build-live.mjs","installCommand":"npm ci",
- "redirects":[
-  {"source":"/market.html","destination":"/market","permanent":true},
-  {"source":"/market","has":[{"type":"query","key":"book","value":"(?<provider>[a-z0-9-]{3,100})"}],"destination":"/place/:provider?book=1","permanent":false},
-  {"source":"/market","has":[{"type":"query","key":"menu","value":"(?<product>[a-zA-Z0-9_-]{1,100})"}],"destination":"/menu/:product","permanent":false}
- ],
- "rewrites":[
-  {"source":"/market","has":[{"type":"query","key":"printOrder"}],"destination":"/api/page?type=printing"},
-  {"source":"/market","has":[{"type":"query","key":"printProvider"}],"destination":"/api/page?type=printing"},
-  {"source":"/market","has":[{"type":"query","key":"printProduct"}],"destination":"/api/page?type=printing"},
-  {"source":"/market","has":[{"type":"query","key":"view","value":"printing"}],"destination":"/api/page?type=printing"},
-  {"source":"/market","destination":"/market-shell"},
-  {"source":"/api/printing","destination":"/api/service-claims?__serviceRoute=printing"},
-  {"source":"/api/member","destination":"/api/service-claims?__serviceRoute=member"},
-  {"source":"/api/provider-catalog","destination":"/api/service-claims?__serviceRoute=provider-catalog"},
-  {"source":"/api/provider-requests","destination":"/api/service-claims?__serviceRoute=provider-requests"},
-  {"source":"/api/provider-alerts","destination":"/api/service-claims?__serviceRoute=provider-alerts"},
-  {"source":"/api/shop-checkout","destination":"/api/service-claims?__serviceRoute=shop-checkout"},
-  {"source":"/api/provider-admin","destination":"/api/service-claims?__serviceRoute=provider-admin"},
-  {"source":"/api/seller-orders","destination":"/api/service-claims?__serviceRoute=orders"},
-  {"source":"/api/order-track","destination":"/api/service-claims?__serviceRoute=tracking"},
-  {"source":"/api/operations","destination":"/api/service-claims?__serviceRoute=operations"},
-  {"source":"/api/admin-sms","destination":"/api/service-claims?__serviceRoute=admin-sms"},
-  {"source":"/api/public-places","destination":"/api/service-claims?__serviceRoute=public-places"},
-  {"source":"/api/bookings","destination":"/api/service-claims?__serviceRoute=bookings"},
-  {"source":"/api/assistant-journeys","destination":"/api/service-claims?__serviceRoute=assistant-journeys"},
-  {"source":"/api/assistant-requests","destination":"/api/service-claims?__serviceRoute=assistant-requests"},
-  {"source":"/market/category/:category","destination":"/market-shell"},
-  {"source":"/seller/:id","destination":"/api/page?type=seller&id=:id"},
-  {"source":"/item/:id","destination":"/api/page?type=item&id=:id"},
-  {"source":"/sitemap.xml","destination":"/api/sitemap"},
-  {"source":"/catalog/:id","destination":"/api/page?type=catalog&id=:id"},
-  {"source":"/place/:id","destination":"/api/place?id=:id"},
-  {"source":"/places","destination":"/api/place"},
-  {"source":"/guide/:category","destination":"/api/place?category=:category"},
-  {"source":"/buses","destination":"/api/bus"},
-  {"source":"/bus/:id","destination":"/api/bus?id=:id"},
-  {"source":"/menu/:id","destination":"/api/menu?id=:id"}
- ],
- "functions":{
-  "api/page.mjs":{"includeFiles":"public/market.html"},
-  "api/place.mjs":{"includeFiles":"public/data/{places,business-hours}.json"},
-  "api/bus.mjs":{"includeFiles":"public/data/transit.json"},
-  "api/assistant.mjs":{"includeFiles":"public/data/{map,places,transit,market-directory,transport-hubs,rail-network,enr-stations,transport-map,intercity-coaches,eastdelta-reference}.json","maxDuration":30},
-  "api/notifications.mjs":{"maxDuration":120},
-  "api/rounds.mjs":{"maxDuration":30},
-  "api/sms-hook.mjs":{"maxDuration":10},
-  "api/menu.mjs":{"includeFiles":"public/data/{places,market-directory}.json"},
-  "api/sitemap.mjs":{"includeFiles":"public/data/{places,market-directory}.json"},
-  "api/notifications-daily.mjs":{"maxDuration":60},
-  "api/service-claims.mjs":{"includeFiles":"public/data/{places,market-directory,transit,map,transport-hubs}.json","maxDuration":300}
- },
- "crons":[{"path":"/api/notifications-daily","schedule":"5 22 * * *"}]
+  "version": 2,
+  "outputDirectory": "public",
+  "cleanUrls": true,
+  "headers": [
+    {
+      "source": "/property/track",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "private, no-store"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "no-referrer"
+        },
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        }
+      ]
+    },
+    {
+      "source": "/(work|operations)(\\.html)?",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=(self), screen-wake-lock=(self)"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        }
+      ]
+    },
+    {
+      "source": "/order",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "private, no-store"
+        },
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "no-referrer"
+        }
+      ]
+    },
+    {
+      "source": "/order.html",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "private, no-store"
+        },
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "no-referrer"
+        }
+      ]
+    },
+    {
+      "source": "/receipt",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "private, no-store"
+        },
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "no-referrer"
+        }
+      ]
+    },
+    {
+      "source": "/track(\\.html)?",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "private, no-store"
+        },
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "no-referrer"
+        }
+      ]
+    },
+    {
+      "source": "/receipt.html",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "private, no-store"
+        },
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "no-referrer"
+        }
+      ]
+    }
+  ],
+  "buildCommand": "node scripts/build-live.mjs",
+  "installCommand": "npm ci",
+  "redirects": [
+    {
+      "source": "/market.html",
+      "destination": "/market",
+      "permanent": true
+    },
+    {
+      "source": "/market",
+      "has": [
+        {
+          "type": "query",
+          "key": "book",
+          "value": "(?<provider>[a-z0-9-]{3,100})"
+        }
+      ],
+      "destination": "/place/:provider?book=1",
+      "permanent": false
+    },
+    {
+      "source": "/market",
+      "has": [
+        {
+          "type": "query",
+          "key": "menu",
+          "value": "(?<product>[a-zA-Z0-9_-]{1,100})"
+        }
+      ],
+      "destination": "/menu/:product",
+      "permanent": false
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/property/map",
+      "destination": "/property"
+    },
+    {
+      "source": "/property/track",
+      "destination": "/property"
+    },
+    {
+      "source": "/market",
+      "has": [
+        {
+          "type": "query",
+          "key": "printOrder"
+        }
+      ],
+      "destination": "/api/page?type=printing"
+    },
+    {
+      "source": "/market",
+      "has": [
+        {
+          "type": "query",
+          "key": "printProvider"
+        }
+      ],
+      "destination": "/api/page?type=printing"
+    },
+    {
+      "source": "/market",
+      "has": [
+        {
+          "type": "query",
+          "key": "printProduct"
+        }
+      ],
+      "destination": "/api/page?type=printing"
+    },
+    {
+      "source": "/market",
+      "has": [
+        {
+          "type": "query",
+          "key": "view",
+          "value": "printing"
+        }
+      ],
+      "destination": "/api/page?type=printing"
+    },
+    {
+      "source": "/market",
+      "destination": "/market-shell"
+    },
+    {
+      "source": "/api/printing",
+      "destination": "/api/service-claims?__serviceRoute=printing"
+    },
+    {
+      "source": "/api/member",
+      "destination": "/api/service-claims?__serviceRoute=member"
+    },
+    {
+      "source": "/api/provider-catalog",
+      "destination": "/api/service-claims?__serviceRoute=provider-catalog"
+    },
+    {
+      "source": "/api/provider-requests",
+      "destination": "/api/service-claims?__serviceRoute=provider-requests"
+    },
+    {
+      "source": "/api/provider-alerts",
+      "destination": "/api/service-claims?__serviceRoute=provider-alerts"
+    },
+    {
+      "source": "/api/shop-checkout",
+      "destination": "/api/service-claims?__serviceRoute=shop-checkout"
+    },
+    {
+      "source": "/api/provider-admin",
+      "destination": "/api/service-claims?__serviceRoute=provider-admin"
+    },
+    {
+      "source": "/api/seller-orders",
+      "destination": "/api/service-claims?__serviceRoute=orders"
+    },
+    {
+      "source": "/api/order-track",
+      "destination": "/api/service-claims?__serviceRoute=tracking"
+    },
+    {
+      "source": "/api/operations",
+      "destination": "/api/service-claims?__serviceRoute=operations"
+    },
+    {
+      "source": "/api/admin-sms",
+      "destination": "/api/service-claims?__serviceRoute=admin-sms"
+    },
+    {
+      "source": "/api/public-places",
+      "destination": "/api/service-claims?__serviceRoute=public-places"
+    },
+    {
+      "source": "/api/bookings",
+      "destination": "/api/service-claims?__serviceRoute=bookings"
+    },
+    {
+      "source": "/api/assistant-journeys",
+      "destination": "/api/service-claims?__serviceRoute=assistant-journeys"
+    },
+    {
+      "source": "/api/assistant-requests",
+      "destination": "/api/service-claims?__serviceRoute=assistant-requests"
+    },
+    {
+      "source": "/market/category/:category",
+      "destination": "/market-shell"
+    },
+    {
+      "source": "/seller/:id",
+      "destination": "/api/page?type=seller&id=:id"
+    },
+    {
+      "source": "/item/:id",
+      "destination": "/api/page?type=item&id=:id"
+    },
+    {
+      "source": "/sitemap.xml",
+      "destination": "/api/sitemap"
+    },
+    {
+      "source": "/catalog/:id",
+      "destination": "/api/page?type=catalog&id=:id"
+    },
+    {
+      "source": "/place/:id",
+      "destination": "/api/place?id=:id"
+    },
+    {
+      "source": "/places",
+      "destination": "/api/place"
+    },
+    {
+      "source": "/guide/:category",
+      "destination": "/api/place?category=:category"
+    },
+    {
+      "source": "/buses",
+      "destination": "/api/bus"
+    },
+    {
+      "source": "/bus/:id",
+      "destination": "/api/bus?id=:id"
+    },
+    {
+      "source": "/menu/:id",
+      "destination": "/api/menu?id=:id"
+    }
+  ],
+  "functions": {
+    "api/page.mjs": {
+      "includeFiles": "public/market.html"
+    },
+    "api/place.mjs": {
+      "includeFiles": "public/data/{places,business-hours}.json"
+    },
+    "api/bus.mjs": {
+      "includeFiles": "public/data/transit.json"
+    },
+    "api/assistant.mjs": {
+      "includeFiles": "public/data/{map,places,transit,market-directory,transport-hubs,rail-network,enr-stations,transport-map,intercity-coaches,eastdelta-reference}.json",
+      "maxDuration": 30
+    },
+    "api/notifications.mjs": {
+      "maxDuration": 120
+    },
+    "api/rounds.mjs": {
+      "maxDuration": 30
+    },
+    "api/sms-hook.mjs": {
+      "maxDuration": 10
+    },
+    "api/menu.mjs": {
+      "includeFiles": "public/data/{places,market-directory}.json"
+    },
+    "api/sitemap.mjs": {
+      "includeFiles": "public/data/{places,market-directory}.json"
+    },
+    "api/notifications-daily.mjs": {
+      "maxDuration": 60
+    },
+    "api/service-claims.mjs": {
+      "includeFiles": "public/data/{places,market-directory,transit,map,transport-hubs}.json",
+      "maxDuration": 300
+    }
+  },
+  "crons": [
+    {
+      "path": "/api/notifications-daily",
+      "schedule": "5 22 * * *"
+    }
+  ]
 }

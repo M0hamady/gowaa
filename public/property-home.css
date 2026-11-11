@@ -1,0 +1,17 @@
+/* Property promo sits BELOW the original Jowwa home assistant, never replaces it. */
+.home-property-promo{margin:30px auto 10px;max-width:850px}
+.home-property-header{text-align:right;margin:0 4px 15px}
+.home-property-header>span{font-size:11px;font-weight:850;color:#638b4b}
+.home-property-header h2{font-size:clamp(19px,2.6vw,25px);line-height:1.6;margin:5px 0 3px;color:#174c3b}
+.home-property-header p{font-size:12px;line-height:1.9;color:#647a67;margin:0}
+.home-property-slider{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:thin;padding:5px 3px 16px;overscroll-behavior-inline:contain}
+.home-property-card{scroll-snap-align:start;flex:0 0 min(330px,83vw);display:flex;align-items:flex-start;gap:13px;border-radius:21px;border:1px solid #dfe8d9;background:linear-gradient(155deg,#f8fcf4,#e5f2e0);padding:19px 16px;min-height:152px;text-decoration:none;box-shadow:0 9px 24px #1943260e;color:#1c4533}
+.home-property-card.sale{background:linear-gradient(155deg,#fffaf0,#f5ead2);border-color:#ecdfc5}
+.home-property-card.transfer{background:linear-gradient(155deg,#f9f7ff,#e6e8f8);border-color:#dde0eb}
+.home-property-card.explore{background:linear-gradient(155deg,#edf7f8,#d8ebeb);border-color:#d0e5e4}
+.home-property-emoji{display:grid;place-items:center;min-width:51px;height:51px;border-radius:16px;background:#fff9;font-size:27px}
+.home-property-text{display:grid;gap:7px}.home-property-text strong{font-size:16px;line-height:1.65}.home-property-text small{font-size:11px;line-height:1.85;color:#64776a}.home-property-text b{font-size:11px;color:#326d4b}
+.home-property-card:hover{border-color:#8ab47f;transform:translateY(-2px)}
+.home-property-card:focus-visible{outline:3px solid #598f3c;outline-offset:2px}
+@media(max-width:720px){body.home-mode .home-property-promo{margin-top:21px}.home-property-header h2{font-size:19px}.home-property-card{flex-basis:min(285px,81vw);min-height:148px}.home-property-text strong{font-size:14px}.home-property-text small{font-size:10px}}
+@media(prefers-reduced-motion:reduce){.home-property-slider{scroll-behavior:auto}.home-property-card{transform:none!important}}
