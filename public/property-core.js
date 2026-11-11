@@ -18,6 +18,7 @@ export function validateStep(key,state,files){
  if(key==='area_m2'&&!(Number(state.area_m2)>=1&&Number.isFinite(Number(state.area_m2))))return 'اكتب مساحة الشقة بالأمتار.';
  if(key==='price_egp'&&!(Number(state.price_egp)>=0&&String(state.price_egp||'').trim()!==''&&Number.isFinite(Number(state.price_egp))))return 'اكتب سعر مطلوب صحيح.';
  if(key==='finishing'&&!['core','semi','full','furnished'].includes(state.finishing))return 'اختار مستوى التشطيب.';
+ if(key==='review'&&state.owner_declaration!==true)return 'لازم توافق صراحة على إقرار صحة البيانات وحق عرض الشقة قبل التقديم.';
  if(['unit','view','entrance'].includes(key)){
   const pictures=files[key]||[];
   if(pictures.length<1||pictures.length>(key==='unit'?10:1))return 'ارفع '+(key==='unit'?'من صورة إلى 10 صور للشقة':key==='view'?'صورة واحدة للإطلالة':'صورة واحدة لمدخل العمارة')+'.';
