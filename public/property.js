@@ -68,8 +68,8 @@ function render(){
  error('');
  let html='';
  if(key==='kind')html=choose([
-  {value:'rental',label:'إيجار',icon:'🔑',note:'ابدأ من 50 جنيه'},
-  {value:'sale',label:'بيع',icon:'🏡',note:'ابدأ من 200 جنيه'},
+  {value:'rental',label:'إيجار',icon:'🔑',note:'الرسوم بتظهر حسب آخر تسعير'},
+  {value:'sale',label:'بيع',icon:'🏡',note:'رسوم قابلة للتعديل من الإدارة'},
   {value:'transfer',label:'تنازل',icon:'📃',note:'رسوم تحددها الإدارة'},
  ],key)+'<p class="step-note">الرسوم المعروضة مبدئية؛ السعر النهائي حسب تسعير الإدارة والكوبون على السيرفر.</p>';
  else if(key==='zone')html=zones.length?choose(zones.map(z=>({value:String(z.id),label:z.name,icon:'📍'})),key):'<p class="step-note">بنحمّل المدن والمناطق من الخريطة…</p>';
