@@ -63,8 +63,8 @@ test('public pages never render administrator or private tracking token in SEO',
 test('admin UI and moderation code are excluded from the public marketplace entrypoint',()=>{
  const source=load('../src/market.js');
  assert.doesNotMatch(source,/createManagement|loadPlatformRoles|showAdmin|showModeration/);
- assert.doesNotMatch(source,/\$('admin-tab'\)/);
- assert.doesNotMatch(source,/\$('admin-view'\)/);
+ assert.ok(!source.includes("$('admin-tab')"));
+ assert.ok(!source.includes("$('admin-view')"));
  assert.doesNotMatch(source,/jowwa_is_admin/);
  assert.doesNotMatch(source,/jowwa_admin_edit_seller/);
 });
@@ -86,8 +86,9 @@ test('approved-property map uses a separate URL and only public listing endpoint
  assert.match(js,/api\('listings\/\?'/);
  assert.match(js,/window\.L\.marker/);
  assert.match(js,/\/property\/map/);
- for(const path of ['/property','/property/map','/property/track'])
-  assert.equal(vercel.rewrites.find(x=>x.source===path)?.destination,'/property.html');
+ assert.equal(vercel.rewrites.find(x=>x.source==='/property'),undefined);
+ for(const path of ['/property/map','/property/track'])
+  assert.equal(vercel.rewrites.find(x=>x.source===path)?.destination,'/property');
  assert.ok(vercel.headers.find(x=>x.source==='/property/track')?.headers.some(x=>x.key==='Referrer-Policy'&&x.value==='no-referrer'));
 });
 
