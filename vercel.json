@@ -180,16 +180,12 @@
   ],
   "rewrites": [
     {
-      "source": "/property",
-      "destination": "/property.html"
-    },
-    {
       "source": "/property/map",
-      "destination": "/property.html"
+      "destination": "/property"
     },
     {
       "source": "/property/track",
-      "destination": "/property.html"
+      "destination": "/property"
     },
     {
       "source": "/market",
