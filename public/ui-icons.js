@@ -1,4 +1,5 @@
 const paths={
+ home:'<path d="m3 10 9-7 9 7v11H3Zm6 11v-8h6v8"/>',
  file:'<path d="M14 2H5v20h14V7l-5-5Zm0 0v5h5M8 12h8M8 16h8"/>',
  printer:'<path d="M6 8V3h12v5M6 17H3V8h18v9h-3M6 14h12v8H6Z"/><path d="M17 11h1"/>',
  gift:'<path d="M3 8h18v5H3Zm2 5v9h14v-9M12 8v14"/><path d="M12 8C2 8 5 0 9 3l3 5Zm0 0c10 0 7-8 3-5l-3 5Z"/>',
