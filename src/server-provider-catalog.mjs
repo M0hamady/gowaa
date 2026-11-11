@@ -125,9 +125,11 @@ export async function conciergeOrder(body,state,member,{env=process.env,serviceF
  if(body.fulfillment==='delivery'&&address.length<5)fail('اكتب عنوان التوصيل بالتفصيل.');if(address.length>300||note.length>500)fail('النص أطول من المسموح.');
  const provider=state.providers.find(p=>p.id===body.providerId&&!p._archived);if(!provider)fail('المكان لم يعد متاحًا.',404);
  const deliveryArea=String(c.deliveryArea||'').trim();
+ // Accept the common colloquial spelling without altering the stored official delivery-fee rows.
+ const normalizedArea=deliveryArea.replace(/^كارما\s*([12١٢])$/,(_,n)=>'كرمة '+({'١':'1','٢':'2'}[n]||n));
  let deliveryFee=0;
  if(provider.id==='directory-sucreve'&&body.fulfillment==='delivery'){
-  const selected=Array.isArray(provider.deliveryFees)?provider.deliveryFees.find(x=>x.area===deliveryArea&&Number.isFinite(x.fee)&&x.currency==='EGP'):null;
+  const selected=Array.isArray(provider.deliveryFees)?provider.deliveryFees.find(x=>x.area===normalizedArea&&Number.isFinite(x.fee)&&x.currency==='EGP'):null;
   if(!selected)fail('اختار منطقة التوصيل: كارما 1 أو كارما 2.');
   deliveryFee=selected.fee;
  }
