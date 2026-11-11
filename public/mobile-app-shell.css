@@ -20,6 +20,8 @@
  body.navigating{padding-bottom:0!important}
  body.navigating main{height:100dvh!important}
  body:has(dialog[open]) .jowwa-app-dock{visibility:hidden;pointer-events:none}
+ /* On mobile, let the on-screen keyboard own the bottom edge while typing. */
+ body:has(input:focus) .jowwa-app-dock,body:has(textarea:focus) .jowwa-app-dock,body:has([contenteditable="true"]:focus) .jowwa-app-dock{visibility:hidden;pointer-events:none}
 }
 @media(max-width:350px){.jowwa-app-dock>a{font-size:9px;gap:4px}.jowwa-app-dock>a .ui-icon{width:21px;height:21px}}
 @media(prefers-reduced-motion:reduce){.jowwa-app-dock>a .ui-icon{transition:none}.jowwa-app-dock>a.active .ui-icon{transform:none}}
