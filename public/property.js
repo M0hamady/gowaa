@@ -28,7 +28,7 @@ const steps=[
  {key:'coupon',title:'معاك كوبون خصم؟'},
  {key:'review',title:'راجع طلبك قبل الإرسال'},
 ];
-let step=0,zones=[],price=null,token='',uploadDone=new Set(),requestId=null,submitting=false;
+let step=0,zones=[],price=null,token='',uploadDone=new Set(),requestId=null,submitting=false,smsDelivery='unknown';
 const num=v=>Number(v||0);
 const qs=s=>document.querySelector(s);
 const format=v=>money(v)+' ج.م';
@@ -192,6 +192,7 @@ async function finalize(){
  try{
   const result=await api('requests/'+encodeURIComponent(token)+'/submit/',{method:'POST',body:fee>0?{payment_method:$('property-payment-method').value,transfer_reference:ref}:{}});
   if(result.status!=='pending')throw Error('لا يمكن تأكيد حالة الطلب. استخدم رابط المتابعة.');
+  smsDelivery=result.sms_status||'unknown';
   history.replaceState(null,'','/property/track?token='+encodeURIComponent(token));
   showTrack();
  }catch(e){error(e.message,'property-payment-error');}
