@@ -32,6 +32,10 @@ test('real marketplace sections correctly select services, products and merchant
  assert.equal(activeAppTab({pathname:'/market.html',search:'?view=mine'}),'mine');
  assert.equal(activeAppTab({pathname:'/market',search:'?view=services',activeView:'browse'}),'market');
  assert.equal(activeAppTab({pathname:'/places'}),'services');
+ assert.equal(activeAppTab({pathname:'/place/directory-sucreve'}),'services');
+ assert.equal(activeAppTab({pathname:'/place/directory-koshary.html'}),'services');
+ assert.equal(activeAppTab({pathname:'/menu/directory-menu-sucreve-classic-hazelnut'}),'market');
+ assert.equal(activeAppTab({pathname:'/market/category/food'}),'market');
  assert.equal(activeAppTab({pathname:'/buses'}),'routes');
  assert.equal(activeAppTab({pathname:'/order/123'}),null);
  assert.equal(activeAppTab({pathname:'/work'}),null);
