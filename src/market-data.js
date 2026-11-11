@@ -1,6 +1,5 @@
 import {loadContent} from '../public/content.js';
 import {confirmedProviderPlaces} from '../public/market-discovery.js';
-import {kayanMeatsCatalog} from '../public/kayan-meats.js';
 
 // All market tabs share these public snapshots. A page or filter change never
 // starts a new download; a later tab visit refreshes after the short cache TTL.
@@ -34,15 +33,7 @@ export function createMarketData({db=null,fetcher=fetch,mergeContent=null,now=()
   }else rows=await loadContent('places',[...merged.values()]);
   return rows.filter(place=>place?.id&&!place.archived).map(place=>({...place,url:'/place/'+encodeURIComponent(place.id)}));
  });
- const loadCatalog=()=>cached('catalog',async()=>{
-  const payload=await json('/data/market-directory.json');
-  const items=Array.isArray(payload)?payload:payload?.items;
-  if(!Array.isArray(items))throw Error('market catalog');
-  const seen=new Set(items.map(x=>x.id));
-  // Compatible with a Vercel build and local static preview; no duplicate records.
-  const missing=kayanMeatsCatalog.filter(x=>!seen.has(x.id));
-  return Array.isArray(payload)?[...items,...missing]:{...payload,items:[...items,...missing]};
- });
+ const loadCatalog=()=>cached('catalog',()=>json('/data/market-directory.json'));
  const loadServices=()=>cached('services',async()=>{
   if(!db)return [];
   // Services have their own query: a large product catalog must not push older
