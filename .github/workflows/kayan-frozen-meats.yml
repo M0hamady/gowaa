@@ -1,0 +1,45 @@
+name: Kayan frozen meats release verification
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'public/kayan-meats.js'
+      - 'public/directory-updates.js'
+      - 'public/provider-catalog-core.js'
+      - 'src/place-render.mjs'
+      - 'scripts/directory-pages.mjs'
+      - 'scripts/verify-kayan-order-live.mjs'
+      - 'scripts/build-live.mjs'
+      - 'supabase/048_kayan_frozen_meats.sql'
+      - 'tests/kayan-frozen-meats.test.mjs'
+      - '.github/workflows/kayan-frozen-meats.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  safe-catalog-and-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Verify source syntax
+        run: |
+          node --check public/kayan-meats.js
+          node --check src/place-render.mjs
+          node --check scripts/verify-kayan-order-live.mjs
+          node --check scripts/build-live.mjs
+      - name: Prepare safe production output
+        run: npm run pretest
+      - name: Test catalog, store, routing and safe price quotes
+        run: node --test tests/kayan-frozen-meats.test.mjs tests/market-data.test.mjs tests/neighborhood-service-additions.test.mjs tests/directory-live-routing.test.mjs tests/provider-catalog.test.mjs
+      - name: Build existing customer application
+        run: npm run build
+      - name: Verify generated data contains both original offer posters
+        run: |
+          node -e "const c=require('./public/data/market-directory.json');let x=c.items.filter(i=>i.placeId==='directory-kayan-frozen-meats'); if(x.length!==31||!x.some(i=>i.price===450)||!x.some(i=>i.price===480))process.exit(1);"
+          node --check public/market.js
