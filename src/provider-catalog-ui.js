@@ -14,9 +14,9 @@ export function mountProviderCatalog(){
  let generation=0,loadPromise=null,loadController=null,dialog=null,dialogMode='basket',quoteSeq=0,quoteController=null,qtyTimer=null,lastQuote=null;
  let checkoutDraft={},conciergeRequest=null,sending=false,searchFrame=null,addSequence=0;
  // Only these reviewed, priced offer IDs can open a prefilled checkout.
- const offerSlug=id==='directory-kayan-frozen-meats'?new URLSearchParams(location.search).get('offer'):null;
- const offerId=({ 'offer-450':'directory-menu-kayan-meats-offer-450','offer-480':'directory-menu-kayan-meats-offer-480' })[offerSlug]||'';
- let openedOffer=false;
+ const initialOffer=id==='directory-kayan-frozen-meats'?new URLSearchParams(location.search).get('offer'):null;
+ const offerIds={ 'offer-450':'directory-menu-kayan-meats-offer-450','offer-480':'directory-menu-kayan-meats-offer-480' };
+ let autoOfferHandled=false,openingOffer=false;
  const signature=()=>JSON.stringify(lines);
  const estimate=()=>basketTotal(products,lines,id);
  const canConcierge=quote=>concierge&&quote?.items?.length>0&&!quote.items.some(line=>line.missing||line.unavailable);
@@ -46,7 +46,7 @@ export function mountProviderCatalog(){
     const data=await memberFetch('/api/provider-catalog?provider='+encodeURIComponent(id),{signal:loadController.signal});
     if(current!==generation||memberState().user?.id!==activeUser)return false;
     provider=data.provider;products=data.products||[];orderGate=data.orderGate||{};concierge=data.concierge===true&&!orderGate.canOrder;
-    readBasket();catalogStatus='ready';render();if(offerId&&!openedOffer)void openDirectOffer();return true;
+    readBasket();catalogStatus='ready';render();if(initialOffer&&!autoOfferHandled&&offerIds[initialOffer]){autoOfferHandled=true;queueMicrotask(()=>void openDirectOffer(initialOffer));}return true;
    }catch(error){
     if(current!==generation||error.name==='AbortError')return false;
     catalogStatus='error';host.innerHTML='<h2>منتجات المكان</h2><p role="alert">'+esc(error.message)+'</p><button type="button" data-catalog-retry>حاول تاني</button>';host.querySelector('button').onclick=load;announceBasket();return false;
@@ -65,20 +65,35 @@ export function mountProviderCatalog(){
   const selected=new URLSearchParams(location.search).get('product');
   if(selected){const card=[...host.querySelectorAll('[data-product-id]')].find(node=>node.dataset.productId===selected);card?.scrollIntoView({block:'center'});}
  }
- async function openDirectOffer(){
-  if(openedOffer||!offerId||!provider)return;
-  openedOffer=true;
-  const selected=products.find(product=>product.id===offerId&&Number.isFinite(catalogPrice(product))&&product.stockStatus!=='unavailable'&&product.quantity!==0);
-  if(!selected){showMessage('العرض غير متاح للطلب حاليًا. راجع الأصناف أو اسأل المحل.');return;}
-  if(!await ensureBookingMember({kind:'basket'}))return;
-  if(!concierge){showMessage('العرض محتاج تأكيد من المحل؛ استقبال الطلبات مش متاح الآن.');return;}
+ async function openDirectOffer(slug){
+  if(openingOffer||!offerIds[slug])return;
+  openingOffer=true;
   try{
-   // A direct offer is a single offer line, never the individual items charged again.
+   // The poster remains on this page. Only the checkout dialog opens.
+   if(!await ensureBookingMember({kind:'basket'}))return;
+   if(!provider||!products.length||memberState().user?.id!==activeUser){
+    if(!await load())throw Error('تعذر تحميل عروض المحل حاليًا.');
+   }
+   const selected=products.find(product=>product.id===offerIds[slug]&&Number.isFinite(catalogPrice(product))&&product.stockStatus!=='unavailable'&&product.quantity!==0);
+   if(!selected)throw Error('العرض غير متاح للطلب حاليًا. راجع الأصناف أو اسأل المحل.');
+   if(!concierge)throw Error('استقبال الطلبات متوقف مؤقتًا. جرّب مرة تانية أو تواصل مع إدارة جوه.');
+   // A deal is a single price-verified catalog item, not separate charged components.
    lines=addProviderLine([],selected,1);persist();
-   const url=new URL(location.href);url.searchParams.delete('offer');history.replaceState(history.state,'',url.pathname+url.search+url.hash);
+   const url=new URL(location.href);url.searchParams.delete('offer');
+   if(url.href!==location.href)history.replaceState(history.state,'',url.pathname+url.search+url.hash);
    await showBasket();
    if(dialog?.open&&dialogMode==='basket'&&currentQuote()&&canConcierge(currentQuote()))await showCheckout();
   }catch(error){showMessage(error.message||'راجع العرض وحاول تاني.');}
+  finally{openingOffer=false;}
+ }
+ if(id==='directory-kayan-frozen-meats'){
+  document.addEventListener('click',event=>{
+   const link=event.target instanceof Element?event.target.closest('[data-kayan-offer]'):null;
+   if(!link)return;
+   // Prevent the browser navigation/reload before the async login or quote flow.
+   event.preventDefault();
+   void openDirectOffer(link.dataset.kayanOffer);
+  },true);
  }
  function draw(){
   const selected=products.filter(product=>(!filter||product.section===filter)&&(!search||(product.title+' '+(product.description||'')).includes(search))).slice(0,120);
@@ -275,5 +290,5 @@ export function mountProviderCatalog(){
  });
  window.addEventListener('pagehide',cancelQuote);
  if(memberState().member)void load();
- else if(offerId)void ensureMember({kind:'basket'});
+ else if(initialOffer&&offerIds[initialOffer])void ensureMember({kind:'basket'});
 }
