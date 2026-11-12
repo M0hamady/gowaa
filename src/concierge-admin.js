@@ -33,7 +33,7 @@ export function createConciergeAdmin({db,toast,modal,close}){
    ${o.statusNote?`<p class="data-note">${esc(o.statusNote)}</p>`:''}
    <div class="card-actions">${(NEXT[o.state]||[]).map(s=>`<button class="${['cancelled','rejected'].includes(s)?'text-button':'secondary'}" data-c-move="${o.id}|${o.version}|${s}">${STATE[s]}</button>`).join('')}<a class="text-button" href="/track#c-${o.trackingToken}" target="_blank" rel="noopener">صفحة التتبع</a></div></article>`).join(''):'<p class="empty-card">مفيش طلبات هنا.</p>'}`;
   body.querySelectorAll('[data-c-filter]').forEach(b=>b.onclick=()=>{filter=b.dataset.cFilter;orders(body);});
-  body.querySelectorAll('[data-c-move]').forEach(b=>b.onclick=async()=>{const [id,v,s]=b.dataset.cMove.split('|');let note='';if(['cancelled','rejected'].includes(s)){note=prompt('السبب؟ (هيظهر للعميل)');if(!note)return;}b.disabled=true;
+  body.querySelectorAll('[data-c-move]').forEach(b=>b.onclick=async()=>{const [id,v,s]=b.dataset.cMove.split('|');let note='';const target=d.orders.find(o=>o.id===id);if(s==='confirmed'&&target?.directoryId==='directory-kayan-frozen-meats'&&target.fulfillment==='delivery'){const time=prompt('ميعاد توصيل العرض المؤكد (YYYY-MM-DD HH:mm بتوقيت القاهرة):');if(!time)return;if(!/^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}$/.test(time)){toast('اكتب الموعد بالشكل 2026-11-12 17:30');return;}note='ميعاد التوصيل: '+time+' بتوقيت القاهرة';}if(['cancelled','rejected'].includes(s)){note=prompt('السبب؟ (هيظهر للعميل)');if(!note)return;}b.disabled=true;
    try{await call('jowwa_admin_concierge_update',{p_order:id,expected_version:Number(v),p_state:s,p_note:note});toast('اتحدّث: '+STATE[s]);orders(body);}catch(e){b.disabled=false;toast(friendly(e));}});
  }
 
