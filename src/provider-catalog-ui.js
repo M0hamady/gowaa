@@ -13,6 +13,10 @@ export function mountProviderCatalog(){
  let activeUser=null,products=[],provider=null,lines=[],orderGate={},concierge=false,host=null,filter='',search='',catalogStatus='idle';
  let generation=0,loadPromise=null,loadController=null,dialog=null,dialogMode='basket',quoteSeq=0,quoteController=null,qtyTimer=null,lastQuote=null;
  let checkoutDraft={},conciergeRequest=null,sending=false,searchFrame=null,addSequence=0;
+ // Only these reviewed, priced offer IDs can open a prefilled checkout.
+ const offerSlug=id==='directory-kayan-frozen-meats'?new URLSearchParams(location.search).get('offer'):null;
+ const offerId=({ 'offer-450':'directory-menu-kayan-meats-offer-450','offer-480':'directory-menu-kayan-meats-offer-480' })[offerSlug]||'';
+ let openedOffer=false;
  const signature=()=>JSON.stringify(lines);
  const estimate=()=>basketTotal(products,lines,id);
  const canConcierge=quote=>concierge&&quote?.items?.length>0&&!quote.items.some(line=>line.missing||line.unavailable);
@@ -42,7 +46,7 @@ export function mountProviderCatalog(){
     const data=await memberFetch('/api/provider-catalog?provider='+encodeURIComponent(id),{signal:loadController.signal});
     if(current!==generation||memberState().user?.id!==activeUser)return false;
     provider=data.provider;products=data.products||[];orderGate=data.orderGate||{};concierge=data.concierge===true&&!orderGate.canOrder;
-    readBasket();catalogStatus='ready';render();return true;
+    readBasket();catalogStatus='ready';render();if(offerId&&!openedOffer)void openDirectOffer();return true;
    }catch(error){
     if(current!==generation||error.name==='AbortError')return false;
     catalogStatus='error';host.innerHTML='<h2>منتجات المكان</h2><p role="alert">'+esc(error.message)+'</p><button type="button" data-catalog-retry>حاول تاني</button>';host.querySelector('button').onclick=load;announceBasket();return false;
@@ -60,6 +64,21 @@ export function mountProviderCatalog(){
   host.querySelector('#provider-basket-open').onclick=showBasket;draw();announceBasket();
   const selected=new URLSearchParams(location.search).get('product');
   if(selected){const card=[...host.querySelectorAll('[data-product-id]')].find(node=>node.dataset.productId===selected);card?.scrollIntoView({block:'center'});}
+ }
+ async function openDirectOffer(){
+  if(openedOffer||!offerId||!provider)return;
+  openedOffer=true;
+  const selected=products.find(product=>product.id===offerId&&Number.isFinite(catalogPrice(product))&&product.stockStatus!=='unavailable'&&product.quantity!==0);
+  if(!selected){showMessage('العرض غير متاح للطلب حاليًا. راجع الأصناف أو اسأل المحل.');return;}
+  if(!await ensureBookingMember({kind:'basket'}))return;
+  if(!concierge){showMessage('العرض محتاج تأكيد من المحل؛ استقبال الطلبات مش متاح الآن.');return;}
+  try{
+   // A direct offer is a single offer line, never the individual items charged again.
+   lines=addProviderLine([],selected,1);persist();
+   const url=new URL(location.href);url.searchParams.delete('offer');history.replaceState(history.state,'',url.pathname+url.search+url.hash);
+   await showBasket();
+   if(dialog?.open&&dialogMode==='basket'&&currentQuote()&&canConcierge(currentQuote()))await showCheckout();
+  }catch(error){showMessage(error.message||'راجع العرض وحاول تاني.');}
  }
  function draw(){
   const selected=products.filter(product=>(!filter||product.section===filter)&&(!search||(product.title+' '+(product.description||'')).includes(search))).slice(0,120);
@@ -256,4 +275,5 @@ export function mountProviderCatalog(){
  });
  window.addEventListener('pagehide',cancelQuote);
  if(memberState().member)void load();
+ else if(offerId)void ensureMember({kind:'basket'});
 }
