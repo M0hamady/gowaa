@@ -16,12 +16,12 @@ export const kayanMeatsProvider = {
   "serviceArea": "كيان سيتي والمناطق التي يؤكد المحل إمكانية توصيلها",
   "district": "other",
   "phone": "01557887258",
-  "description": "لحوم بلدي وكفتة وكبدة ومحاشي ومجمدات وفراخ فريش وحمام سوبر جامبو. عروض حصرية لعملاء جوه: عرض 450 جنيه وعرض 480 جنيه. اطلب من خلال جوه وتابع الطلب؛ توفر الأصناف وموعد ورسوم التوصيل تتأكد قبل التنفيذ.",
-  "visitorNote": "متاح توصيل بالتنسيق؛ رسوم التوصيل منفصلة عن قيمة المنتجات وتتحدد بعد معرفة العنوان وموافقة العميل.",
+  "description": "لحوم بلدي ومجمدات ومنتجات مُجهزة للطهي فقط (غير مطهية): كفتة، برجر، كبدة، طرب، سجق، حواوشي ومحاشي وفراخ. العروض الحصرية على جوه بسعر 450 جنيه و480 جنيه. الطلب والتوصيل من خلال جوه، ورسوم التوصيل تتحدد منفصلة بعد تأكيد العنوان.",
+  "visitorNote": "المحل أونلاين فقط، والمنتجات غير مطهية. التوصيل بالتنسيق، ورسومه منفصلة عن قيمة المنتجات وتُحدد حسب العنوان وبموافقة العميل.",
   "status": "أسعار ومنيو وعرضان حصريان قدمتهما إدارة جوه بتاريخ 12 نوفمبر 2026. التوصيل متاح ويحتاج تأكيد المنطقة والرسوم. لا يوجد عنوان استقبال مؤكد.",
   "menuStatus": "owner_provided",
   "menuCheckedAt": "2026-11-12",
-  "menuNote": "الأسعار للكيلو ما لم يذكر غير ذلك. الفرخة البلدي الكاملة أكثر من 2 كيلو سعرها حسب الوزن. العروض حصرية عبر جوه، والاختيارات تكتب في ملاحظات الطلب.",
+  "menuNote": "جميع الأصناف نيّة وغير مطبوخة، وبعضها متبل أو جاهز للطهي فقط. الصور توضيحية لشكل المنتج قبل التسوية. الأسعار للكيلو ما لم يذكر غير ذلك. الفرخة البلدي الكاملة أكثر من 2 كيلو سعرها حسب الوزن. العروض حصرية عبر جوه والاختيارات في ملاحظات الطلب.",
   "sourceType": "admin_supplied_business_menu",
   "sourceTitle": "منيو وصورتا عرض مجمدات الكيان المقدمتان من إدارة جوه",
   "checkedAt": "2026-11-12",
@@ -30,10 +30,12 @@ export const kayanMeatsProvider = {
     "https://d2ol7oe51mr4n9.cloudfront.net/user_2xVtjU8YUaitd0fAODLUsGslhuX/cb624ae4-1267-4fc8-bcb4-ed61894ac011.jpg"
   ],
   "cardPhotos": [
-    "https://d2ol7oe51mr4n9.cloudfront.net/user_2xVtjU8YUaitd0fAODLUsGslhuX/a9d56b13-b40e-4ebf-9a4f-26f28d028ab5.jpg",
-    "https://d2ol7oe51mr4n9.cloudfront.net/user_2xVtjU8YUaitd0fAODLUsGslhuX/cb624ae4-1267-4fc8-bcb4-ed61894ac011.jpg"
+    "https://d2ol7oe51mr4n9.cloudfront.net/user_2xVtjU8YUaitd0fAODLUsGslhuX/4bddf3dd-3355-4abd-a795-7cd75f5e469e.png",
+    "https://d2ol7oe51mr4n9.cloudfront.net/user_2xVtjU8YUaitd0fAODLUsGslhuX/ad6a1bce-317b-4054-8d25-ab68b6bd5020.png",
+    "https://d2ol7oe51mr4n9.cloudfront.net/user_2xVtjU8YUaitd0fAODLUsGslhuX/91d67c39-0436-47d6-a922-f170008e85c0.png",
+    "https://d2ol7oe51mr4n9.cloudfront.net/user_2xVtjU8YUaitd0fAODLUsGslhuX/9814c89e-da47-49bd-abb6-2222b0af91fd.png"
   ],
-  "image": "https://d2ol7oe51mr4n9.cloudfront.net/user_2xVtjU8YUaitd0fAODLUsGslhuX/a9d56b13-b40e-4ebf-9a4f-26f28d028ab5.jpg",
+  "image": "https://d2ol7oe51mr4n9.cloudfront.net/user_2xVtjU8YUaitd0fAODLUsGslhuX/4bddf3dd-3355-4abd-a795-7cd75f5e469e.png",
   "businessOwnerVerified": false,
   "keywords": [
     "لحوم",
@@ -47,10 +49,14 @@ export const kayanMeatsProvider = {
     "كبدة",
     "محاشي",
     "عرض 450",
-    "عرض 480"
+    "عرض 480",
+    "لحوم نيّة",
+    "لحوم غير مطهية",
+    "منتجات جاهزة للطهي"
   ],
   "featured": true,
-  "priority": 2
+  "priority": 2,
+  "logo": "https://d2ol7oe51mr4n9.cloudfront.net/user_2xVtjU8YUaitd0fAODLUsGslhuX/4bddf3dd-3355-4abd-a795-7cd75f5e469e.png"
 };
 export const kayanMeatsCatalog = [
   {
@@ -58,7 +64,7 @@ export const kayanMeatsCatalog = [
     "placeId": "directory-kayan-frozen-meats",
     "sellerName": "الكيان — لحوم ومجمدات",
     "title": "عرض الكيان الحصري — لحوم ومجمدات",
-    "description": "نصف كيلو لحمة مفرومة + نصف كيلو كبدة (شرائح أو إسكندراني) + نصف كيلو طرب بمنديل ضاني. حدّد نوع الكبدة في ملاحظات الطلب.",
+    "description": "نصف كيلو لحمة مفرومة + نصف كيلو كبدة (شرائح أو إسكندراني) + نصف كيلو طرب بمنديل ضاني. حدّد نوع الكبدة في ملاحظات الطلب. المنتج غير مطهو ويحتاج تجهيزًا وطهيًا كاملًا قبل الأكل.",
     "category": "grocery",
     "section": "عروض حصرية",
     "kind": "menu_item",
@@ -76,14 +82,14 @@ export const kayanMeatsCatalog = [
     "sourceTitle": "منيو وصورتا عرض مجمدات الكيان المقدمتان من إدارة جوه",
     "checkedAt": "2026-11-12",
     "sourceType": "admin_supplied_business_menu",
-    "notes": "السعر النهائي والتوفر والتوصيل يتأكدوا مع المحل قبل التنفيذ. الطلب والمتابعة من خلال جوه."
+    "notes": "جميع الأصناف نيّة وغير مطهية؛ الصور توضيحية. السعر والتوفر يتأكدان قبل التنفيذ، ورسوم التوصيل منفصلة. الطلب والمتابعة من خلال جوه."
   },
   {
     "id": "directory-menu-kayan-meats-offer-480",
     "placeId": "directory-kayan-frozen-meats",
     "sellerName": "الكيان — لحوم ومجمدات",
     "title": "عرض مجمدات الكيان — وجبة التوفير",
-    "description": "نصف كيلو ممبار صوابع جاهز للقلي + نصف كيلو من اختيارك (استربس أو بانيه أو شاورما فراخ فريش بلدي) + جوز حمام سوبر جامبو. حدّد اختيار الفراخ في ملاحظات الطلب.",
+    "description": "نصف كيلو ممبار صوابع جاهز للقلي + نصف كيلو من اختيارك (استربس أو بانيه أو شاورما فراخ فريش بلدي) + جوز حمام سوبر جامبو. حدّد اختيار الفراخ في ملاحظات الطلب. المنتج غير مطهو ويحتاج تجهيزًا وطهيًا كاملًا قبل الأكل.",
     "category": "grocery",
     "section": "عروض حصرية",
     "kind": "menu_item",
@@ -101,14 +107,14 @@ export const kayanMeatsCatalog = [
     "sourceTitle": "منيو وصورتا عرض مجمدات الكيان المقدمتان من إدارة جوه",
     "checkedAt": "2026-11-12",
     "sourceType": "admin_supplied_business_menu",
-    "notes": "السعر النهائي والتوفر والتوصيل يتأكدوا مع المحل قبل التنفيذ. الطلب والمتابعة من خلال جوه."
+    "notes": "جميع الأصناف نيّة وغير مطهية؛ الصور توضيحية. السعر والتوفر يتأكدان قبل التنفيذ، ورسوم التوصيل منفصلة. الطلب والمتابعة من خلال جوه."
   },
   {
     "id": "directory-menu-kayan-meats-minced-beef",
     "placeId": "directory-kayan-frozen-meats",
     "sellerName": "الكيان — لحوم ومجمدات",
     "title": "لحمة مفرومة",
-    "description": "سعر الكيلو.",
+    "description": "سعر الكيلو. المنتج غير مطهو ويحتاج تجهيزًا وطهيًا كاملًا قبل الأكل.",
     "category": "grocery",
     "section": "اللحوم",
     "kind": "menu_item",
@@ -118,22 +124,22 @@ export const kayanMeatsCatalog = [
     "unit": "كيلو",
     "pricePublishedAt": "2026-11-12",
     "stockStatus": "unknown",
-    "imageUrl": null,
-    "imageAlt": null,
-    "imageKind": null,
+    "imageUrl": "https://d2ol7oe51mr4n9.cloudfront.net/user_2xVtjU8YUaitd0fAODLUsGslhuX/9814c89e-da47-49bd-abb6-2222b0af91fd.png",
+    "imageAlt": "صورة توضيحية لـ لحمة مفرومة في الحالة النيئة قبل الطهي",
+    "imageKind": "illustrative",
     "menuUrl": "https://d2ol7oe51mr4n9.cloudfront.net/user_2xVtjU8YUaitd0fAODLUsGslhuX/a9d56b13-b40e-4ebf-9a4f-26f28d028ab5.jpg",
     "sourceUrl": "https://d2ol7oe51mr4n9.cloudfront.net/user_2xVtjU8YUaitd0fAODLUsGslhuX/a9d56b13-b40e-4ebf-9a4f-26f28d028ab5.jpg",
     "sourceTitle": "منيو وصورتا عرض مجمدات الكيان المقدمتان من إدارة جوه",
     "checkedAt": "2026-11-12",
     "sourceType": "admin_supplied_business_menu",
-    "notes": "السعر النهائي والتوفر والتوصيل يتأكدوا مع المحل قبل التنفيذ. الطلب والمتابعة من خلال جوه."
+    "notes": "جميع الأصناف نيّة وغير مطهية؛ الصور توضيحية. السعر والتوفر يتأكدان قبل التنفيذ، ورسوم التوصيل منفصلة. الطلب والمتابعة من خلال جوه."
   },
   {
     "id": "directory-menu-kayan-meats-kofta-beef",
     "placeId": "directory-kayan-frozen-meats",
     "sellerName": "الكيان — لحوم ومجمدات",
     "title": "كفتة كندوز",
-    "description": "سعر الكيلو.",
+    "description": "سعر الكيلو. المنتج غير مطهو ويحتاج تجهيزًا وطهيًا كاملًا قبل الأكل.",
     "category": "grocery",
     "section": "اللحوم",
     "kind": "menu_item",
@@ -143,22 +149,22 @@ export const kayanMeatsCatalog = [
     "unit": "كيلو",
     "pricePublishedAt": "2026-11-12",
     "stockStatus": "unknown",
-    "imageUrl": null,
-    "imageAlt": null,
-    "imageKind": null,
+    "imageUrl": "https://d2ol7oe51mr4n9.cloudfront.net/user_2xVtjU8YUaitd0fAODLUsGslhuX/ad6a1bce-317b-4054-8d25-ab68b6bd5020.png",
+    "imageAlt": "صورة توضيحية لـ كفتة كندوز في الحالة النيئة قبل الطهي",
+    "imageKind": "illustrative",
     "menuUrl": "https://d2ol7oe51mr4n9.cloudfront.net/user_2xVtjU8YUaitd0fAODLUsGslhuX/a9d56b13-b40e-4ebf-9a4f-26f28d028ab5.jpg",
     "sourceUrl": "https://d2ol7oe51mr4n9.cloudfront.net/user_2xVtjU8YUaitd0fAODLUsGslhuX/a9d56b13-b40e-4ebf-9a4f-26f28d028ab5.jpg",
     "sourceTitle": "منيو وصورتا عرض مجمدات الكيان المقدمتان من إدارة جوه",
     "checkedAt": "2026-11-12",
     "sourceType": "admin_supplied_business_menu",
-    "notes": "السعر النهائي والتوفر والتوصيل يتأكدوا مع المحل قبل التنفيذ. الطلب والمتابعة من خلال جوه."
+    "notes": "جميع الأصناف نيّة وغير مطهية؛ الصور توضيحية. السعر والتوفر يتأكدان قبل التنفيذ، ورسوم التوصيل منفصلة. الطلب والمتابعة من خلال جوه."
   },
   {
     "id": "directory-menu-kayan-meats-kofta-lamb",
     "placeId": "directory-kayan-frozen-meats",
     "sellerName": "الكيان — لحوم ومجمدات",
     "title": "كفتة ضاني",
-    "description": "سعر الكيلو.",
+    "description": "سعر الكيلو. المنتج غير مطهو ويحتاج تجهيزًا وطهيًا كاملًا قبل الأكل.",
     "category": "grocery",
     "section": "اللحوم",
     "kind": "menu_item",
@@ -168,22 +174,22 @@ export const kayanMeatsCatalog = [
     "unit": "كيلو",
     "pricePublishedAt": "2026-11-12",
     "stockStatus": "unknown",
-    "imageUrl": null,
-    "imageAlt": null,
-    "imageKind": null,
+    "imageUrl": "https://d2ol7oe51mr4n9.cloudfront.net/user_2xVtjU8YUaitd0fAODLUsGslhuX/4808df4a-e318-45c8-b3f4-28e6b6df98c1.png",
+    "imageAlt": "صورة توضيحية لـ كفتة ضاني في الحالة النيئة قبل الطهي",
+    "imageKind": "illustrative",
     "menuUrl": "https://d2ol7oe51mr4n9.cloudfront.net/user_2xVtjU8YUaitd0fAODLUsGslhuX/a9d56b13-b40e-4ebf-9a4f-26f28d028ab5.jpg",
     "sourceUrl": "https://d2ol7oe51mr4n9.cloudfront.net/user_2xVtjU8YUaitd0fAODLUsGslhuX/a9d56b13-b40e-4ebf-9a4f-26f28d028ab5.jpg",
     "sourceTitle": "منيو وصورتا عرض مجمدات الكيان المقدمتان من إدارة جوه",
     "checkedAt": "2026-11-12",
     "sourceType": "admin_supplied_business_menu",
-    "notes": "السعر النهائي والتوفر والتوصيل يتأكدوا مع المحل قبل التنفيذ. الطلب والمتابعة من خلال جوه."
+    "notes": "جميع الأصناف نيّة وغير مطهية؛ الصور توضيحية. السعر والتوفر يتأكدان قبل التنفيذ، ورسوم التوصيل منفصلة. الطلب والمتابعة من خلال جوه."
   },
   {
     "id": "directory-menu-kayan-meats-kofta-rice",
     "placeId": "directory-kayan-frozen-meats",
     "sellerName": "الكيان — لحوم ومجمدات",
     "title": "كفتة رز",
-    "description": "سعر الكيلو.",
+    "description": "سعر الكيلو. المنتج غير مطهو ويحتاج تجهيزًا وطهيًا كاملًا قبل الأكل.",
     "category": "grocery",
     "section": "اللحوم",
     "kind": "menu_item",
@@ -193,22 +199,22 @@ export const kayanMeatsCatalog = [
     "unit": "كيلو",
     "pricePublishedAt": "2026-11-12",
     "stockStatus": "unknown",
-    "imageUrl": null,
-    "imageAlt": null,
-    "imageKind": null,
+    "imageUrl": "https://d2ol7oe51mr4n9.cloudfront.net/user_2xVtjU8YUaitd0fAODLUsGslhuX/be5ead8e-1c70-4503-a082-17f6c6edb04f.png",
+    "imageAlt": "صورة توضيحية لـ كفتة رز في الحالة النيئة قبل الطهي",
+    "imageKind": "illustrative",
     "menuUrl": "https://d2ol7oe51mr4n9.cloudfront.net/user_2xVtjU8YUaitd0fAODLUsGslhuX/a9d56b13-b40e-4ebf-9a4f-26f28d028ab5.jpg",
     "sourceUrl": "https://d2ol7oe51mr4n9.cloudfront.net/user_2xVtjU8YUaitd0fAODLUsGslhuX/a9d56b13-b40e-4ebf-9a4f-26f28d028ab5.jpg",
     "sourceTitle": "منيو وصورتا عرض مجمدات الكيان المقدمتان من إدارة جوه",
     "checkedAt": "2026-11-12",
     "sourceType": "admin_supplied_business_menu",
-    "notes": "السعر النهائي والتوفر والتوصيل يتأكدوا مع المحل قبل التنفيذ. الطلب والمتابعة من خلال جوه."
+    "notes": "جميع الأصناف نيّة وغير مطهية؛ الصور توضيحية. السعر والتوفر يتأكدان قبل التنفيذ، ورسوم التوصيل منفصلة. الطلب والمتابعة من خلال جوه."
   },
   {
     "id": "directory-menu-kayan-meats-tarb-lamb",
     "placeId": "directory-kayan-frozen-meats",
     "sellerName": "الكيان — لحوم ومجمدات",
     "title": "طرب بمنديل ضاني",
-    "description": "سعر الكيلو.",
+    "description": "سعر الكيلو. المنتج غير مطهو ويحتاج تجهيزًا وطهيًا كاملًا قبل الأكل.",
     "category": "grocery",
     "section": "اللحوم",
     "kind": "menu_item",
@@ -218,22 +224,22 @@ export const kayanMeatsCatalog = [
     "unit": "كيلو",
     "pricePublishedAt": "2026-11-12",
     "stockStatus": "unknown",
-    "imageUrl": null,
-    "imageAlt": null,
-    "imageKind": null,
+    "imageUrl": "https://d2ol7oe51mr4n9.cloudfront.net/user_2xVtjU8YUaitd0fAODLUsGslhuX/f86e2df7-b258-4a09-87ee-695d75f64c00.png",
+    "imageAlt": "صورة توضيحية لـ طرب بمنديل ضاني في الحالة النيئة قبل الطهي",
+    "imageKind": "illustrative",
     "menuUrl": "https://d2ol7oe51mr4n9.cloudfront.net/user_2xVtjU8YUaitd0fAODLUsGslhuX/a9d56b13-b40e-4ebf-9a4f-26f28d028ab5.jpg",
     "sourceUrl": "https://d2ol7oe51mr4n9.cloudfront.net/user_2xVtjU8YUaitd0fAODLUsGslhuX/a9d56b13-b40e-4ebf-9a4f-26f28d028ab5.jpg",
     "sourceTitle": "منيو وصورتا عرض مجمدات الكيان المقدمتان من إدارة جوه",
     "checkedAt": "2026-11-12",
     "sourceType": "admin_supplied_business_menu",
-    "notes": "السعر النهائي والتوفر والتوصيل يتأكدوا مع المحل قبل التنفيذ. الطلب والمتابعة من خلال جوه."
+    "notes": "جميع الأصناف نيّة وغير مطهية؛ الصور توضيحية. السعر والتوفر يتأكدان قبل التنفيذ، ورسوم التوصيل منفصلة. الطلب والمتابعة من خلال جوه."
   },
   {
     "id": "directory-menu-kayan-meats-burger",
     "placeId": "directory-kayan-frozen-meats",
     "sellerName": "الكيان — لحوم ومجمدات",
     "title": "برجر",
-    "description": "سعر الكيلو.",
+    "description": "سعر الكيلو. المنتج غير مطهو ويحتاج تجهيزًا وطهيًا كاملًا قبل الأكل.",
     "category": "grocery",
     "section": "اللحوم",
     "kind": "menu_item",
@@ -243,22 +249,22 @@ export const kayanMeatsCatalog = [
     "unit": "كيلو",
     "pricePublishedAt": "2026-11-12",
     "stockStatus": "unknown",
-    "imageUrl": null,
-    "imageAlt": null,
-    "imageKind": null,
+    "imageUrl": "https://d2ol7oe51mr4n9.cloudfront.net/user_2xVtjU8YUaitd0fAODLUsGslhuX/91d67c39-0436-47d6-a922-f170008e85c0.png",
+    "imageAlt": "صورة توضيحية لـ برجر في الحالة النيئة قبل الطهي",
+    "imageKind": "illustrative",
     "menuUrl": "https://d2ol7oe51mr4n9.cloudfront.net/user_2xVtjU8YUaitd0fAODLUsGslhuX/a9d56b13-b40e-4ebf-9a4f-26f28d028ab5.jpg",
     "sourceUrl": "https://d2ol7oe51mr4n9.cloudfront.net/user_2xVtjU8YUaitd0fAODLUsGslhuX/a9d56b13-b40e-4ebf-9a4f-26f28d028ab5.jpg",
     "sourceTitle": "منيو وصورتا عرض مجمدات الكيان المقدمتان من إدارة جوه",
     "checkedAt": "2026-11-12",
     "sourceType": "admin_supplied_business_menu",
-    "notes": "السعر النهائي والتوفر والتوصيل يتأكدوا مع المحل قبل التنفيذ. الطلب والمتابعة من خلال جوه."
+    "notes": "جميع الأصناف نيّة وغير مطهية؛ الصور توضيحية. السعر والتوفر يتأكدان قبل التنفيذ، ورسوم التوصيل منفصلة. الطلب والمتابعة من خلال جوه."
   },
   {
     "id": "directory-menu-kayan-meats-liver-slices",
     "placeId": "directory-kayan-frozen-meats",
     "sellerName": "الكيان — لحوم ومجمدات",
     "title": "كبدة شرائح",
-    "description": "سعر الكيلو.",
+    "description": "سعر الكيلو. المنتج غير مطهو ويحتاج تجهيزًا وطهيًا كاملًا قبل الأكل.",
     "category": "grocery",
     "section": "الكبدة والسجق",
     "kind": "menu_item",
@@ -268,22 +274,22 @@ export const kayanMeatsCatalog = [
     "unit": "كيلو",
     "pricePublishedAt": "2026-11-12",
     "stockStatus": "unknown",
-    "imageUrl": null,
-    "imageAlt": null,
-    "imageKind": null,
+    "imageUrl": "https://d2ol7oe51mr4n9.cloudfront.net/user_2xVtjU8YUaitd0fAODLUsGslhuX/a4cc0b95-fef6-4eda-a061-e9672cbb1a0c.png",
+    "imageAlt": "صورة توضيحية لـ كبدة شرائح في الحالة النيئة قبل الطهي",
+    "imageKind": "illustrative",
     "menuUrl": "https://d2ol7oe51mr4n9.cloudfront.net/user_2xVtjU8YUaitd0fAODLUsGslhuX/a9d56b13-b40e-4ebf-9a4f-26f28d028ab5.jpg",
     "sourceUrl": "https://d2ol7oe51mr4n9.cloudfront.net/user_2xVtjU8YUaitd0fAODLUsGslhuX/a9d56b13-b40e-4ebf-9a4f-26f28d028ab5.jpg",
     "sourceTitle": "منيو وصورتا عرض مجمدات الكيان المقدمتان من إدارة جوه",
     "checkedAt": "2026-11-12",
     "sourceType": "admin_supplied_business_menu",
-    "notes": "السعر النهائي والتوفر والتوصيل يتأكدوا مع المحل قبل التنفيذ. الطلب والمتابعة من خلال جوه."
+    "notes": "جميع الأصناف نيّة وغير مطهية؛ الصور توضيحية. السعر والتوفر يتأكدان قبل التنفيذ، ورسوم التوصيل منفصلة. الطلب والمتابعة من خلال جوه."
   },
   {
     "id": "directory-menu-kayan-meats-liver-alex",
     "placeId": "directory-kayan-frozen-meats",
     "sellerName": "الكيان — لحوم ومجمدات",
     "title": "كبدة إسكندراني",
-    "description": "سعر الكيلو.",
+    "description": "سعر الكيلو. المنتج غير مطهو ويحتاج تجهيزًا وطهيًا كاملًا قبل الأكل.",
     "category": "grocery",
     "section": "الكبدة والسجق",
     "kind": "menu_item",
@@ -293,22 +299,22 @@ export const kayanMeatsCatalog = [
     "unit": "كيلو",
     "pricePublishedAt": "2026-11-12",
     "stockStatus": "unknown",
-    "imageUrl": null,
-    "imageAlt": null,
-    "imageKind": null,
+    "imageUrl": "https://d2ol7oe51mr4n9.cloudfront.net/user_2xVtjU8YUaitd0fAODLUsGslhuX/28b27ace-27b8-4995-91f0-85c8b7cbf777.png",
+    "imageAlt": "صورة توضيحية لـ كبدة إسكندراني في الحالة النيئة قبل الطهي",
+    "imageKind": "illustrative",
     "menuUrl": "https://d2ol7oe51mr4n9.cloudfront.net/user_2xVtjU8YUaitd0fAODLUsGslhuX/a9d56b13-b40e-4ebf-9a4f-26f28d028ab5.jpg",
     "sourceUrl": "https://d2ol7oe51mr4n9.cloudfront.net/user_2xVtjU8YUaitd0fAODLUsGslhuX/a9d56b13-b40e-4ebf-9a4f-26f28d028ab5.jpg",
     "sourceTitle": "منيو وصورتا عرض مجمدات الكيان المقدمتان من إدارة جوه",
     "checkedAt": "2026-11-12",
     "sourceType": "admin_supplied_business_menu",
-    "notes": "السعر النهائي والتوفر والتوصيل يتأكدوا مع المحل قبل التنفيذ. الطلب والمتابعة من خلال جوه."
+    "notes": "جميع الأصناف نيّة وغير مطهية؛ الصور توضيحية. السعر والتوفر يتأكدان قبل التنفيذ، ورسوم التوصيل منفصلة. الطلب والمتابعة من خلال جوه."
   },
   {
     "id": "directory-menu-kayan-meats-sausages",
     "placeId": "directory-kayan-frozen-meats",
     "sellerName": "الكيان — لحوم ومجمدات",
     "title": "سجق بلدي",
-    "description": "سعر الكيلو.",
+    "description": "سعر الكيلو. المنتج غير مطهو ويحتاج تجهيزًا وطهيًا كاملًا قبل الأكل.",
     "category": "grocery",
     "section": "الكبدة والسجق",
     "kind": "menu_item",
@@ -318,22 +324,22 @@ export const kayanMeatsCatalog = [
     "unit": "كيلو",
     "pricePublishedAt": "2026-11-12",
     "stockStatus": "unknown",
-    "imageUrl": null,
-    "imageAlt": null,
-    "imageKind": null,
+    "imageUrl": "https://d2ol7oe51mr4n9.cloudfront.net/user_2xVtjU8YUaitd0fAODLUsGslhuX/c08ca6ec-4c1c-4ce3-8f49-1fdd7d340aa4.png",
+    "imageAlt": "صورة توضيحية لـ سجق بلدي في الحالة النيئة قبل الطهي",
+    "imageKind": "illustrative",
     "menuUrl": "https://d2ol7oe51mr4n9.cloudfront.net/user_2xVtjU8YUaitd0fAODLUsGslhuX/a9d56b13-b40e-4ebf-9a4f-26f28d028ab5.jpg",
     "sourceUrl": "https://d2ol7oe51mr4n9.cloudfront.net/user_2xVtjU8YUaitd0fAODLUsGslhuX/a9d56b13-b40e-4ebf-9a4f-26f28d028ab5.jpg",
     "sourceTitle": "منيو وصورتا عرض مجمدات الكيان المقدمتان من إدارة جوه",
     "checkedAt": "2026-11-12",
     "sourceType": "admin_supplied_business_menu",
-    "notes": "السعر النهائي والتوفر والتوصيل يتأكدوا مع المحل قبل التنفيذ. الطلب والمتابعة من خلال جوه."
+    "notes": "جميع الأصناف نيّة وغير مطهية؛ الصور توضيحية. السعر والتوفر يتأكدان قبل التنفيذ، ورسوم التوصيل منفصلة. الطلب والمتابعة من خلال جوه."
   },
   {
     "id": "directory-menu-kayan-meats-hawawshi",
     "placeId": "directory-kayan-frozen-meats",
     "sellerName": "الكيان — لحوم ومجمدات",
     "title": "حواوشي متبل",
-    "description": "سعر الكيلو.",
+    "description": "سعر الكيلو. المنتج غير مطهو ويحتاج تجهيزًا وطهيًا كاملًا قبل الأكل.",
     "category": "grocery",
     "section": "اللحوم",
     "kind": "menu_item",
@@ -343,22 +349,22 @@ export const kayanMeatsCatalog = [
     "unit": "كيلو",
     "pricePublishedAt": "2026-11-12",
     "stockStatus": "unknown",
-    "imageUrl": null,
-    "imageAlt": null,
-    "imageKind": null,
+    "imageUrl": "https://d2ol7oe51mr4n9.cloudfront.net/user_2xVtjU8YUaitd0fAODLUsGslhuX/0d9f4b44-469d-42d3-a1d3-8861830c1e2c.png",
+    "imageAlt": "صورة توضيحية لـ حواوشي متبل في الحالة النيئة قبل الطهي",
+    "imageKind": "illustrative",
     "menuUrl": "https://d2ol7oe51mr4n9.cloudfront.net/user_2xVtjU8YUaitd0fAODLUsGslhuX/a9d56b13-b40e-4ebf-9a4f-26f28d028ab5.jpg",
     "sourceUrl": "https://d2ol7oe51mr4n9.cloudfront.net/user_2xVtjU8YUaitd0fAODLUsGslhuX/a9d56b13-b40e-4ebf-9a4f-26f28d028ab5.jpg",
     "sourceTitle": "منيو وصورتا عرض مجمدات الكيان المقدمتان من إدارة جوه",
     "checkedAt": "2026-11-12",
     "sourceType": "admin_supplied_business_menu",
-    "notes": "السعر النهائي والتوفر والتوصيل يتأكدوا مع المحل قبل التنفيذ. الطلب والمتابعة من خلال جوه."
+    "notes": "جميع الأصناف نيّة وغير مطهية؛ الصور توضيحية. السعر والتوفر يتأكدان قبل التنفيذ، ورسوم التوصيل منفصلة. الطلب والمتابعة من خلال جوه."
   },
   {
     "id": "directory-menu-kayan-meats-mixed-offal",
     "placeId": "directory-kayan-frozen-meats",
     "sellerName": "الكيان — لحوم ومجمدات",
     "title": "مشكل حلويات — كبدة وقلب وكلاوي ولية ضاني",
-    "description": "سعر الكيلو.",
+    "description": "سعر الكيلو. المنتج غير مطهو ويحتاج تجهيزًا وطهيًا كاملًا قبل الأكل.",
     "category": "grocery",
     "section": "الكبدة والسجق",
     "kind": "menu_item",
@@ -368,22 +374,22 @@ export const kayanMeatsCatalog = [
     "unit": "كيلو",
     "pricePublishedAt": "2026-11-12",
     "stockStatus": "unknown",
-    "imageUrl": null,
-    "imageAlt": null,
-    "imageKind": null,
+    "imageUrl": "https://d2ol7oe51mr4n9.cloudfront.net/user_2xVtjU8YUaitd0fAODLUsGslhuX/2a45f498-e8c5-443b-9e38-ab8ad9673c0d.png",
+    "imageAlt": "صورة توضيحية لـ مشكل حلويات — كبدة وقلب وكلاوي ولية ضاني في الحالة النيئة قبل الطهي",
+    "imageKind": "illustrative",
     "menuUrl": "https://d2ol7oe51mr4n9.cloudfront.net/user_2xVtjU8YUaitd0fAODLUsGslhuX/a9d56b13-b40e-4ebf-9a4f-26f28d028ab5.jpg",
     "sourceUrl": "https://d2ol7oe51mr4n9.cloudfront.net/user_2xVtjU8YUaitd0fAODLUsGslhuX/a9d56b13-b40e-4ebf-9a4f-26f28d028ab5.jpg",
     "sourceTitle": "منيو وصورتا عرض مجمدات الكيان المقدمتان من إدارة جوه",
     "checkedAt": "2026-11-12",
     "sourceType": "admin_supplied_business_menu",
-    "notes": "السعر النهائي والتوفر والتوصيل يتأكدوا مع المحل قبل التنفيذ. الطلب والمتابعة من خلال جوه."
+    "notes": "جميع الأصناف نيّة وغير مطهية؛ الصور توضيحية. السعر والتوفر يتأكدان قبل التنفيذ، ورسوم التوصيل منفصلة. الطلب والمتابعة من خلال جوه."
   },
   {
     "id": "directory-menu-kayan-meats-lamb-fat",
     "placeId": "directory-kayan-frozen-meats",
     "sellerName": "الكيان — لحوم ومجمدات",
     "title": "لية ضاني بلدي",
-    "description": "سعر الكيلو.",
+    "description": "سعر الكيلو. المنتج غير مطهو ويحتاج تجهيزًا وطهيًا كاملًا قبل الأكل.",
     "category": "grocery",
     "section": "اللحوم",
     "kind": "menu_item",
@@ -401,14 +407,14 @@ export const kayanMeatsCatalog = [
     "sourceTitle": "منيو وصورتا عرض مجمدات الكيان المقدمتان من إدارة جوه",
     "checkedAt": "2026-11-12",
     "sourceType": "admin_supplied_business_menu",
-    "notes": "السعر النهائي والتوفر والتوصيل يتأكدوا مع المحل قبل التنفيذ. الطلب والمتابعة من خلال جوه."
+    "notes": "جميع الأصناف نيّة وغير مطهية؛ الصور توضيحية. السعر والتوفر يتأكدان قبل التنفيذ، ورسوم التوصيل منفصلة. الطلب والمتابعة من خلال جوه."
   },
   {
     "id": "directory-menu-kayan-meats-mombar-clean",
     "placeId": "directory-kayan-frozen-meats",
     "sellerName": "الكيان — لحوم ومجمدات",
     "title": "ممبار متنضف جاهز للحشو — علبة ٣ متر",
-    "description": "السعر للعلبة بطول ٣ أمتار.",
+    "description": "السعر للعلبة بطول ٣ أمتار. المنتج غير مطهو ويحتاج تجهيزًا وطهيًا كاملًا قبل الأكل.",
     "category": "grocery",
     "section": "الممبار",
     "kind": "menu_item",
@@ -426,14 +432,14 @@ export const kayanMeatsCatalog = [
     "sourceTitle": "منيو وصورتا عرض مجمدات الكيان المقدمتان من إدارة جوه",
     "checkedAt": "2026-11-12",
     "sourceType": "admin_supplied_business_menu",
-    "notes": "السعر النهائي والتوفر والتوصيل يتأكدوا مع المحل قبل التنفيذ. الطلب والمتابعة من خلال جوه."
+    "notes": "جميع الأصناف نيّة وغير مطهية؛ الصور توضيحية. السعر والتوفر يتأكدان قبل التنفيذ، ورسوم التوصيل منفصلة. الطلب والمتابعة من خلال جوه."
   },
   {
     "id": "directory-menu-kayan-meats-sambusa-meat",
     "placeId": "directory-kayan-frozen-meats",
     "sellerName": "الكيان — لحوم ومجمدات",
     "title": "سمبوسة لحمة",
-    "description": "سعر الكيلو.",
+    "description": "سعر الكيلو. المنتج غير مطهو ويحتاج تجهيزًا وطهيًا كاملًا قبل الأكل.",
     "category": "grocery",
     "section": "المجمدات",
     "kind": "menu_item",
@@ -451,14 +457,14 @@ export const kayanMeatsCatalog = [
     "sourceTitle": "منيو وصورتا عرض مجمدات الكيان المقدمتان من إدارة جوه",
     "checkedAt": "2026-11-12",
     "sourceType": "admin_supplied_business_menu",
-    "notes": "السعر النهائي والتوفر والتوصيل يتأكدوا مع المحل قبل التنفيذ. الطلب والمتابعة من خلال جوه."
+    "notes": "جميع الأصناف نيّة وغير مطهية؛ الصور توضيحية. السعر والتوفر يتأكدان قبل التنفيذ، ورسوم التوصيل منفصلة. الطلب والمتابعة من خلال جوه."
   },
   {
     "id": "directory-menu-kayan-meats-sambusa-cheese",
     "placeId": "directory-kayan-frozen-meats",
     "sellerName": "الكيان — لحوم ومجمدات",
     "title": "سمبوسة جبنة",
-    "description": "سعر الكيلو.",
+    "description": "سعر الكيلو. المنتج غير مطهو ويحتاج تجهيزًا وطهيًا كاملًا قبل الأكل.",
     "category": "grocery",
     "section": "المجمدات",
     "kind": "menu_item",
@@ -476,14 +482,14 @@ export const kayanMeatsCatalog = [
     "sourceTitle": "منيو وصورتا عرض مجمدات الكيان المقدمتان من إدارة جوه",
     "checkedAt": "2026-11-12",
     "sourceType": "admin_supplied_business_menu",
-    "notes": "السعر النهائي والتوفر والتوصيل يتأكدوا مع المحل قبل التنفيذ. الطلب والمتابعة من خلال جوه."
+    "notes": "جميع الأصناف نيّة وغير مطهية؛ الصور توضيحية. السعر والتوفر يتأكدان قبل التنفيذ، ورسوم التوصيل منفصلة. الطلب والمتابعة من خلال جوه."
   },
   {
     "id": "directory-menu-kayan-meats-grape-leaves",
     "placeId": "directory-kayan-frozen-meats",
     "sellerName": "الكيان — لحوم ومجمدات",
     "title": "محشي ورق عنب",
-    "description": "سعر الكيلو.",
+    "description": "سعر الكيلو. المنتج غير مطهو ويحتاج تجهيزًا وطهيًا كاملًا قبل الأكل.",
     "category": "grocery",
     "section": "المحاشي",
     "kind": "menu_item",
@@ -501,14 +507,14 @@ export const kayanMeatsCatalog = [
     "sourceTitle": "منيو وصورتا عرض مجمدات الكيان المقدمتان من إدارة جوه",
     "checkedAt": "2026-11-12",
     "sourceType": "admin_supplied_business_menu",
-    "notes": "السعر النهائي والتوفر والتوصيل يتأكدوا مع المحل قبل التنفيذ. الطلب والمتابعة من خلال جوه."
+    "notes": "جميع الأصناف نيّة وغير مطهية؛ الصور توضيحية. السعر والتوفر يتأكدان قبل التنفيذ، ورسوم التوصيل منفصلة. الطلب والمتابعة من خلال جوه."
   },
   {
     "id": "directory-menu-kayan-meats-cabbage",
     "placeId": "directory-kayan-frozen-meats",
     "sellerName": "الكيان — لحوم ومجمدات",
     "title": "محشي كرنب",
-    "description": "سعر الكيلو.",
+    "description": "سعر الكيلو. المنتج غير مطهو ويحتاج تجهيزًا وطهيًا كاملًا قبل الأكل.",
     "category": "grocery",
     "section": "المحاشي",
     "kind": "menu_item",
@@ -526,14 +532,14 @@ export const kayanMeatsCatalog = [
     "sourceTitle": "منيو وصورتا عرض مجمدات الكيان المقدمتان من إدارة جوه",
     "checkedAt": "2026-11-12",
     "sourceType": "admin_supplied_business_menu",
-    "notes": "السعر النهائي والتوفر والتوصيل يتأكدوا مع المحل قبل التنفيذ. الطلب والمتابعة من خلال جوه."
+    "notes": "جميع الأصناف نيّة وغير مطهية؛ الصور توضيحية. السعر والتوفر يتأكدان قبل التنفيذ، ورسوم التوصيل منفصلة. الطلب والمتابعة من خلال جوه."
   },
   {
     "id": "directory-menu-kayan-meats-mixed-stuffed",
     "placeId": "directory-kayan-frozen-meats",
     "sellerName": "الكيان — لحوم ومجمدات",
     "title": "محشي مشكل — باذنجان وفلفل وكوسة",
-    "description": "سعر الكيلو.",
+    "description": "سعر الكيلو. المنتج غير مطهو ويحتاج تجهيزًا وطهيًا كاملًا قبل الأكل.",
     "category": "grocery",
     "section": "المحاشي",
     "kind": "menu_item",
@@ -551,14 +557,14 @@ export const kayanMeatsCatalog = [
     "sourceTitle": "منيو وصورتا عرض مجمدات الكيان المقدمتان من إدارة جوه",
     "checkedAt": "2026-11-12",
     "sourceType": "admin_supplied_business_menu",
-    "notes": "السعر النهائي والتوفر والتوصيل يتأكدوا مع المحل قبل التنفيذ. الطلب والمتابعة من خلال جوه."
+    "notes": "جميع الأصناف نيّة وغير مطهية؛ الصور توضيحية. السعر والتوفر يتأكدان قبل التنفيذ، ورسوم التوصيل منفصلة. الطلب والمتابعة من خلال جوه."
   },
   {
     "id": "directory-menu-kayan-meats-crispy-drumstick",
     "placeId": "directory-kayan-frozen-meats",
     "sellerName": "الكيان — لحوم ومجمدات",
     "title": "دبوس كرسبي",
-    "description": "سعر الكيلو.",
+    "description": "سعر الكيلو. المنتج غير مطهو ويحتاج تجهيزًا وطهيًا كاملًا قبل الأكل.",
     "category": "grocery",
     "section": "الفراخ",
     "kind": "menu_item",
@@ -576,14 +582,14 @@ export const kayanMeatsCatalog = [
     "sourceTitle": "منيو وصورتا عرض مجمدات الكيان المقدمتان من إدارة جوه",
     "checkedAt": "2026-11-12",
     "sourceType": "admin_supplied_business_menu",
-    "notes": "السعر النهائي والتوفر والتوصيل يتأكدوا مع المحل قبل التنفيذ. الطلب والمتابعة من خلال جوه."
+    "notes": "جميع الأصناف نيّة وغير مطهية؛ الصور توضيحية. السعر والتوفر يتأكدان قبل التنفيذ، ورسوم التوصيل منفصلة. الطلب والمتابعة من خلال جوه."
   },
   {
     "id": "directory-menu-kayan-meats-crispy-wings",
     "placeId": "directory-kayan-frozen-meats",
     "sellerName": "الكيان — لحوم ومجمدات",
     "title": "جناح كرسبي",
-    "description": "سعر الكيلو.",
+    "description": "سعر الكيلو. المنتج غير مطهو ويحتاج تجهيزًا وطهيًا كاملًا قبل الأكل.",
     "category": "grocery",
     "section": "الفراخ",
     "kind": "menu_item",
@@ -601,14 +607,14 @@ export const kayanMeatsCatalog = [
     "sourceTitle": "منيو وصورتا عرض مجمدات الكيان المقدمتان من إدارة جوه",
     "checkedAt": "2026-11-12",
     "sourceType": "admin_supplied_business_menu",
-    "notes": "السعر النهائي والتوفر والتوصيل يتأكدوا مع المحل قبل التنفيذ. الطلب والمتابعة من خلال جوه."
+    "notes": "جميع الأصناف نيّة وغير مطهية؛ الصور توضيحية. السعر والتوفر يتأكدان قبل التنفيذ، ورسوم التوصيل منفصلة. الطلب والمتابعة من خلال جوه."
   },
   {
     "id": "directory-menu-kayan-meats-mombar-pops",
     "placeId": "directory-kayan-frozen-meats",
     "sellerName": "الكيان — لحوم ومجمدات",
     "title": "ممبار بوبس",
-    "description": "سعر الكيلو.",
+    "description": "سعر الكيلو. المنتج غير مطهو ويحتاج تجهيزًا وطهيًا كاملًا قبل الأكل.",
     "category": "grocery",
     "section": "الممبار",
     "kind": "menu_item",
@@ -626,14 +632,14 @@ export const kayanMeatsCatalog = [
     "sourceTitle": "منيو وصورتا عرض مجمدات الكيان المقدمتان من إدارة جوه",
     "checkedAt": "2026-11-12",
     "sourceType": "admin_supplied_business_menu",
-    "notes": "السعر النهائي والتوفر والتوصيل يتأكدوا مع المحل قبل التنفيذ. الطلب والمتابعة من خلال جوه."
+    "notes": "جميع الأصناف نيّة وغير مطهية؛ الصور توضيحية. السعر والتوفر يتأكدان قبل التنفيذ، ورسوم التوصيل منفصلة. الطلب والمتابعة من خلال جوه."
   },
   {
     "id": "directory-menu-kayan-meats-mombar-fingers",
     "placeId": "directory-kayan-frozen-meats",
     "sellerName": "الكيان — لحوم ومجمدات",
     "title": "ممبار صوابع",
-    "description": "سعر الكيلو.",
+    "description": "سعر الكيلو. المنتج غير مطهو ويحتاج تجهيزًا وطهيًا كاملًا قبل الأكل.",
     "category": "grocery",
     "section": "الممبار",
     "kind": "menu_item",
@@ -651,14 +657,14 @@ export const kayanMeatsCatalog = [
     "sourceTitle": "منيو وصورتا عرض مجمدات الكيان المقدمتان من إدارة جوه",
     "checkedAt": "2026-11-12",
     "sourceType": "admin_supplied_business_menu",
-    "notes": "السعر النهائي والتوفر والتوصيل يتأكدوا مع المحل قبل التنفيذ. الطلب والمتابعة من خلال جوه."
+    "notes": "جميع الأصناف نيّة وغير مطهية؛ الصور توضيحية. السعر والتوفر يتأكدان قبل التنفيذ، ورسوم التوصيل منفصلة. الطلب والمتابعة من خلال جوه."
   },
   {
     "id": "directory-menu-kayan-meats-pigeon-jumbo",
     "placeId": "directory-kayan-frozen-meats",
     "sellerName": "الكيان — لحوم ومجمدات",
     "title": "حمام سوبر جامبو — جوز",
-    "description": "السعر لجوز الحمام السوبر جامبو.",
+    "description": "السعر لجوز الحمام السوبر جامبو. المنتج غير مطهو ويحتاج تجهيزًا وطهيًا كاملًا قبل الأكل.",
     "category": "grocery",
     "section": "الحمام",
     "kind": "menu_item",
@@ -676,14 +682,14 @@ export const kayanMeatsCatalog = [
     "sourceTitle": "منيو وصورتا عرض مجمدات الكيان المقدمتان من إدارة جوه",
     "checkedAt": "2026-11-12",
     "sourceType": "admin_supplied_business_menu",
-    "notes": "السعر النهائي والتوفر والتوصيل يتأكدوا مع المحل قبل التنفيذ. الطلب والمتابعة من خلال جوه."
+    "notes": "جميع الأصناف نيّة وغير مطهية؛ الصور توضيحية. السعر والتوفر يتأكدان قبل التنفيذ، ورسوم التوصيل منفصلة. الطلب والمتابعة من خلال جوه."
   },
   {
     "id": "directory-menu-kayan-meats-breaded-beef",
     "placeId": "directory-kayan-frozen-meats",
     "sellerName": "الكيان — لحوم ومجمدات",
     "title": "بوفتيك متبل جاهز للقلي",
-    "description": "سعر الكيلو.",
+    "description": "سعر الكيلو. المنتج غير مطهو ويحتاج تجهيزًا وطهيًا كاملًا قبل الأكل.",
     "category": "grocery",
     "section": "اللحوم",
     "kind": "menu_item",
@@ -701,14 +707,14 @@ export const kayanMeatsCatalog = [
     "sourceTitle": "منيو وصورتا عرض مجمدات الكيان المقدمتان من إدارة جوه",
     "checkedAt": "2026-11-12",
     "sourceType": "admin_supplied_business_menu",
-    "notes": "السعر النهائي والتوفر والتوصيل يتأكدوا مع المحل قبل التنفيذ. الطلب والمتابعة من خلال جوه."
+    "notes": "جميع الأصناف نيّة وغير مطهية؛ الصور توضيحية. السعر والتوفر يتأكدان قبل التنفيذ، ورسوم التوصيل منفصلة. الطلب والمتابعة من خلال جوه."
   },
   {
     "id": "directory-menu-kayan-meats-country-chicken",
     "placeId": "directory-kayan-frozen-meats",
     "sellerName": "الكيان — لحوم ومجمدات",
     "title": "فراخ بلدي كاملة أكثر من ٢ كيلو — غير مقطعة",
-    "description": "الوزن أكثر من ٢ كيلو للفراخة الكاملة، السعر حسب الوزن والتوفر.",
+    "description": "الوزن أكثر من ٢ كيلو للفراخة الكاملة، السعر حسب الوزن والتوفر. المنتج غير مطهو ويحتاج تجهيزًا وطهيًا كاملًا قبل الأكل.",
     "category": "grocery",
     "section": "الفراخ",
     "kind": "menu_item",
@@ -726,14 +732,14 @@ export const kayanMeatsCatalog = [
     "sourceTitle": "منيو وصورتا عرض مجمدات الكيان المقدمتان من إدارة جوه",
     "checkedAt": "2026-11-12",
     "sourceType": "admin_supplied_business_menu",
-    "notes": "السعر النهائي والتوفر والتوصيل يتأكدوا مع المحل قبل التنفيذ. الطلب والمتابعة من خلال جوه."
+    "notes": "جميع الأصناف نيّة وغير مطهية؛ الصور توضيحية. السعر والتوفر يتأكدان قبل التنفيذ، ورسوم التوصيل منفصلة. الطلب والمتابعة من خلال جوه."
   },
   {
     "id": "directory-menu-kayan-meats-chicken-shawarma",
     "placeId": "directory-kayan-frozen-meats",
     "sellerName": "الكيان — لحوم ومجمدات",
     "title": "شاورما فراخ فريش",
-    "description": "سعر الكيلو.",
+    "description": "سعر الكيلو. المنتج غير مطهو ويحتاج تجهيزًا وطهيًا كاملًا قبل الأكل.",
     "category": "grocery",
     "section": "الفراخ",
     "kind": "menu_item",
@@ -751,14 +757,14 @@ export const kayanMeatsCatalog = [
     "sourceTitle": "منيو وصورتا عرض مجمدات الكيان المقدمتان من إدارة جوه",
     "checkedAt": "2026-11-12",
     "sourceType": "admin_supplied_business_menu",
-    "notes": "السعر النهائي والتوفر والتوصيل يتأكدوا مع المحل قبل التنفيذ. الطلب والمتابعة من خلال جوه."
+    "notes": "جميع الأصناف نيّة وغير مطهية؛ الصور توضيحية. السعر والتوفر يتأكدان قبل التنفيذ، ورسوم التوصيل منفصلة. الطلب والمتابعة من خلال جوه."
   },
   {
     "id": "directory-menu-kayan-meats-chicken-pane",
     "placeId": "directory-kayan-frozen-meats",
     "sellerName": "الكيان — لحوم ومجمدات",
     "title": "بانيه فراخ فريش",
-    "description": "سعر الكيلو.",
+    "description": "سعر الكيلو. المنتج غير مطهو ويحتاج تجهيزًا وطهيًا كاملًا قبل الأكل.",
     "category": "grocery",
     "section": "الفراخ",
     "kind": "menu_item",
@@ -776,14 +782,14 @@ export const kayanMeatsCatalog = [
     "sourceTitle": "منيو وصورتا عرض مجمدات الكيان المقدمتان من إدارة جوه",
     "checkedAt": "2026-11-12",
     "sourceType": "admin_supplied_business_menu",
-    "notes": "السعر النهائي والتوفر والتوصيل يتأكدوا مع المحل قبل التنفيذ. الطلب والمتابعة من خلال جوه."
+    "notes": "جميع الأصناف نيّة وغير مطهية؛ الصور توضيحية. السعر والتوفر يتأكدان قبل التنفيذ، ورسوم التوصيل منفصلة. الطلب والمتابعة من خلال جوه."
   },
   {
     "id": "directory-menu-kayan-meats-chicken-strips",
     "placeId": "directory-kayan-frozen-meats",
     "sellerName": "الكيان — لحوم ومجمدات",
     "title": "استربس فراخ فريش",
-    "description": "سعر الكيلو.",
+    "description": "سعر الكيلو. المنتج غير مطهو ويحتاج تجهيزًا وطهيًا كاملًا قبل الأكل.",
     "category": "grocery",
     "section": "الفراخ",
     "kind": "menu_item",
@@ -801,14 +807,14 @@ export const kayanMeatsCatalog = [
     "sourceTitle": "منيو وصورتا عرض مجمدات الكيان المقدمتان من إدارة جوه",
     "checkedAt": "2026-11-12",
     "sourceType": "admin_supplied_business_menu",
-    "notes": "السعر النهائي والتوفر والتوصيل يتأكدوا مع المحل قبل التنفيذ. الطلب والمتابعة من خلال جوه."
+    "notes": "جميع الأصناف نيّة وغير مطهية؛ الصور توضيحية. السعر والتوفر يتأكدان قبل التنفيذ، ورسوم التوصيل منفصلة. الطلب والمتابعة من خلال جوه."
   },
   {
     "id": "directory-menu-kayan-meats-chicken-liver",
     "placeId": "directory-kayan-frozen-meats",
     "sellerName": "الكيان — لحوم ومجمدات",
     "title": "كبدة فراخ فريش",
-    "description": "سعر الكيلو.",
+    "description": "سعر الكيلو. المنتج غير مطهو ويحتاج تجهيزًا وطهيًا كاملًا قبل الأكل.",
     "category": "grocery",
     "section": "الفراخ",
     "kind": "menu_item",
@@ -826,6 +832,6 @@ export const kayanMeatsCatalog = [
     "sourceTitle": "منيو وصورتا عرض مجمدات الكيان المقدمتان من إدارة جوه",
     "checkedAt": "2026-11-12",
     "sourceType": "admin_supplied_business_menu",
-    "notes": "السعر النهائي والتوفر والتوصيل يتأكدوا مع المحل قبل التنفيذ. الطلب والمتابعة من خلال جوه."
+    "notes": "جميع الأصناف نيّة وغير مطهية؛ الصور توضيحية. السعر والتوفر يتأكدان قبل التنفيذ، ورسوم التوصيل منفصلة. الطلب والمتابعة من خلال جوه."
   }
 ];
