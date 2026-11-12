@@ -40,7 +40,7 @@ export function providerRequestOperation(body){
   let note=text(body.note,body.directoryId==='directory-kayan-frozen-meats'?190:300);
   if(body.directoryId==='directory-kayan-frozen-meats'&&body.state==='confirmed'){
    const value=body.deliveryAt;
-   if(typeof value!=='string'||!/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}$/.test(value))bad('حدد تاريخ ووقت التوصيل قبل قبول الطلب.');
+   if(typeof value!=='string'||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value))bad('حدد تاريخ ووقت التوصيل قبل قبول الطلب.');
    const d=new Date(value+':00+02:00');
    if(!Number.isFinite(d.getTime())||d.getTime()<Date.now()-3600000||d.getTime()>Date.now()+31*86400000)bad('حدد معاد توصيل صحيح خلال ٣١ يوم.');
    note='ميعاد التوصيل: '+value.replace('T',' ')+' بتوقيت القاهرة'+(note?' — '+note:'');
