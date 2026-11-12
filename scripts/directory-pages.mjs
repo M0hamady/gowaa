@@ -12,8 +12,14 @@ if(catalogText!==null){
  const catalog=JSON.parse(catalogText);
  const sourceRows=Array.isArray(catalog)?catalog:catalog.items;
  if(!Array.isArray(sourceRows))throw Error('Expected market catalog items');
- const known=new Set(sourceRows.map(x=>x.id));
- for(const product of kayanMeatsCatalog)if(!known.has(product.id)){sourceRows.push(product);known.add(product.id);}
+ // Refresh source-owned fields on every build, not only on first insertion.
+ // Otherwise an existing live catalog keeps old poster images after the shop sends new photos.
+ const byId=new Map(sourceRows.map((row,index)=>[row.id,index]));
+ for(const product of kayanMeatsCatalog){
+  const index=byId.get(product.id);
+  if(index===undefined){byId.set(product.id,sourceRows.length);sourceRows.push(product);}
+  else sourceRows[index]={...sourceRows[index],...product};
+ }
  await writeFile(catalogPath,JSON.stringify(catalog,null,2)+'\n');
 }
 const curated=mergeDirectoryUpdates(JSON.parse(await readFile('public/data/directory.json','utf8')));
