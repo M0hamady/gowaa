@@ -9,7 +9,7 @@ async function loadConcierge(){
  const r=await fetch('/api/operations?'+new URLSearchParams({action:'conciergeTrack',token}),{cache:'no-store'});const b=await r.json().catch(()=>({}));
  if(!r.ok){$('#track').innerHTML=`<p>${esc(b.error||'مش لاقيين الطلب.')}</p>`;return;}
  const d=b.data,steps=d.fulfillment==='pickup'?['new','confirmed','preparing','ready_for_pickup','delivered']:['new','confirmed','preparing','on_the_way','delivered'],at=steps.indexOf(d.state);
- $('#track').innerHTML=`<h1>${esc(d.provider)}</h1><p class="track-num">طلب #${d.number} · ${d.itemCount||''} صنف · عن طريق جوه</p><p class="track-state">${C_STATE[d.state]||d.state}</p>${d.statusNote?`<p>${esc(d.statusNote)}</p>`:''}
+ $('#track').innerHTML=`<h1>${esc(d.provider)}</h1><p class="track-num">طلب #${d.number} · ${d.itemCount||''} صنف · عن طريق جوه</p><p class="track-state">${C_STATE[d.state]||d.state}</p>${d.statusNote?`<p class="track-confirmation-message" role="status">${esc(d.statusNote)}</p>`:''}${d.providerPhone&&['confirmed','preparing','on_the_way','ready_for_pickup','delivered'].includes(d.state)?`<p class="track-contact">رقم المحل للتواصل: <a dir="ltr" href="tel:${esc(d.providerPhone.replace(/[^+0-9]/g,''))}">${esc(d.providerPhone)}</a></p>`:''}
  ${at>=0?`<ol class="track-steps">${steps.map((s,i)=>`<li class="${i<=at?'done':''}">${C_STATE[s]}</li>`).join('')}</ol>`:''}<p class="data-note">آخر تحديث ${new Date(d.updatedAt).toLocaleString('ar-EG')}</p>`;
 }
 async function load(){

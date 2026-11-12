@@ -1,5 +1,6 @@
 import {authenticatedMember,noStore} from './server-member.mjs';
 import {dispatchProviderOrderAlert} from './server-provider-alerts.mjs';
+import {sendSms,smsSendingReady} from './server-identity-sms.mjs';
 
 const UUID=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
 const DIRECTORY=/^[a-zA-Z0-9_-]{1,100}$/;
@@ -33,9 +34,18 @@ export function providerRequestOperation(body){
   return {name:'jowwa_provider_booking_complete',args:{p_id:body.id,p_request_id:body.requestId,p_version:body.version}};
  }
  if(body.action==='concierge_update'){
-  keys(body,['action','id','requestId','version','state','note']);
+  keys(body,['action','id','requestId','version','state','note','directoryId','deliveryAt']);
   if(!['confirmed','preparing','on_the_way','ready_for_pickup','delivered','cancelled','rejected'].includes(body.state))bad();
-  return {name:'jowwa_provider_concierge_update',args:{p_id:body.id,p_request_id:body.requestId,p_version:body.version,p_state:body.state,p_note:text(body.note,300)}};
+  if(body.directoryId!==undefined&&!directory(body.directoryId))bad();
+  let note=text(body.note,body.directoryId==='directory-kayan-frozen-meats'?190:300);
+  if(body.directoryId==='directory-kayan-frozen-meats'&&body.state==='confirmed'){
+   const value=body.deliveryAt;
+   if(typeof value!=='string'||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value))bad('حدد تاريخ ووقت التوصيل قبل قبول الطلب.');
+   const d=new Date(value+':00+02:00');
+   if(!Number.isFinite(d.getTime())||d.getTime()<Date.now()-3600000||d.getTime()>Date.now()+31*86400000)bad('حدد معاد توصيل صحيح خلال ٣١ يوم.');
+   note='ميعاد التوصيل: '+value.replace('T',' ')+' بتوقيت القاهرة'+(note?' — '+note:'');
+  }
+  return {name:'jowwa_provider_concierge_update',args:{p_id:body.id,p_request_id:body.requestId,p_version:body.version,p_state:body.state,p_note:note}};
  }
  bad('الإجراء ده مش متاح.');
 }
@@ -96,7 +106,18 @@ export function createProviderRequestsHandler({env=process.env,dispatch=dispatch
     // invitation limits and delivery idempotency; its failure never loses a request.
     try{notification=await dispatch({source:'provider_request',sourceId:data.id},env);}catch{notification={status:'queued',sent:0};}
    }
-   return reply(200,{data,...(notification?{notification}:{})});
+   let customerNotification;
+   if(operation.name==='jowwa_provider_concierge_update'&&data?.state==='confirmed'&&data.directoryId==='directory-kayan-frozen-meats'&&String(data.statusNote||'').startsWith('ميعاد التوصيل: ')){
+    customerNotification={status:'saved_in_jowwa',sms:'not_configured'};
+    if(smsSendingReady(env)&&data?.customer?.phone){
+     try{
+      const message='جوه: الكيان للحوم والمجمدات وافق على طلبك #'+data.number+'. '+data.statusNote+'. للتواصل مع المحل: 01557887258. تابع طلبك من جوه.';
+      const result=await sendSms({phone:data.customer.phone,message,kind:'provider_order',idempotencyKey:'kayan_confirm_'+data.id.replaceAll('-','')},env);
+      customerNotification.sms=result.accepted?'sent':'queued';
+     }catch{customerNotification.sms='queued';}
+    }
+   }
+   return reply(200,{data,...(notification?{notification}:{}),...(customerNotification?{customerNotification}:{})});
   }catch(error){
    const code=error?.code;
    const arabic=typeof error?.message==='string'&&/^[\u0600-\u06ff]/.test(error.message);
