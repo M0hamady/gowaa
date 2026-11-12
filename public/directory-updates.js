@@ -25,7 +25,12 @@ export function mergeDirectoryUpdates(records){
   {id:'memorycraft',name:'MemoryCraft | ميموري كرافت',category:'هدايا وطباعة',phone:'01019374388',description:'مجات وتيشيرتات وبازل وبراويز وأطقم بتصميم العميل. معاينة التصميم والسعر والميعاد تتأكد قبل التنفيذ.',keywords:['ميموري كرافت','MemoryCraft','هدايا','طباعة','مج','تيشيرت','بازل','برواز','مواليد'],printingType:'personalized',instagram:'https://www.instagram.com/memorycraft1/',telegram:'https://t.me/MemoryCraft1'}
  ];
  for(const p of printing)if(!result.has(p.id))result.set(p.id,{...p,specialization:'printing',schemaType:'Store',address:'مكان الاستلام يتحدد مع الطلب',sourceType:'user_shared_business_message',sourceTitle:'مراسلة النشاط ونماذج أعماله التي شاركها مالك جوّه',checkedAt:'2026-11-06',businessOwnerVerified:false,providerManaged:false,status:'بيانات النشاط من رسائله المرفقة. السعر النهائي وميعاد التنفيذ وعنوان الاستلام يتأكدوا داخل الطلب.',visitorNote:'طلب خاص بالطباعة والهدايا. راجع عرض السعر والمعاينة قبل الموافقة.'});
- if(!result.has(kayanMeatsProvider.id))result.set(kayanMeatsProvider.id,{...kayanMeatsProvider});
+ const existingMeats=result.get(kayanMeatsProvider.id);
+ if(!existingMeats)result.set(kayanMeatsProvider.id,{...kayanMeatsProvider});
+ else result.set(kayanMeatsProvider.id,{...kayanMeatsProvider,...existingMeats,
+  logo:kayanMeatsProvider.logo,image:kayanMeatsProvider.image,
+  cardPhotos:kayanMeatsProvider.cardPhotos,menuImages:kayanMeatsProvider.menuImages,
+  menuNote:kayanMeatsProvider.menuNote});
  const group=result.get('directory-atms-sunmall');
  if(group)for(const [id,name,english] of bankNames){
   if(result.has(id))continue;

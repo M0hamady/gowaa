@@ -5,6 +5,8 @@ export const LOGO_PATH=/^[0-9a-f-]{36}\/(?:logo|card)-[a-z0-9]{4,40}\.(?:webp|pn
 const STATIC=/^\/logos\/[a-z0-9-]{1,100}\.(?:webp|png|jpg)$/;
 export function placeLogo(p){
  const v=typeof p?.logo==='string'?p.logo:'';
+ // Reviewed Kayan brand artwork is stored on the same media CDN as its existing offer posters.
+ if(p?.id==='directory-kayan-frozen-meats'&&/^https:\/\/d2ol7oe51mr4n9\.cloudfront\.net\/user_[a-zA-Z0-9]+\/[0-9a-f-]{36}\.png$/.test(v))return v;
  if(STATIC.test(v))return v;
  if(LOGO_PATH.test(v)&&/^[a-zA-Z0-9_-]{1,100}$/.test(p.id||''))return '/api/image?type=place&id='+encodeURIComponent(p.id)+'&v='+encodeURIComponent(v.split('/').pop().replace(/\..+$/,''));
  return '';

@@ -5,6 +5,7 @@ import {kayanMeatsProvider,kayanMeatsCatalog} from '../public/kayan-meats.js';
 import {mergeDirectoryUpdates} from '../public/directory-updates.js';
 import {normalizeDirectoryCatalog} from '../public/market-discovery.js';
 import {catalogForProvider,basketTotal} from '../public/provider-catalog-core.js';
+import {placeLogo} from '../public/place-logo.js';
 
 test('Kayan meats exists exactly once and does not assign unverified ownership',()=>{
  const merged=mergeDirectoryUpdates([]);
@@ -42,4 +43,19 @@ test('private registry and concierge migration are opt-in and preserve existing 
  assert.match(sql,/on conflict \(directory_id\) do nothing/ig);
  assert.doesNotMatch(sql,/update set enabled\s*=\s*true/i);
  assert.doesNotMatch(sql,/insert into auth\.users|insert into public\.sellers/i);
+});
+
+test('Kayan original gold bull logo and raw photos are linked safely',()=>{
+ assert.match(placeLogo(kayanMeatsProvider),/^https:\/\/d2ol7oe51mr4n9\.cloudfront\.net\//);
+ assert.match(kayanMeatsProvider.menuNote,/غير مطبوخة/);
+ const withPhotos=kayanMeatsCatalog.filter(x=>x.imageKind==='illustrative');
+ assert.equal(withPhotos.length,11);
+ for(const item of kayanMeatsCatalog){
+  assert.match(item.description,/غير مطه/);
+  if(item.imageKind==='illustrative'){
+   assert.match(item.imageUrl,/^https:\/\/d2ol7oe51mr4n9\.cloudfront\.net\/user_/);
+   assert.match(item.imageAlt,/صورة توضيحية/);
+  }
+ }
+ assert.equal(placeLogo({id:'different-shop',logo:kayanMeatsProvider.logo}),'');
 });
