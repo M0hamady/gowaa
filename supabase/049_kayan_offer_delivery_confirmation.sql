@@ -31,7 +31,7 @@ begin
  select * into o from jowwa_private.concierge_orders
  where tracking_token=p_token;
  if not found then raise exception 'Not found' using errcode='22023';end if;
- if o.state in ('confirmed','preparing','on_the_way','ready_for_pickup','delivered') then
+ if o.directory_id='directory-kayan-frozen-meats' and o.state in ('confirmed','preparing','on_the_way','ready_for_pickup','delivered') then
   select provider_phone into contact from jowwa_private.concierge_providers
   where directory_id=o.directory_id;
  end if;
