@@ -11115,6 +11115,29 @@
       "checkedAt": "2026-11-07",
       "notes": "السعر من صورة المنيو المرسلة. التوفر والسعر النهائي يُراجعان مع المحل قبل التنفيذ.",
       "pricePublishedAt": null
+    },
+    {
+      "id": "directory-menu-estakoza-viagra-tagine-250",
+      "placeId": "community-estakoza-fish",
+      "sellerName": "استاكوزا للأسماك",
+      "title": "طاجن فياجرا",
+      "description": "طاجن فياجرا (جمبري • سبيط • بيض سبيط • بطارخ) — طبق كما ورد في صورة العرض.",
+      "category": "food",
+      "section": "العروض",
+      "kind": "menu_item",
+      "district": "yasmin",
+      "price": 250,
+      "currency": "EGP",
+      "pricePublishedAt": "2026-11-13",
+      "stockStatus": "unknown",
+      "imageUrl": "https://d2ol7oe51mr4n9.cloudfront.net/user_2xVtjU8YUaitd0fAODLUsGslhuX/0c8e4a76-f788-40c1-83ab-33dbfcff1479.jpg",
+      "imageAlt": "طاجن فياجرا — 250 جنيه — استاكوزا للأسماك",
+      "imageKind": "offer_poster",
+      "sourceUrl": "https://d2ol7oe51mr4n9.cloudfront.net/user_2xVtjU8YUaitd0fAODLUsGslhuX/0c8e4a76-f788-40c1-83ab-33dbfcff1479.jpg",
+      "sourceType": "user_provided_offer_image",
+      "sourceTitle": "صورة العرض المرسلة",
+      "checkedAt": "2026-11-13",
+      "notes": "السعر والمكونات مذكوران في صورة العرض. التوفر والطلب يخضعان لتأكيد المحل."
     }
   ]
 }
